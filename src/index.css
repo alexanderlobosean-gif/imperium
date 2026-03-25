@@ -1,0 +1,193 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --font-inter: 'Inter', sans-serif;
+
+    --background: 222 30% 4%;
+    --foreground: 216 33% 97%;
+    --card: 222 25% 9%;
+    --card-foreground: 216 33% 97%;
+    --popover: 222 25% 9%;
+    --popover-foreground: 216 33% 97%;
+    --primary: 40 89% 53%;
+    --primary-foreground: 222 30% 4%;
+    --secondary: 222 20% 12%;
+    --secondary-foreground: 216 33% 97%;
+    --muted: 222 18% 15%;
+    --muted-foreground: 218 12% 62%;
+    --accent: 270 90% 55%;
+    --accent-foreground: 216 33% 97%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 216 33% 97%;
+    --border: 222 15% 18%;
+    --input: 222 15% 18%;
+    --ring: 40 89% 53%;
+    --chart-1: 40 89% 53%;
+    --chart-2: 142 71% 45%;
+    --chart-3: 270 90% 55%;
+    --chart-4: 217 91% 60%;
+    --chart-5: 0 84% 60%;
+    --radius: 0.75rem;
+
+    --gold-primary: #F2A71B;
+    --gold-hover: #FFB82E;
+    --gold-dark: #C8840D;
+    --gold-burnt: #8C5A12;
+    --gold-glow: #5E3B00;
+    --gold-light: #F4D08A;
+    --bg-main: #090B12;
+    --bg-secondary: #11141C;
+    --bg-card: #171B24;
+    --bg-card-highlight: #1E1410;
+    --purple-card: #2A1238;
+    --purple-accent: #7A2CF3;
+    --purple-button: #A24DFF;
+    --green-success: #22C55E;
+    --green-hover: #16A34A;
+    --green-soft: #163B2A;
+    --blue-action: #3B82F6;
+    --blue-hover: #2563EB;
+    --blue-dark: #152C52;
+    --red-alert: #EF4444;
+    --red-hover: #DC2626;
+    --text-primary: #F5F7FA;
+    --text-secondary: #B8C0CC;
+    --text-soft: #8B93A1;
+    --border-default: #2A2F3A;
+    --border-soft: #232833;
+
+    --sidebar-background: 222 25% 6%;
+    --sidebar-foreground: 216 33% 97%;
+    --sidebar-primary: 40 89% 53%;
+    --sidebar-primary-foreground: 222 30% 4%;
+    --sidebar-accent: 222 20% 12%;
+    --sidebar-accent-foreground: 216 33% 97%;
+    --sidebar-border: 222 15% 18%;
+    --sidebar-ring: 40 89% 53%;
+  }
+
+  .dark {
+    --background: 222 30% 4%;
+    --foreground: 216 33% 97%;
+    --card: 222 25% 9%;
+    --card-foreground: 216 33% 97%;
+    --popover: 222 25% 9%;
+    --popover-foreground: 216 33% 97%;
+    --primary: 40 89% 53%;
+    --primary-foreground: 222 30% 4%;
+    --secondary: 222 20% 12%;
+    --secondary-foreground: 216 33% 97%;
+    --muted: 222 18% 15%;
+    --muted-foreground: 218 12% 62%;
+    --accent: 270 90% 55%;
+    --accent-foreground: 216 33% 97%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 216 33% 97%;
+    --border: 222 15% 18%;
+    --input: 222 15% 18%;
+    --ring: 40 89% 53%;
+    --chart-1: 40 89% 53%;
+    --chart-2: 142 71% 45%;
+    --chart-3: 270 90% 55%;
+    --chart-4: 217 91% 60%;
+    --chart-5: 0 84% 60%;
+    --sidebar-background: 222 25% 6%;
+    --sidebar-foreground: 216 33% 97%;
+    --sidebar-primary: 40 89% 53%;
+    --sidebar-primary-foreground: 222 30% 4%;
+    --sidebar-accent: 222 20% 12%;
+    --sidebar-accent-foreground: 216 33% 97%;
+    --sidebar-border: 222 15% 18%;
+    --sidebar-ring: 40 89% 53%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+    font-family: 'Inter', sans-serif;
+    letter-spacing: 0.2px;
+    line-height: 1.5;
+  }
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-track {
+  background: var(--bg-main);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--border-default);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--gold-dark);
+}
+
+/* Animated background */
+@keyframes gridPulse {
+  0%, 100% { opacity: 0.03; }
+  50% { opacity: 0.06; }
+}
+
+@keyframes goldGlow {
+  0%, 100% { opacity: 0.1; transform: translateX(-100%); }
+  50% { opacity: 0.3; transform: translateX(100%); }
+}
+
+@keyframes barMove {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(200%); }
+}
+
+.animated-bg {
+  position: relative;
+  overflow: hidden;
+}
+
+.animated-bg::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: 
+    linear-gradient(90deg, transparent 49.5%, var(--border-soft) 49.5%, var(--border-soft) 50.5%, transparent 50.5%),
+    linear-gradient(0deg, transparent 49.5%, var(--border-soft) 49.5%, var(--border-soft) 50.5%, transparent 50.5%);
+  background-size: 60px 60px;
+  animation: gridPulse 8s ease-in-out infinite;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.animated-bg::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 50%;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--gold-primary), transparent);
+  animation: barMove 12s linear infinite;
+  opacity: 0.2;
+  z-index: 0;
+}
+
+.gold-glow {
+  box-shadow: 0 0 30px rgba(242, 167, 27, 0.1), 0 0 60px rgba(242, 167, 27, 0.05);
+}
+
+.gold-text {
+  background: linear-gradient(135deg, #F2A71B, #FFB82E, #F4D08A);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}

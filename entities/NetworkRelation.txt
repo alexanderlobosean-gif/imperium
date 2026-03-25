@@ -1,0 +1,48 @@
+{
+  "name": "NetworkRelation",
+  "type": "object",
+  "properties": {
+    "user_id": {
+      "type": "string",
+      "description": "Usu\u00e1rio que indicou"
+    },
+    "user_email": {
+      "type": "string"
+    },
+    "user_name": {
+      "type": "string"
+    },
+    "referred_id": {
+      "type": "string",
+      "description": "Usu\u00e1rio indicado"
+    },
+    "referred_email": {
+      "type": "string"
+    },
+    "referred_name": {
+      "type": "string"
+    },
+    "level": {
+      "type": "number",
+      "description": "N\u00edvel na rede (1=direto, 2+=indireto)"
+    },
+    "total_generated": {
+      "type": "number",
+      "default": 0,
+      "description": "Total gerado por esse membro para o usu\u00e1rio"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "active",
+        "inactive"
+      ],
+      "default": "active"
+    }
+  },
+  "required": [
+    "user_id",
+    "referred_id",
+    "level"
+  ]
+}

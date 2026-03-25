@@ -1,0 +1,60 @@
+import { Toaster } from "@/components/ui/toaster"
+import { QueryClientProvider } from '@tanstack/react-query'
+import { queryClientInstance } from '@/lib/query-client'
+import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
+import PageNotFound from './lib/PageNotFound';
+import { AuthProvider, useAuth } from '@/lib/AuthContext';
+import UserNotRegisteredError from '@/components/UserNotRegisteredError';
+import AppLayout from '@/components/layout/AppLayout';
+import Dashboard from '@/pages/Dashboard';
+import Wallet from '@/pages/Wallet';
+import Plans from '@/pages/Plans';
+import Network from '@/pages/Network';
+import Career from '@/pages/Career';
+import Profile from '@/pages/Profile';
+import AdminPanel from '@/pages/admin/AdminPanel';
+import Indicacao from '@/pages/Indicacao';
+import Login from '@/pages/Login'
+import Register from '@/pages/Register';
+import LandingPage from '@/pages/LandingPage';
+
+const AuthenticatedApp = () => {
+  // For landing page, we don't need auth checks
+  return (
+    <Routes>
+      <Route path="/" element={<LandingPage />} />
+      <Route path="/landing" element={<LandingPage />} />
+      <Route element={<AppLayout />}>
+        <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/wallet" element={<Wallet />} />
+        <Route path="/plans" element={<Plans />} />
+        <Route path="/network" element={<Network />} />
+        <Route path="/indicacao" element={<Indicacao />} />
+        <Route path="/career" element={<Career />} />
+        <Route path="/profile" element={<Profile />} />
+        <Route path="/admin" element={<AdminPanel />} />
+        <Route path="/Dashboard" element={<Navigate to="/dashboard" replace />} />
+      </Route>
+      <Route path="/login" element={<Login />} />
+      <Route path="/register" element={<Register />} />
+      <Route path="/registrar" element={<Register />} />
+      <Route path="*" element={<PageNotFound />} />
+    </Routes>
+  );
+};
+
+
+function App() {
+  return (
+    <QueryClientProvider client={queryClientInstance}>
+      <Router>
+        <AuthProvider>
+          <AuthenticatedApp />
+        </AuthProvider>
+      </Router>
+      <Toaster />
+    </QueryClientProvider>
+  )
+}
+
+export default App

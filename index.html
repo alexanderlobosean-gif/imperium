@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="https://base44.com/logo_v2.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="manifest" href="/manifest.json" />
+    <title>Imperium Club</title>
+    <script>
+      // Fix Google Translate URL mangling before React loads
+      (function() {
+        var path = window.location.pathname.replace(/^\//, '').toLowerCase();
+        var params = new URLSearchParams(window.location.search);
+        var ref = params.get('ref') || params.get('ref__') || params.get('ref_') || '';
+
+        // Case 1: Google Translate changed /register -> /registrar
+        if (path === 'registrar' || path.indexOf('registrar') === 0) {
+          window.location.replace(ref ? '/register?ref=' + ref : '/register');
+          return;
+        }
+
+        // Case 2: URL is /register but params were mangled (ref__ or ref_ instead of ref)
+        if ((path === 'register' || path.indexOf('register') === 0) && ref && !params.get('ref')) {
+          window.location.replace('/register?ref=' + ref);
+          return;
+        }
+      })();
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.jsx"></script>
+  </body>
+</html>

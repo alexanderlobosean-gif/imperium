@@ -1,0 +1,92 @@
+{
+  "name": "Transaction",
+  "type": "object",
+  "properties": {
+    "user_id": {
+      "type": "string"
+    },
+    "user_email": {
+      "type": "string"
+    },
+    "user_name": {
+      "type": "string"
+    },
+    "type": {
+      "type": "string",
+      "enum": [
+        "deposit",
+        "withdrawal",
+        "transfer",
+        "yield",
+        "network_bonus",
+        "referral_bonus",
+        "reinvestment",
+        "penalty",
+        "career_bonus"
+      ]
+    },
+    "amount": {
+      "type": "number"
+    },
+    "fee": {
+      "type": "number",
+      "default": 0
+    },
+    "penalty": {
+      "type": "number",
+      "default": 0
+    },
+    "net_amount": {
+      "type": "number"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "approved",
+        "rejected",
+        "completed"
+      ],
+      "default": "pending"
+    },
+    "description": {
+      "type": "string"
+    },
+    "txid": {
+      "type": "string",
+      "description": "Hash de confirma\u00e7\u00e3o para dep\u00f3sitos"
+    },
+    "crypto_wallet": {
+      "type": "string"
+    },
+    "transfer_to_user_id": {
+      "type": "string",
+      "description": "Para transfer\u00eancias internas"
+    },
+    "transfer_to_email": {
+      "type": "string"
+    },
+    "investment_id": {
+      "type": "string"
+    },
+    "related_user_id": {
+      "type": "string",
+      "description": "Usu\u00e1rio relacionado (ex: indicado)"
+    },
+    "admin_notes": {
+      "type": "string"
+    },
+    "processed_by": {
+      "type": "string"
+    },
+    "processed_date": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "required": [
+    "user_id",
+    "type",
+    "amount"
+  ]
+}

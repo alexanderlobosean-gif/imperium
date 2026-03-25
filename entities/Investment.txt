@@ -1,0 +1,105 @@
+{
+  "name": "Investment",
+  "type": "object",
+  "properties": {
+    "user_id": {
+      "type": "string",
+      "description": "ID do usu\u00e1rio"
+    },
+    "user_email": {
+      "type": "string"
+    },
+    "user_name": {
+      "type": "string"
+    },
+    "plan": {
+      "type": "string",
+      "enum": [
+        "start",
+        "basic",
+        "silver",
+        "gold",
+        "imperium",
+        "leadership_100",
+        "leadership_2000"
+      ]
+    },
+    "amount": {
+      "type": "number",
+      "description": "Valor investido"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "active",
+        "completed",
+        "cancelled"
+      ],
+      "default": "pending"
+    },
+    "activation_date": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Data de ativa\u00e7\u00e3o (24h ap\u00f3s confirma\u00e7\u00e3o)"
+    },
+    "current_daily_rate": {
+      "type": "number",
+      "default": 0.2,
+      "description": "Taxa di\u00e1ria atual em %"
+    },
+    "base_rate": {
+      "type": "number",
+      "description": "Taxa base do plano"
+    },
+    "days_without_withdrawal": {
+      "type": "number",
+      "default": 0
+    },
+    "total_earned": {
+      "type": "number",
+      "default": 0,
+      "description": "Total ganho com esse investimento"
+    },
+    "earning_cap": {
+      "type": "number",
+      "description": "Teto de ganho (300% do investido)"
+    },
+    "cap_percentage_reached": {
+      "type": "number",
+      "default": 0
+    },
+    "client_share": {
+      "type": "number",
+      "description": "% do cliente na divis\u00e3o semanal"
+    },
+    "company_share": {
+      "type": "number",
+      "description": "% da empresa na divis\u00e3o semanal"
+    },
+    "unlocked_levels": {
+      "type": "number",
+      "default": 0,
+      "description": "N\u00edveis de rede liberados"
+    },
+    "weekly_earnings": {
+      "type": "number",
+      "default": 0,
+      "description": "Ganhos da semana atual"
+    },
+    "deposit_confirmed": {
+      "type": "boolean",
+      "default": false
+    },
+    "referral_bonus_paid": {
+      "type": "boolean",
+      "default": false,
+      "description": "Indica se o b\u00f4nus de indica\u00e7\u00e3o de 10% j\u00e1 foi pago ao referenciador"
+    }
+  },
+  "required": [
+    "user_id",
+    "plan",
+    "amount"
+  ]
+}
