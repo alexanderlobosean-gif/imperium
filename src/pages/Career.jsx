@@ -1,6 +1,6 @@
 import React from 'react';
 import { useAuth } from '@/lib/AuthContext';
-// import { CAREER_LEVELS, formatCurrency } from '@/lib/planConfig'; // Mantido
+import { CAREER_LEVELS, formatCurrency } from '@/lib/planConfig';
 import { Award, CheckCircle, Lock } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
 

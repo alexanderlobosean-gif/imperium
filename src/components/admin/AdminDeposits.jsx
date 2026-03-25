@@ -1,129 +1,401 @@
-import React from 'react';
-// import { base44 } from '@/api/base44Client'; // Removido - agora usa Supabase
-import { supabase } from '@/lib/supabase'; // Adicionado
+import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { formatCurrency } from '@/lib/planConfig';
+import { supabase } from '@/lib/supabase';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { toast } from 'sonner';
-import { CheckCircle, XCircle } from 'lucide-react';
-import { format } from 'date-fns';
+import { formatCurrency } from '@/lib/planConfig';
+import { Search, Filter, Eye, CheckCircle, XCircle, Clock, DollarSign, FileText } from 'lucide-react';
+
+// Fetch deposits
+const fetchDeposits = async () => {
+  const { data, error } = await supabase
+    .from('deposits')
+    .select(`
+      *,
+      profiles!inner(
+        full_name,
+        email
+      )
+    `)
+    .order('created_at', { ascending: false });
+
+  if (error) throw error;
+  return data;
+};
+
+// Update deposit status
+const updateDepositStatus = async ({ depositId, status, adminNotes }) => {
+  const { data, error } = await supabase
+    .from('deposits')
+    .update({ 
+      status,
+      admin_notes: adminNotes,
+      confirmed_at: status === 'confirmed' ? new Date().toISOString() : null
+    })
+    .eq('id', depositId)
+    .select()
+    .single();
+
+  if (error) throw error;
+  return data;
+};
 
 export default function AdminDeposits() {
+  const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState('all');
+  const [methodFilter, setMethodFilter] = useState('all');
+  const [selectedDeposit, setSelectedDeposit] = useState(null);
+  const [showDepositDialog, setShowDepositDialog] = useState(false);
+  const [adminNotes, setAdminNotes] = useState('');
   const queryClient = useQueryClient();
 
-  const { data: deposits = [] } = useQuery({
+  const { data: deposits = [], isLoading } = useQuery({
     queryKey: ['admin-deposits'],
-    queryFn: () => base44.entities.Transaction.filter({ type: 'deposit' }, '-created_date', 50),
+    queryFn: fetchDeposits,
   });
 
-  const updateTransaction = useMutation({
-    mutationFn: ({ id, data }) => base44.entities.Transaction.update(id, data),
+  const updateStatusMutation = useMutation({
+    mutationFn: updateDepositStatus,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['admin-deposits'] });
-      queryClient.invalidateQueries({ queryKey: ['admin-users'] });
-      toast.success('Transação atualizada');
+      queryClient.invalidateQueries(['admin-deposits']);
+      toast.success('Status do depósito atualizado!');
+      setShowDepositDialog(false);
+      setSelectedDeposit(null);
+      setAdminNotes('');
+    },
+    onError: (error) => {
+      toast.error('Erro ao atualizar status: ' + error.message);
     },
   });
 
-  const handleApprove = async (deposit) => {
-    updateTransaction.mutate({
-      id: deposit.id,
-      data: {
-        status: 'approved',
-        processed_date: new Date().toISOString(),
-      },
-    });
+  const filteredDeposits = deposits.filter(deposit => {
+    const matchesSearch = deposit.profiles?.full_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         deposit.profiles?.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         deposit.transaction_hash?.toLowerCase().includes(searchTerm.toLowerCase());
+    
+    const matchesStatus = statusFilter === 'all' || deposit.status === statusFilter;
+    const matchesMethod = methodFilter === 'all' || deposit.method === methodFilter;
+    
+    return matchesSearch && matchesStatus && matchesMethod;
+  });
 
-    // Update user balance — apenas credita saldo disponível (cliente usará para comprar plano)
-    const users = await base44.entities.User.filter({ email: deposit.user_email });
-    if (users.length > 0) {
-      const u = users[0];
-      await base44.entities.User.update(u.id, {
-        available_balance: (u.available_balance || 0) + deposit.amount,
-        status: 'active',
-      });
-    }
-
+  const handleViewDeposit = (deposit) => {
+    setSelectedDeposit(deposit);
+    setShowDepositDialog(true);
   };
 
-  const handleReject = (deposit) => {
-    updateTransaction.mutate({
-      id: deposit.id,
-      data: {
-        status: 'rejected',
-        processed_date: new Date().toISOString(),
-      },
+  const handleUpdateStatus = (newStatus) => {
+    updateStatusMutation.mutate({
+      depositId: selectedDeposit.id,
+      status: newStatus,
+      adminNotes: adminNotes
     });
   };
 
-  const pending = deposits.filter((d) => d.status === 'pending');
-  const processed = deposits.filter((d) => d.status !== 'pending');
+  const getStatusBadge = (status) => {
+    const variants = {
+      pending: 'secondary',
+      confirmed: 'default',
+      rejected: 'destructive',
+      cancelled: 'outline'
+    };
+    
+    const labels = {
+      pending: 'Pendente',
+      confirmed: 'Confirmado',
+      rejected: 'Rejeitado',
+      cancelled: 'Cancelado'
+    };
+    
+    return (
+      <Badge variant={variants[status] || 'secondary'}>
+        {labels[status] || status}
+      </Badge>
+    );
+  };
+
+  const getMethodBadge = (method) => {
+    const labels = {
+      pix: 'PIX',
+      bank_transfer: 'Transferência',
+      crypto: 'Cripto',
+      credit_card: 'Cartão'
+    };
+    
+    return (
+      <Badge variant="outline">
+        {labels[method] || method}
+      </Badge>
+    );
+  };
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <div className="w-8 h-8 border-4 border-gold border-t-transparent rounded-full animate-spin"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
-      <div className="rounded-xl border border-border bg-card p-6">
-        <h3 className="font-semibold text-foreground mb-4 flex items-center gap-2">
-          Depósitos Pendentes
-          {pending.length > 0 && (
-            <Badge className="bg-amber-500/10 text-amber-400 border-amber-500/30">{pending.length}</Badge>
-          )}
-        </h3>
-        {pending.length === 0 ? (
-          <p className="text-sm text-muted-foreground text-center py-4">Nenhum depósito pendente</p>
-        ) : (
-          <div className="space-y-3">
-            {pending.map((d) => (
-              <div key={d.id} className="p-4 rounded-lg bg-secondary/50 border border-border space-y-2">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-foreground">{d.user_name || d.user_email}</p>
-                    <p className="text-xs text-muted-foreground">{d.user_email}</p>
-                  </div>
-                  <p className="text-lg font-bold text-green-400">{formatCurrency(d.amount)}</p>
-                </div>
-                <div className="flex items-center gap-4 text-xs text-muted-foreground">
-                  <span>TXID: <span className="font-mono text-foreground">{d.txid || 'N/A'}</span></span>
-                  <span>{d.created_date ? format(new Date(d.created_date), 'dd/MM/yyyy HH:mm') : ''}</span>
-                </div>
-                <div className="flex gap-2 pt-2">
-                  <Button size="sm" onClick={() => handleApprove(d)} className="bg-green-600 hover:bg-green-700 text-white flex-1">
-                    <CheckCircle className="w-4 h-4 mr-1" /> Aprovar
-                  </Button>
-                  <Button size="sm" variant="outline" onClick={() => handleReject(d)} className="text-red-400 border-red-500/30 hover:bg-red-500/10 flex-1">
-                    <XCircle className="w-4 h-4 mr-1" /> Rejeitar
-                  </Button>
-                </div>
-              </div>
-            ))}
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-foreground">Gerenciar Depósitos</h1>
+          <p className="text-sm text-muted-foreground mt-1">
+            Visualize e aprove todos os depósitos do sistema
+          </p>
+        </div>
+        <div className="flex items-center gap-2">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <Input
+              placeholder="Buscar depósitos..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-10 w-64"
+            />
           </div>
-        )}
-      </div>
-
-      <div className="rounded-xl border border-border bg-card p-6">
-        <h3 className="font-semibold text-foreground mb-4">Histórico de Depósitos</h3>
-        <div className="space-y-2">
-          {processed.map((d) => (
-            <div key={d.id} className="flex items-center justify-between p-3 rounded-lg bg-secondary/50 border border-border">
-              <div>
-                <p className="text-sm font-medium text-foreground">{d.user_name || d.user_email}</p>
-                <p className="text-xs text-muted-foreground">
-                  {d.created_date ? format(new Date(d.created_date), 'dd/MM/yyyy') : ''}
-                </p>
-              </div>
-              <div className="text-right">
-                <p className="text-sm font-semibold text-foreground">{formatCurrency(d.amount)}</p>
-                <Badge variant="outline" className={d.status === 'approved' ? 'text-green-400 border-green-500/30' : 'text-red-400 border-red-500/30'}>
-                  {d.status === 'approved' ? 'Aprovado' : 'Rejeitado'}
-                </Badge>
-              </div>
-            </div>
-          ))}
-          {processed.length === 0 && (
-            <p className="text-sm text-muted-foreground text-center py-4">Nenhum histórico</p>
-          )}
+          <Select value={statusFilter} onValueChange={setStatusFilter}>
+            <SelectTrigger className="w-32">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todos</SelectItem>
+              <SelectItem value="pending">Pendentes</SelectItem>
+              <SelectItem value="confirmed">Confirmados</SelectItem>
+              <SelectItem value="rejected">Rejeitados</SelectItem>
+              <SelectItem value="cancelled">Cancelados</SelectItem>
+            </SelectContent>
+          </Select>
+          <Select value={methodFilter} onValueChange={setMethodFilter}>
+            <SelectTrigger className="w-32">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todos</SelectItem>
+              <SelectItem value="pix">PIX</SelectItem>
+              <SelectItem value="bank_transfer">Transferência</SelectItem>
+              <SelectItem value="crypto">Cripto</SelectItem>
+              <SelectItem value="credit_card">Cartão</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
       </div>
+
+      <div className="grid gap-4">
+        {filteredDeposits.map((deposit) => (
+          <Card key={deposit.id}>
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div className="flex-1">
+                  <div className="flex items-center gap-4 mb-4">
+                    <div>
+                      <h3 className="font-semibold text-foreground">{deposit.profiles?.full_name || 'Usuário'}</h3>
+                      <p className="text-sm text-muted-foreground">{deposit.profiles?.email}</p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      {getStatusBadge(deposit.status)}
+                      {getMethodBadge(deposit.method)}
+                    </div>
+                  </div>
+                  
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                    <div>
+                      <p className="text-muted-foreground">Valor</p>
+                      <p className="font-medium">{formatCurrency(deposit.amount)}</p>
+                    </div>
+                    <div>
+                      <p className="text-muted-foreground">Hash da Transação</p>
+                      <p className="font-mono text-xs">{deposit.transaction_hash || 'Não informado'}</p>
+                    </div>
+                    <div>
+                      <p className="text-muted-foreground">Data</p>
+                      <p className="font-medium">{new Date(deposit.created_at).toLocaleDateString('pt-BR')}</p>
+                    </div>
+                    <div>
+                      <p className="text-muted-foreground">Confirmação</p>
+                      <p className="font-medium">
+                        {deposit.confirmed_at 
+                          ? new Date(deposit.confirmed_at).toLocaleDateString('pt-BR')
+                          : 'Pendente'
+                        }
+                      </p>
+                    </div>
+                  </div>
+                  
+                  {deposit.description && (
+                    <div className="mt-4">
+                      <p className="text-sm text-muted-foreground">Descrição</p>
+                      <p className="text-sm">{deposit.description}</p>
+                    </div>
+                  )}
+                  
+                  {deposit.proof_url && (
+                    <div className="mt-4">
+                      <p className="text-sm text-muted-foreground">Comprovante</p>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => window.open(deposit.proof_url, '_blank')}
+                      >
+                        <FileText className="w-4 h-4 mr-1" />
+                        Ver Comprovante
+                      </Button>
+                    </div>
+                  )}
+                  
+                  {deposit.admin_notes && (
+                    <div className="mt-4">
+                      <p className="text-sm text-muted-foreground">Notas do Admin</p>
+                      <p className="text-sm bg-secondary/50 p-2 rounded">{deposit.admin_notes}</p>
+                    </div>
+                  )}
+                </div>
+                
+                <div className="flex items-center gap-2 ml-4">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => handleViewDeposit(deposit)}
+                  >
+                    <Eye className="w-4 h-4 mr-1" />
+                    Ver
+                  </Button>
+                  
+                  {deposit.status === 'pending' && (
+                    <>
+                      <Button
+                        size="sm"
+                        variant="default"
+                        onClick={() => {
+                          setSelectedDeposit(deposit);
+                          setShowDepositDialog(true);
+                        }}
+                      >
+                        <CheckCircle className="w-4 h-4 mr-1" />
+                        Aprovar
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="destructive"
+                        onClick={() => {
+                          setSelectedDeposit(deposit);
+                          setAdminNotes('');
+                          setShowDepositDialog(true);
+                        }}
+                      >
+                        <XCircle className="w-4 h-4 mr-1" />
+                        Rejeitar
+                      </Button>
+                    </>
+                  )}
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+
+      {/* Deposit Details Dialog */}
+      <Dialog open={showDepositDialog} onOpenChange={setShowDepositDialog}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Gerenciar Depósito</DialogTitle>
+          </DialogHeader>
+          
+          {selectedDeposit && (
+            <div className="space-y-6">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <p className="text-sm text-muted-foreground">Usuário</p>
+                  <p className="font-medium">{selectedDeposit.profiles?.full_name}</p>
+                  <p className="text-sm text-muted-foreground">{selectedDeposit.profiles?.email}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Valor</p>
+                  <p className="font-medium text-lg">{formatCurrency(selectedDeposit.amount)}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Método</p>
+                  <div className="mt-1">{getMethodBadge(selectedDeposit.method)}</div>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Status</p>
+                  <div className="mt-1">{getStatusBadge(selectedDeposit.status)}</div>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Data do Depósito</p>
+                  <p className="font-medium">{new Date(selectedDeposit.created_at).toLocaleString('pt-BR')}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Hash da Transação</p>
+                  <p className="font-mono text-xs">{selectedDeposit.transaction_hash || 'Não informado'}</p>
+                </div>
+              </div>
+              
+              {selectedDeposit.description && (
+                <div>
+                  <p className="text-sm text-muted-foreground">Descrição</p>
+                  <p className="text-sm bg-secondary/50 p-2 rounded">{selectedDeposit.description}</p>
+                </div>
+              )}
+              
+              {selectedDeposit.proof_url && (
+                <div>
+                  <p className="text-sm text-muted-foreground">Comprovante</p>
+                  <Button
+                    variant="outline"
+                    onClick={() => window.open(selectedDeposit.proof_url, '_blank')}
+                  >
+                    <FileText className="w-4 h-4 mr-1" />
+                    Ver Comprovante
+                  </Button>
+                </div>
+              )}
+              
+              {selectedDeposit.status === 'pending' && (
+                <div>
+                  <p className="text-sm text-muted-foreground mb-2">Notas do Admin</p>
+                  <Input
+                    placeholder="Adicione notas sobre esta aprovação/rejeição..."
+                    value={adminNotes}
+                    onChange={(e) => setAdminNotes(e.target.value)}
+                  />
+                </div>
+              )}
+            </div>
+          )}
+          
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowDepositDialog(false)}>
+              Cancelar
+            </Button>
+            {selectedDeposit?.status === 'pending' && (
+              <>
+                <Button
+                  variant="destructive"
+                  onClick={() => handleUpdateStatus('rejected')}
+                  disabled={updateStatusMutation.isPending}
+                >
+                  {updateStatusMutation.isPending ? 'Processando...' : 'Rejeitar'}
+                </Button>
+                <Button
+                  onClick={() => handleUpdateStatus('confirmed')}
+                  disabled={updateStatusMutation.isPending}
+                >
+                  {updateStatusMutation.isPending ? 'Processando...' : 'Aprovar'}
+                </Button>
+              </>
+            )}
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

@@ -17,7 +17,17 @@ export const AuthProvider = ({ children }) => {
       const { data: { session }, error } = await supabase.auth.getSession()
       
       if (session) {
-        setUser(session.user)
+        // Fetch user profile to get role from profiles table
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('role')
+          .eq('user_id', session.user.id)
+          .single();
+        
+        setUser({
+          ...session.user,
+          role: profile?.role || 'user' // Default to 'user' if not found
+        })
         setIsAuthenticated(true)
       }
       
@@ -29,8 +39,20 @@ export const AuthProvider = ({ children }) => {
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
+        console.log('Auth state changed:', { event, session: session?.user });
+        
         if (session) {
-          setUser(session.user)
+          // Fetch user profile to get role from profiles table
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('role')
+            .eq('user_id', session.user.id)
+            .single();
+          
+          setUser({
+            ...session.user,
+            role: profile?.role || 'user' // Default to 'user' if not found
+          })
           setIsAuthenticated(true)
         } else {
           setUser(null)

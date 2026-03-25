@@ -1,202 +1,408 @@
-import React, { useState, useEffect } from 'react';
-import { useAuth } from '@/lib/AuthContext';
-// import { base44 } from '@/api/base44Client'; // Removido - agora usa Supabase
-import { supabase } from '@/lib/supabase'; // Adicionado
+import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { formatCurrency } from '@/lib/planConfig';
+import { supabase } from '@/lib/supabase';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { toast } from 'sonner';
-import { Search, UserCheck, Trash2, Edit, Shield, Eye } from 'lucide-react';
-import { impersonation } from '@/lib/impersonation';
+import { formatCurrency } from '@/lib/planConfig';
+import { Users, Search, Filter, Eye, Edit, Ban, CheckCircle, XCircle, Clock } from 'lucide-react';
+
+// Fetch users
+const fetchUsers = async () => {
+  const { data, error } = await supabase
+    .from('profiles')
+    .select('*')
+    .order('created_at', { ascending: false });
+
+  if (error) throw error;
+  return data;
+};
+
+// Update user status
+const updateUserStatus = async ({ userId, status }) => {
+  const { data, error } = await supabase
+    .from('profiles')
+    .update({ status })
+    .eq('user_id', userId)
+    .select()
+    .single();
+
+  if (error) throw error;
+  return data;
+};
+
+// Update user role
+const updateUserRole = async ({ userId, role }) => {
+  const { data, error } = await supabase
+    .from('profiles')
+    .update({ role })
+    .eq('user_id', userId)
+    .select()
+    .single();
+
+  if (error) throw error;
+  return data;
+};
 
 export default function AdminUsers() {
+  const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState('all');
+  const [roleFilter, setRoleFilter] = useState('all');
+  const [selectedUser, setSelectedUser] = useState(null);
+  const [showUserDialog, setShowUserDialog] = useState(false);
   const queryClient = useQueryClient();
-  const [search, setSearch] = useState('');
-  const [editUser, setEditUser] = useState(null);
-  const [editForm, setEditForm] = useState({});
 
-  const { data: users = [] } = useQuery({
+  const { data: users = [], isLoading } = useQuery({
     queryKey: ['admin-users'],
-    queryFn: () => base44.entities.User.list(),
+    queryFn: fetchUsers,
   });
 
-  // Busca relações nível 1 para saber o patrocinador de cada usuário
-  const { data: relations = [] } = useQuery({
-    queryKey: ['admin-network-relations'],
-    queryFn: () => base44.entities.NetworkRelation.list(),
-  });
-
-  // Mapa: referred_id/referred_email → sponsor name (apenas nível 1 = patrocinador direto)
-  const sponsorMapById = {};
-  const sponsorMapByEmail = {};
-  relations
-    .filter((r) => Number(r.level) === 1)
-    .forEach((r) => {
-      if (r.referred_id) sponsorMapById[r.referred_id] = r.user_name || r.user_email;
-      if (r.referred_email) sponsorMapByEmail[r.referred_email] = r.user_name || r.user_email;
-    });
-
-  const updateUser = useMutation({
-    mutationFn: ({ id, data }) => base44.entities.User.update(id, data),
+  const updateStatusMutation = useMutation({
+    mutationFn: updateUserStatus,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['admin-users'] });
-      toast.success('Usuário atualizado');
-      setEditUser(null);
+      queryClient.invalidateQueries(['admin-users']);
+      toast.success('Status do usuário atualizado!');
+    },
+    onError: (error) => {
+      toast.error('Erro ao atualizar status: ' + error.message);
     },
   });
 
-  const deleteUser = useMutation({
-    mutationFn: (id) => base44.entities.User.delete(id),
+  const updateRoleMutation = useMutation({
+    mutationFn: updateUserRole,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['admin-users'] });
-      toast.success('Usuário removido');
+      queryClient.invalidateQueries(['admin-users']);
+      toast.success('Role do usuário atualizado!');
+    },
+    onError: (error) => {
+      toast.error('Erro ao atualizar role: ' + error.message);
     },
   });
 
-  const filteredUsers = users.filter(
-    (u) =>
-      u.full_name?.toLowerCase().includes(search.toLowerCase()) ||
-      u.email?.toLowerCase().includes(search.toLowerCase())
-  );
+  const filteredUsers = users.filter(user => {
+    const matchesSearch = user.full_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         user.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         user.document_number?.toLowerCase().includes(searchTerm.toLowerCase());
+    
+    const matchesStatus = statusFilter === 'all' || user.status === statusFilter;
+    const matchesRole = roleFilter === 'all' || user.role === roleFilter;
+    
+    return matchesSearch && matchesStatus && matchesRole;
+  });
 
-  const handleEdit = (user) => {
-    setEditUser(user);
-    setEditForm({
-      role: user.role || 'user',
-      status: user.status || 'pending',
-      total_invested: user.total_invested || 0,
-      available_balance: user.available_balance || 0,
-    });
+  const handleViewUser = (user) => {
+    setSelectedUser(user);
+    setShowUserDialog(true);
   };
 
-  const handleActivate = (user) => {
-    updateUser.mutate({ id: user.id, data: { status: 'active' } });
+  const handleUpdateStatus = (userId, newStatus) => {
+    updateStatusMutation.mutate({ userId, status: newStatus });
   };
 
-  const statusColors = {
-    active: 'bg-green-500/10 text-green-400 border-green-500/30',
-    pending: 'bg-amber-500/10 text-amber-400 border-amber-500/30',
-    suspended: 'bg-red-500/10 text-red-400 border-red-500/30',
-    blocked: 'bg-red-500/10 text-red-400 border-red-500/30',
+  const handleUpdateRole = (userId, newRole) => {
+    updateRoleMutation.mutate({ userId, role: newRole });
   };
+
+  const getStatusBadge = (status) => {
+    const variants = {
+      active: 'default',
+      inactive: 'secondary',
+      suspended: 'destructive',
+      banned: 'destructive'
+    };
+    
+    const labels = {
+      active: 'Ativo',
+      inactive: 'Inativo',
+      suspended: 'Suspenso',
+      banned: 'Banido'
+    };
+    
+    return (
+      <Badge variant={variants[status] || 'secondary'}>
+        {labels[status] || status}
+      </Badge>
+    );
+  };
+
+  const getRoleBadge = (role) => {
+    const variants = {
+      user: 'secondary',
+      admin: 'default',
+      super_admin: 'destructive'
+    };
+    
+    const labels = {
+      user: 'Usuário',
+      admin: 'Admin',
+      super_admin: 'Super Admin'
+    };
+    
+    return (
+      <Badge variant={variants[role] || 'secondary'}>
+        {labels[role] || role}
+      </Badge>
+    );
+  };
+
+  const getKYCBadge = (kycStatus) => {
+    const variants = {
+      pending: 'secondary',
+      approved: 'default',
+      rejected: 'destructive',
+      verification_required: 'outline'
+    };
+    
+    const labels = {
+      pending: 'Pendente',
+      approved: 'Aprovado',
+      rejected: 'Rejeitado',
+      verification_required: 'Verificação Req.'
+    };
+    
+    return (
+      <Badge variant={variants[kycStatus] || 'secondary'}>
+        {labels[kycStatus] || kycStatus}
+      </Badge>
+    );
+  };
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <div className="w-8 h-8 border-4 border-gold border-t-transparent rounded-full animate-spin"></div>
+      </div>
+    );
+  }
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-center gap-3">
-        <div className="relative flex-1">
-          <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-          <Input
-            placeholder="Buscar por nome ou email..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="pl-10 bg-secondary border-border"
-          />
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-foreground">Gerenciar Usuários</h1>
+          <p className="text-sm text-muted-foreground mt-1">
+            Visualize e gerencie todos os usuários do sistema
+          </p>
+        </div>
+        <div className="flex items-center gap-2">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <Input
+              placeholder="Buscar usuários..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-10 w-64"
+            />
+          </div>
+          <Select value={statusFilter} onValueChange={setStatusFilter}>
+            <SelectTrigger className="w-32">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todos</SelectItem>
+              <SelectItem value="active">Ativos</SelectItem>
+              <SelectItem value="inactive">Inativos</SelectItem>
+              <SelectItem value="suspended">Suspensos</SelectItem>
+              <SelectItem value="banned">Banidos</SelectItem>
+            </SelectContent>
+          </Select>
+          <Select value={roleFilter} onValueChange={setRoleFilter}>
+            <SelectTrigger className="w-32">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todos</SelectItem>
+              <SelectItem value="user">Usuários</SelectItem>
+              <SelectItem value="admin">Admins</SelectItem>
+              <SelectItem value="super_admin">Super Admins</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
       </div>
 
-      <div className="space-y-2">
-        {filteredUsers.map((u) => (
-          <div key={u.id} className="flex items-center justify-between p-4 rounded-xl bg-card border border-border">
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2">
-                <p className="text-sm font-medium text-foreground truncate">{u.full_name || 'Sem nome'}</p>
-                {u.role === 'admin' && <Shield className="w-3.5 h-3.5 text-gold flex-shrink-0" />}
+      <div className="grid gap-4">
+        {filteredUsers.map((user) => (
+          <Card key={user.id}>
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div className="flex-1">
+                  <div className="flex items-center gap-4 mb-4">
+                    <div>
+                      <h3 className="font-semibold text-foreground">{user.full_name || 'Sem nome'}</h3>
+                      <p className="text-sm text-muted-foreground">{user.email}</p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      {getStatusBadge(user.status)}
+                      {getRoleBadge(user.role)}
+                      {getKYCBadge(user.kyc_status)}
+                    </div>
+                  </div>
+                  
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                    <div>
+                      <p className="text-muted-foreground">CPF/CNPJ</p>
+                      <p className="font-medium">{user.document_number || 'Não informado'}</p>
+                    </div>
+                    <div>
+                      <p className="text-muted-foreground">Telefone</p>
+                      <p className="font-medium">{user.phone || 'Não informado'}</p>
+                    </div>
+                    <div>
+                      <p className="text-muted-foreground">Saldo</p>
+                      <p className="font-medium">{formatCurrency(user.available_balance || 0)}</p>
+                    </div>
+                    <div>
+                      <p className="text-muted-foreground">Total Investido</p>
+                      <p className="font-medium">{formatCurrency(user.total_invested || 0)}</p>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-center gap-2 text-xs text-muted-foreground mt-4">
+                    <Clock className="w-3 h-3" />
+                    <span>Cadastro: {new Date(user.created_at).toLocaleDateString('pt-BR')}</span>
+                    {user.last_login && (
+                      <>
+                        <span>•</span>
+                        <span>Último login: {new Date(user.last_login).toLocaleDateString('pt-BR')}</span>
+                      </>
+                    )}
+                  </div>
+                </div>
+                
+                <div className="flex items-center gap-2 ml-4">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => handleViewUser(user)}
+                  >
+                    <Eye className="w-4 h-4 mr-1" />
+                    Ver
+                  </Button>
+                  
+                  {user.status === 'active' ? (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => handleUpdateStatus(user.user_id, 'inactive')}
+                    >
+                      <Ban className="w-4 h-4 mr-1" />
+                      Suspender
+                    </Button>
+                  ) : (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => handleUpdateStatus(user.user_id, 'active')}
+                    >
+                      <CheckCircle className="w-4 h-4 mr-1" />
+                      Ativar
+                    </Button>
+                  )}
+                  
+                  <Select
+                    value={user.role}
+                    onValueChange={(newRole) => handleUpdateRole(user.user_id, newRole)}
+                  >
+                    <SelectTrigger className="w-24">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="user">Usuário</SelectItem>
+                      <SelectItem value="admin">Admin</SelectItem>
+                      <SelectItem value="super_admin">Super Admin</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
-              <p className="text-xs text-muted-foreground truncate">{u.email}</p>
-              {(sponsorMapById[u.id] || sponsorMapByEmail[u.email]) && (
-                <p className="text-xs text-gold truncate">👤 Patrocinador: {sponsorMapById[u.id] || sponsorMapByEmail[u.email]}</p>
-              )}
-              <div className="flex items-center gap-2 mt-1">
-                <Badge variant="outline" className={statusColors[u.status || 'pending']}>
-                  {u.status || 'pending'}
-                </Badge>
-                <span className="text-xs text-muted-foreground">Investido: {formatCurrency(u.total_invested || 0)}</span>
-              </div>
-            </div>
-            <div className="flex items-center gap-2 flex-shrink-0 ml-2">
-              {u.status !== 'active' && (
-                <Button size="sm" variant="outline" onClick={() => handleActivate(u)} className="text-green-400 border-green-500/30 hover:bg-green-500/10">
-                  <UserCheck className="w-4 h-4" />
-                </Button>
-              )}
-              <Button size="sm" variant="outline" onClick={() => impersonation.start(u)} className="text-amber-400 border-amber-500/30 hover:bg-amber-500/10" title="Visualizar como este usuário">
-                <Eye className="w-4 h-4" />
-              </Button>
-              <Button size="sm" variant="outline" onClick={() => handleEdit(u)}>
-                <Edit className="w-4 h-4" />
-              </Button>
-              <Button size="sm" variant="outline" onClick={() => deleteUser.mutate(u.id)} className="text-red-400 border-red-500/30 hover:bg-red-500/10">
-                <Trash2 className="w-4 h-4" />
-              </Button>
-            </div>
-          </div>
+            </CardContent>
+          </Card>
         ))}
       </div>
 
-      {/* Edit dialog */}
-      <Dialog open={!!editUser} onOpenChange={() => setEditUser(null)}>
-        <DialogContent className="bg-card border-border">
+      {/* User Details Dialog */}
+      <Dialog open={showUserDialog} onOpenChange={setShowUserDialog}>
+        <DialogContent className="max-w-2xl">
           <DialogHeader>
-            <DialogTitle className="text-foreground">Editar Usuário</DialogTitle>
+            <DialogTitle>Detalhes do Usuário</DialogTitle>
           </DialogHeader>
-          <div className="space-y-4">
-            <p className="text-sm text-muted-foreground">{editUser?.full_name} - {editUser?.email}</p>
-            <div>
-              <label className="text-sm font-medium text-foreground">Função</label>
-              <Select value={editForm.role} onValueChange={(v) => setEditForm({ ...editForm, role: v })}>
-                <SelectTrigger className="mt-1 bg-secondary border-border">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="user">Usuário</SelectItem>
-                  <SelectItem value="admin">Administrador</SelectItem>
-                </SelectContent>
-              </Select>
+          
+          {selectedUser && (
+            <div className="space-y-6">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <p className="text-sm text-muted-foreground">Nome Completo</p>
+                  <p className="font-medium">{selectedUser.full_name || 'Não informado'}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Email</p>
+                  <p className="font-medium">{selectedUser.email}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">CPF/CNPJ</p>
+                  <p className="font-medium">{selectedUser.document_number || 'Não informado'}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Telefone</p>
+                  <p className="font-medium">{selectedUser.phone || 'Não informado'}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Status</p>
+                  <div className="mt-1">{getStatusBadge(selectedUser.status)}</div>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Role</p>
+                  <div className="mt-1">{getRoleBadge(selectedUser.role)}</div>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">KYC</p>
+                  <div className="mt-1">{getKYCBadge(selectedUser.kyc_status)}</div>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Código de Indicação</p>
+                  <p className="font-medium">{selectedUser.referral_code || 'Não gerado'}</p>
+                </div>
+              </div>
+              
+              <div className="grid grid-cols-3 gap-4">
+                <div>
+                  <p className="text-sm text-muted-foreground">Saldo Disponível</p>
+                  <p className="font-medium">{formatCurrency(selectedUser.available_balance || 0)}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Total Investido</p>
+                  <p className="font-medium">{formatCurrency(selectedUser.total_invested || 0)}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Total Sacado</p>
+                  <p className="font-medium">{formatCurrency(selectedUser.total_withdrawn || 0)}</p>
+                </div>
+              </div>
+              
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <p className="text-sm text-muted-foreground">Data de Cadastro</p>
+                  <p className="font-medium">{new Date(selectedUser.created_at).toLocaleString('pt-BR')}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Último Login</p>
+                  <p className="font-medium">
+                    {selectedUser.last_login 
+                      ? new Date(selectedUser.last_login).toLocaleString('pt-BR')
+                      : 'Nunca'
+                    }
+                  </p>
+                </div>
+              </div>
             </div>
-            <div>
-              <label className="text-sm font-medium text-foreground">Status</label>
-              <Select value={editForm.status} onValueChange={(v) => setEditForm({ ...editForm, status: v })}>
-                <SelectTrigger className="mt-1 bg-secondary border-border">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="pending">Pendente</SelectItem>
-                  <SelectItem value="active">Ativo</SelectItem>
-                  <SelectItem value="suspended">Suspenso</SelectItem>
-                  <SelectItem value="blocked">Bloqueado</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div>
-              <label className="text-sm font-medium text-foreground">Total Investido</label>
-              <Input
-                type="number"
-                value={editForm.total_invested}
-                onChange={(e) => setEditForm({ ...editForm, total_invested: parseFloat(e.target.value) || 0 })}
-                className="mt-1 bg-secondary border-border"
-              />
-            </div>
-            <div>
-              <label className="text-sm font-medium text-foreground">Saldo Disponível</label>
-              <Input
-                type="number"
-                value={editForm.available_balance}
-                onChange={(e) => setEditForm({ ...editForm, available_balance: parseFloat(e.target.value) || 0 })}
-                className="mt-1 bg-secondary border-border"
-              />
-            </div>
-          </div>
+          )}
+          
           <DialogFooter>
-            <Button variant="outline" onClick={() => setEditUser(null)}>Cancelar</Button>
-            <Button
-              onClick={() => updateUser.mutate({ id: editUser.id, data: editForm })}
-              className="bg-gold hover:bg-gold-hover text-primary-foreground"
-            >
-              Salvar
+            <Button variant="outline" onClick={() => setShowUserDialog(false)}>
+              Fechar
             </Button>
           </DialogFooter>
         </DialogContent>

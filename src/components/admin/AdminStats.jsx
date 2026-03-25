@@ -1,65 +1,210 @@
 import React from 'react';
-// import { base44 } from '@/api/base44Client'; // Removido - agora usa Supabase
-import { supabase } from '@/lib/supabase'; // Adicionado
 import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/lib/supabase';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Users, TrendingUp, DollarSign, Wallet, Activity, ArrowUpRight, ArrowDownRight } from 'lucide-react';
 import { formatCurrency } from '@/lib/planConfig';
-import { Users, DollarSign, TrendingUp, Clock } from 'lucide-react';
-import StatsCard from '@/components/dashboard/StatsCard';
+
+// Fetch dashboard statistics
+const fetchDashboardStats = async () => {
+  const [
+    usersResult,
+    depositsResult,
+    withdrawalsResult,
+    investmentsResult,
+    yieldsResult
+  ] = await Promise.all([
+    // Total users
+    supabase.from('profiles').select('id').eq('status', 'active'),
+    // Total deposits
+    supabase.from('deposits').select('amount').eq('status', 'confirmed'),
+    // Total withdrawals
+    supabase.from('withdrawals').select('amount').eq('status', 'confirmed'),
+    // Active investments
+    supabase.from('investments').select('amount, status').eq('status', 'active'),
+    // Today's yields
+    supabase.from('yields').select('amount').gte('date', new Date().toISOString().split('T')[0])
+  ]);
+
+  const stats = {
+    totalUsers: usersResult.data?.length || 0,
+    totalDeposits: depositsResult.data?.reduce((sum, d) => sum + parseFloat(d.amount), 0) || 0,
+    totalWithdrawals: withdrawalsResult.data?.reduce((sum, w) => sum + parseFloat(w.amount), 0) || 0,
+    activeInvestments: investmentsResult.data?.reduce((sum, i) => sum + parseFloat(i.amount), 0) || 0,
+    todayYields: yieldsResult.data?.reduce((sum, y) => sum + parseFloat(y.amount), 0) || 0,
+    activeInvestmentsCount: investmentsResult.data?.length || 0,
+  };
+
+  // Calculate net balance
+  stats.netBalance = stats.totalDeposits - stats.totalWithdrawals;
+
+  // Get recent activity
+  const [recentDeposits, recentWithdrawals, recentUsers] = await Promise.all([
+    supabase.from('deposits').select('*').eq('status', 'confirmed').order('created_at', { ascending: false }).limit(5),
+    supabase.from('withdrawals').select('*').eq('status', 'confirmed').order('created_at', { ascending: false }).limit(5),
+    supabase.from('profiles').select('*').order('created_at', { ascending: false }).limit(5)
+  ]);
+
+  stats.recentActivity = [
+    ...recentDeposits.data?.map(d => ({ ...d, type: 'deposit' })) || [],
+    ...recentWithdrawals.data?.map(w => ({ ...w, type: 'withdrawal' })) || [],
+    ...recentUsers.data?.map(u => ({ ...u, type: 'user' })) || []
+  ].sort((a, b) => new Date(b.created_at) - new Date(a.created_at)).slice(0, 10);
+
+  return stats;
+};
 
 export default function AdminStats() {
-  const { data: users = [] } = useQuery({
-    queryKey: ['admin-users'],
-    queryFn: () => base44.entities.User.list(),
+  const { data: stats, isLoading } = useQuery({
+    queryKey: ['admin-dashboard-stats'],
+    queryFn: fetchDashboardStats,
   });
 
-  const { data: investments = [] } = useQuery({
-    queryKey: ['admin-investments'],
-    queryFn: () => base44.entities.Investment.list(),
-  });
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <div className="w-8 h-8 border-4 border-gold border-t-transparent rounded-full animate-spin"></div>
+      </div>
+    );
+  }
 
-  const { data: transactions = [] } = useQuery({
-    queryKey: ['admin-transactions'],
-    queryFn: () => base44.entities.Transaction.list('-created_date', 50),
-  });
-
-  const totalUsers = users.length;
-  const activeUsers = users.filter((u) => u.status === 'active').length;
-  const pendingUsers = users.filter((u) => u.status === 'pending').length;
-  const totalInvested = investments.filter((i) => i.status === 'active').reduce((sum, i) => sum + (i.amount || 0), 0);
-  const pendingDeposits = transactions.filter((t) => t.type === 'deposit' && t.status === 'pending').length;
-  const pendingWithdrawals = transactions.filter((t) => t.type === 'withdrawal' && t.status === 'pending').length;
+  const statCards = [
+    {
+      title: 'Total de Usuários',
+      value: stats?.totalUsers || 0,
+      icon: Users,
+      color: 'text-blue-400',
+      bgColor: 'bg-blue-500/10',
+      borderColor: 'border-blue-500/30',
+      change: '+12%',
+      changeType: 'positive'
+    },
+    {
+      title: 'Total Depositado',
+      value: formatCurrency(stats?.totalDeposits || 0),
+      icon: DollarSign,
+      color: 'text-green-400',
+      bgColor: 'bg-green-500/10',
+      borderColor: 'border-green-500/30',
+      change: '+8%',
+      changeType: 'positive'
+    },
+    {
+      title: 'Total Sacado',
+      value: formatCurrency(stats?.totalWithdrawals || 0),
+      icon: Wallet,
+      color: 'text-red-400',
+      bgColor: 'bg-red-500/10',
+      borderColor: 'border-red-500/30',
+      change: '+5%',
+      changeType: 'positive'
+    },
+    {
+      title: 'Investimentos Ativos',
+      value: formatCurrency(stats?.activeInvestments || 0),
+      icon: TrendingUp,
+      color: 'text-gold',
+      bgColor: 'bg-gold/10',
+      borderColor: 'border-gold/30',
+      change: '+15%',
+      changeType: 'positive'
+    },
+    {
+      title: 'Saldo Líquido',
+      value: formatCurrency(stats?.netBalance || 0),
+      icon: Activity,
+      color: 'text-purple-400',
+      bgColor: 'bg-purple-500/10',
+      borderColor: 'border-purple-500/30',
+      change: '+10%',
+      changeType: 'positive'
+    },
+    {
+      title: 'Rendimentos Hoje',
+      value: formatCurrency(stats?.todayYields || 0),
+      icon: ArrowUpRight,
+      color: 'text-emerald-400',
+      bgColor: 'bg-emerald-500/10',
+      borderColor: 'border-emerald-500/30',
+      change: '+20%',
+      changeType: 'positive'
+    }
+  ];
 
   return (
     <div className="space-y-6">
-      <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
-        <StatsCard title="Total Usuários" value={totalUsers} icon={Users} color="blue" isCurrency={false} />
-        <StatsCard title="Usuários Ativos" value={activeUsers} icon={Users} color="green" isCurrency={false} />
-        <StatsCard title="Pendentes Ativação" value={pendingUsers} icon={Clock} color="amber" isCurrency={false} />
-        <StatsCard title="Total Investido" value={totalInvested} icon={DollarSign} color="gold" />
-        <StatsCard title="Depósitos Pendentes" value={pendingDeposits} icon={TrendingUp} color="green" isCurrency={false} />
-        <StatsCard title="Saques Pendentes" value={pendingWithdrawals} icon={TrendingUp} color="purple" isCurrency={false} />
+      <div>
+        <h1 className="text-2xl font-bold text-foreground">Dashboard</h1>
+        <p className="text-sm text-muted-foreground mt-1">
+          Visão geral do sistema Imperium Club
+        </p>
       </div>
 
-      {/* Recent activity */}
-      <div className="rounded-xl border border-border bg-card p-6">
-        <h3 className="font-semibold text-foreground mb-4">Atividade Recente</h3>
-        <div className="space-y-2">
-          {transactions.slice(0, 10).map((tx) => (
-            <div key={tx.id} className="flex items-center justify-between p-3 rounded-lg bg-secondary/50 border border-border">
-              <div>
-                <p className="text-sm font-medium text-foreground">{tx.user_name || tx.user_email}</p>
-                <p className="text-xs text-muted-foreground capitalize">{tx.type?.replace(/_/g, ' ')} - {tx.status}</p>
-              </div>
-              <p className={`text-sm font-semibold ${['deposit', 'yield'].includes(tx.type) ? 'text-green-400' : 'text-red-400'}`}>
-                {formatCurrency(tx.amount)}
-              </p>
-            </div>
-          ))}
-          {transactions.length === 0 && (
-            <p className="text-sm text-muted-foreground text-center py-4">Nenhuma atividade</p>
-          )}
-        </div>
+      {/* Stats Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {statCards.map((stat, index) => {
+          const Icon = stat.icon;
+          return (
+            <Card key={index} className={`border ${stat.borderColor} bg-gradient-to-br ${stat.bgColor} to-transparent`}>
+              <CardHeader className="pb-3">
+                <div className="flex items-center justify-between">
+                  <div className={`p-2 rounded-lg bg-background/50`}>
+                    <Icon className={`w-6 h-6 ${stat.color}`} />
+                  </div>
+                  <div className={`flex items-center text-xs ${stat.changeType === 'positive' ? 'text-green-400' : 'text-red-400'}`}>
+                    {stat.changeType === 'positive' ? <ArrowUpRight className="w-3 h-3 mr-1" /> : <ArrowDownRight className="w-3 h-3 mr-1" />}
+                    {stat.change}
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-1">
+                  <p className="text-2xl font-bold text-foreground">{stat.value}</p>
+                  <p className="text-xs text-muted-foreground">{stat.title}</p>
+                </div>
+              </CardContent>
+            </Card>
+          );
+        })}
       </div>
+
+      {/* Recent Activity */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Activity className="w-5 h-5" />
+            Atividade Recente
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-3">
+            {stats?.recentActivity?.map((activity, index) => (
+              <div key={index} className="flex items-center justify-between p-3 rounded-lg bg-secondary/50">
+                <div className="flex items-center gap-3">
+                  <div className={`w-2 h-2 rounded-full ${
+                    activity.type === 'deposit' ? 'bg-green-400' :
+                    activity.type === 'withdrawal' ? 'bg-red-400' : 'bg-blue-400'
+                  }`} />
+                  <div>
+                    <p className="text-sm font-medium">
+                      {activity.type === 'deposit' ? 'Depósito' :
+                       activity.type === 'withdrawal' ? 'Saque' : 'Novo Usuário'}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      {activity.type === 'user' ? activity.full_name || activity.email : 
+                       activity.type === 'deposit' ? `R$ ${parseFloat(activity.amount || 0).toFixed(2)}` :
+                       `R$ ${parseFloat(activity.amount || 0).toFixed(2)}`}
+                    </p>
+                  </div>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  {new Date(activity.created_at).toLocaleDateString('pt-BR')}
+                </p>
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }

@@ -98,110 +98,108 @@ export default function Plans() {
     investMutation.mutate({
       plan: plan,
       amount: value,
+      status: 'pending',
+      base_rate: plan.baseRate,
+      current_daily_rate: plan.minRate || 0.2,
+      earning_cap: value * 3,
+      client_share: plan.clientShare,
+      company_share: plan.companyShare,
+      unlocked_levels: unlockedLevels,
+      deposit_confirmed: false,
     });
   };
 
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-[60vh]">
-        <div className="w-8 h-8 border-4 border-gold border-t-transparent rounded-full animate-spin"></div>
-      </div>
-    );
-  }
+  const planEntries = Object.entries(PLANS).filter(([k]) => !k.startsWith('leadership'));
+  const leadershipEntries = Object.entries(PLANS).filter(([k]) => k.startsWith('leadership'));
+  const isAdmin = user?.role === 'admin';
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       <div>
         <h1 className="text-2xl font-bold text-foreground">Planos de Investimento</h1>
-        <p className="text-sm text-muted-foreground mt-1">
-          Escolha o plano ideal para começar a investir
-        </p>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {plans.map((plan) => (
-          <PlanCard
-            key={plan.id}
-            plan={{
-              ...plan,
-              min: plan.min_amount,
-              max: plan.max_amount,
-              baseRate: plan.base_rate * 100, // Convert to percentage
-              minRate: plan.min_rate * 100,
-              maxRate: plan.max_rate * 100,
-              clientShare: plan.client_share,
-              companyShare: plan.company_share,
-              directCommission: plan.direct_commission,
-              reinvestmentCommission: plan.reinvestment_commission,
-              residualLevels: plan.residual_levels,
-              color: plan.color,
-              icon: plan.icon,
-              isMostPopular: plan.is_most_popular,
-              isLeadership: plan.is_leadership,
-            }}
-            onSelect={() => handleSelectPlan(plan)}
-          />
-        ))}
+        <p className="text-sm text-muted-foreground mt-1">Escolha o plano ideal para seus objetivos</p>
       </div>
 
       <ActiveInvestments />
 
-      <InvestmentSuccessModal
-        investment={successInvestment}
-        open={showSuccessModal}
-        onClose={() => setShowSuccessModal(false)}
-      />
+      <div>
+        <h2 className="text-xl font-bold text-foreground">Planos Disponíveis</h2>
+        <p className="text-sm text-muted-foreground mt-1">Escolha o plano ideal para seus objetivos</p>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 mt-0">
+        {planEntries.map(([key, plan]) => (
+          <PlanCard key={key} planKey={key} plan={plan} onSelect={handleSelectPlan} />
+        ))}
+      </div>
+
+      {isAdmin && leadershipEntries.length > 0 && (
+        <>
+          <div>
+            <h2 className="text-xl font-bold text-foreground">Contas de Liderança</h2>
+            <p className="text-sm text-muted-foreground mt-1">Para quem quer ganhar com a rede sem rentabilidade</p>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {leadershipEntries.map(([key, plan]) => (
+              <PlanCard key={key} planKey={key} plan={plan} onSelect={handleSelectPlan} />
+            ))}
+          </div>
+        </>
+      )}
 
       <Dialog open={showDialog} onOpenChange={setShowDialog}>
-        <DialogContent>
+        <DialogContent className="bg-card border-border">
           <DialogHeader>
-            <DialogTitle>Confirmar Investimento</DialogTitle>
+            <DialogTitle className="text-foreground">
+              Investir no plano {selectedPlan ? PLANS[selectedPlan]?.name : ''}
+            </DialogTitle>
           </DialogHeader>
-          
           {selectedPlan && (
             <div className="space-y-4">
-              <div>
-                <p className="text-sm text-muted-foreground">Plano selecionado</p>
-                <p className="font-medium">{selectedPlan.name}</p>
+              <div className="flex items-center justify-between">
+                <p className="text-sm text-muted-foreground">
+                  Faixa: {formatCurrency(PLANS[selectedPlan].min)} - {formatCurrency(PLANS[selectedPlan].max)}
+                </p>
+                <p className="text-sm font-semibold text-green-400">
+                  Saldo: {formatCurrency(user?.available_balance || 0)}
+                </p>
               </div>
-              
               <div>
-                <p className="text-sm text-muted-foreground">Valor mínimo</p>
-                <p className="font-medium">{formatCurrency(selectedPlan.min_amount)}</p>
-              </div>
-              
-              <div>
-                <p className="text-sm text-muted-foreground">Valor máximo</p>
-                <p className="font-medium">{formatCurrency(selectedPlan.max_amount)}</p>
-              </div>
-              
-              <div>
-                <label className="text-sm font-medium">Valor do investimento</label>
+                <label className="text-sm font-medium text-foreground">Valor do investimento (USD)</label>
                 <Input
                   type="number"
                   value={amount}
                   onChange={(e) => setAmount(e.target.value)}
-                  placeholder="Digite o valor"
-                  min={selectedPlan.min_amount}
-                  max={selectedPlan.max_amount}
+                  placeholder={`Min: ${PLANS[selectedPlan].min}`}
+                  className="mt-1 bg-secondary border-border"
                 />
               </div>
+              {amount && parseFloat(amount) >= 100 && (
+                <p className="text-xs text-muted-foreground">
+                  Níveis liberados: {Math.min(Math.floor(parseFloat(amount) / 100), 20)}
+                </p>
+              )}
             </div>
           )}
-          
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowDialog(false)}>
-              Cancelar
-            </Button>
-            <Button 
-              onClick={handleInvest} 
+            <Button variant="outline" onClick={() => setShowDialog(false)}>Cancelar</Button>
+            <Button
+              onClick={handleInvest}
               disabled={investMutation.isPending}
+              className="bg-gold hover:bg-gold-hover text-primary-foreground"
             >
               {investMutation.isPending ? 'Processando...' : 'Confirmar Investimento'}
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <InvestmentSuccessModal
+        open={showSuccessModal}
+        onClose={() => setShowSuccessModal(false)}
+        investment={successInvestment}
+        plan={selectedPlan ? PLANS[selectedPlan] : null}
+      />
     </div>
   );
 }

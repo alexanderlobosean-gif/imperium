@@ -1,15 +1,13 @@
 import React, { useState } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
-import { toast } from 'sonner';
 import { formatCurrency } from '@/lib/planConfig';
-import { Search, Filter, TrendingUp, Calendar, DollarSign, Users, Activity, Settings, RefreshCw } from 'lucide-react';
+import { Search, Filter, TrendingUp, Calendar, DollarSign, Users, Activity } from 'lucide-react';
 
 // Fetch yields data
 const fetchYieldsData = async () => {
@@ -23,7 +21,7 @@ const fetchYieldsData = async () => {
       .from('yields')
       .select(`
         *,
-        profiles!inner(
+        users!inner(
           full_name,
           email
         ),
@@ -59,137 +57,14 @@ const fetchYieldsData = async () => {
   };
 };
 
-// Apply daily yield to all active investments
-const applyDailyYield = async ({ rate }) => {
-  console.log('🚀 Iniciando aplicação de rendimento diário');
-  console.log('📊 Taxa de rendimento:', rate);
-  
-  // Get all active investments
-  const { data: investments, error: investmentsError } = await supabase
-    .from('investments')
-    .select('*')
-    .eq('status', 'active');
-
-  if (investmentsError) {
-    console.error('❌ Erro ao buscar investimentos:', investmentsError);
-    throw investmentsError;
-  }
-
-  console.log('📈 Investimentos ativos encontrados:', investments?.length || 0);
-  
-  const results = [];
-  const today = new Date().toISOString().split('T')[0];
-  console.log('📅 Data de processamento:', today);
-
-  // Process each investment
-  for (let i = 0; i < investments.length; i++) {
-    const investment = investments[i];
-    console.log(`\n🔄 Processando investimento ${i + 1}/${investments.length}`);
-    console.log('💰 Valor do investimento:', investment.amount);
-    console.log('👤 Usuário:', investment.user_id);
-    console.log('📋 Plano:', investment.plan_slug);
-    
-    const dailyYield = parseFloat(investment.amount) * parseFloat(rate);
-    const clientYield = dailyYield * (investment.client_share / 100);
-    const companyYield = dailyYield * (investment.company_share / 100);
-    
-    console.log('💸 Rendimento diário calculado:', dailyYield);
-    console.log('👤 Rendimento cliente:', clientYield);
-    console.log('🏢 Rendimento empresa:', companyYield);
-
-    // Create yield record
-    console.log('💾 Criando registro de rendimento...');
-    const { data: yieldRecord, error: yieldError } = await supabase
-      .from('yields')
-      .insert({
-        investment_id: investment.id,
-        user_id: investment.user_id,
-        amount: dailyYield,
-        rate: parseFloat(rate),
-        client_yield: clientYield,
-        company_yield: companyYield,
-        date: new Date().toISOString()
-      })
-      .select()
-      .single();
-
-    if (yieldError) {
-      console.error('❌ Erro ao criar registro de rendimento:', yieldError);
-      throw yieldError;
-    }
-
-    console.log('✅ Registro de rendimento criado:', yieldRecord.id);
-
-    // Update investment totals
-    console.log('🔄 Atualizando totais do investimento...');
-    const { error: updateError } = await supabase
-      .from('investments')
-      .update({
-        daily_yield: dailyYield,
-        total_yield: (parseFloat(investment.total_yield || 0) + dailyYield),
-        last_yield_calculated: new Date().toISOString()
-      })
-      .eq('id', investment.id);
-
-    if (updateError) {
-      console.error('❌ Erro ao atualizar investimento:', updateError);
-      throw updateError;
-    }
-
-    console.log('✅ Investimento atualizado com sucesso');
-
-    // Update user total earned
-    console.log('👤 Atualizando totais do usuário...');
-    const { error: userUpdateError } = await supabase
-      .from('profiles')
-      .update({
-        total_earned: (parseFloat(investment.profiles?.total_earned || 0) + clientYield)
-      })
-      .eq('user_id', investment.user_id);
-
-    if (userUpdateError) {
-      console.error('❌ Erro ao atualizar usuário:', userUpdateError);
-      throw userUpdateError;
-    }
-
-    console.log('✅ Usuário atualizado com sucesso');
-    console.log(`📊 Saldo anterior: ${investment.profiles?.total_earned || 0}`);
-    console.log(`📊 Saldo atual: ${parseFloat(investment.profiles?.total_earned || 0) + clientYield}`);
-
-    results.push(yieldRecord);
-  }
-
-  console.log(`\n🎉 Processamento concluído!`);
-  console.log(`📊 Total de investimentos processados: ${results.length}`);
-  console.log(`💰 Total de rendimentos aplicados: ${results.reduce((sum, r) => sum + parseFloat(r.amount || 0), 0)}`);
-  
-  return results;
-};
-
 export default function AdminYields() {
   const [searchTerm, setSearchTerm] = useState('');
   const [planFilter, setPlanFilter] = useState('all');
   const [dateFilter, setDateFilter] = useState('all');
-  const [showYieldDialog, setShowYieldDialog] = useState(false);
-  const [dailyRate, setDailyRate] = useState('0.01');
-  const queryClient = useQueryClient();
 
   const { data: yieldsData, isLoading } = useQuery({
     queryKey: ['admin-yields-data'],
     queryFn: fetchYieldsData,
-  });
-
-  const applyYieldMutation = useMutation({
-    mutationFn: applyDailyYield,
-    onSuccess: (results) => {
-      queryClient.invalidateQueries(['admin-yields-data']);
-      toast.success(`Rendimento diário aplicado para ${results.length} investimentos!`);
-      setShowYieldDialog(false);
-      setDailyRate('0.01');
-    },
-    onError: (error) => {
-      toast.error('Erro ao aplicar rendimento: ' + error.message);
-    },
   });
 
   const filteredYields = yieldsData?.yields?.filter(yieldItem => {
@@ -248,20 +123,11 @@ export default function AdminYields() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-foreground">Gerenciar Rendimentos</h1>
-          <p className="text-sm text-muted-foreground mt-1">
-            Visualize e aplique rendimentos diários para todos os investimentos
-          </p>
-        </div>
-        <Button
-          onClick={() => setShowYieldDialog(true)}
-          className="bg-gold hover:bg-gold/90 text-black"
-        >
-          <Settings className="w-4 h-4 mr-2" />
-          Aplicar Rendimento do Dia
-        </Button>
+      <div>
+        <h1 className="text-2xl font-bold text-foreground">Gerenciar Rendimentos</h1>
+        <p className="text-sm text-muted-foreground mt-1">
+          Visualize todos os rendimentos gerados pelo sistema
+        </p>
       </div>
 
       {/* Stats Cards */}
@@ -434,73 +300,6 @@ export default function AdminYields() {
           <p className="text-muted-foreground">Nenhum rendimento encontrado com os filtros selecionados.</p>
         </div>
       )}
-
-      {/* Apply Daily Yield Dialog */}
-      <Dialog open={showYieldDialog} onOpenChange={setShowYieldDialog}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Aplicar Rendimento Diário</DialogTitle>
-          </DialogHeader>
-          
-          <div className="space-y-4">
-            <div>
-              <p className="text-sm text-muted-foreground mb-2">
-                Esta ação irá aplicar o rendimento diário para todos os investimentos ativos.
-              </p>
-              <p className="text-sm text-muted-foreground">
-                Investimentos ativos: <span className="font-medium">{yieldsData?.stats?.activeInvestments || 0}</span>
-              </p>
-            </div>
-            
-            <div>
-              <label className="text-sm font-medium">Taxa de Rendimento Diária (%)</label>
-              <Input
-                type="number"
-                step="0.001"
-                min="0"
-                max="1"
-                value={dailyRate}
-                onChange={(e) => setDailyRate(e.target.value)}
-                placeholder="0.01"
-                className="mt-1"
-              />
-              <p className="text-xs text-muted-foreground mt-1">
-                Ex: 0.01 = 1%, 0.02 = 2%
-              </p>
-            </div>
-            
-            <div className="bg-secondary/50 p-4 rounded-lg">
-              <p className="text-sm font-medium mb-2">Preview:</p>
-              <div className="space-y-1 text-sm">
-                <p>Para um investimento de R$ 1.000,00:</p>
-                <p>Rendimento total: {formatCurrency(1000 * parseFloat(dailyRate || 0))}</p>
-                <p>Cliente recebe: {formatCurrency(1000 * parseFloat(dailyRate || 0) * 0.5)}</p>
-                <p>Empresa recebe: {formatCurrency(1000 * parseFloat(dailyRate || 0) * 0.5)}</p>
-              </div>
-            </div>
-          </div>
-          
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setShowYieldDialog(false)}>
-              Cancelar
-            </Button>
-            <Button
-              onClick={() => applyYieldMutation.mutate({ rate: dailyRate })}
-              disabled={applyYieldMutation.isPending}
-              className="bg-gold hover:bg-gold/90 text-black"
-            >
-              {applyYieldMutation.isPending ? (
-                <>
-                  <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
-                  Processando...
-                </>
-              ) : (
-                'Aplicar Rendimento'
-              )}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }
