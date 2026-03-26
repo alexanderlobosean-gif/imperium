@@ -13,10 +13,12 @@ import Network from '@/pages/Network';
 import Career from '@/pages/Career';
 import Profile from '@/pages/Profile';
 import AdminPanel from '@/pages/admin/AdminPanel';
+import AdminBanking from '@/components/admin/AdminBanking';
 import Indicacao from '@/pages/Indicacao';
 import Login from '@/pages/Login'
 import Register from '@/pages/Register';
 import LandingPage from '@/pages/LandingPage';
+import Deposit from '@/pages/Deposit';
 
 const AuthenticatedApp = () => {
   // For landing page, we don't need auth checks
@@ -27,12 +29,14 @@ const AuthenticatedApp = () => {
       <Route element={<AppLayout />}>
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/wallet" element={<Wallet />} />
+        <Route path="/deposit" element={<Deposit />} />
         <Route path="/plans" element={<Plans />} />
         <Route path="/network" element={<Network />} />
         <Route path="/indicacao" element={<Indicacao />} />
         <Route path="/career" element={<Career />} />
         <Route path="/profile" element={<Profile />} />
         <Route path="/admin" element={<AdminPanel />} />
+        <Route path="/admin/banking" element={<AdminBanking />} />
         <Route path="/Dashboard" element={<Navigate to="/dashboard" replace />} />
       </Route>
       <Route path="/login" element={<Login />} />

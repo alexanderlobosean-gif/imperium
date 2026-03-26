@@ -31,6 +31,7 @@ const NAV_ITEMS = [
 
 const ADMIN_ITEMS = [
   { path: '/admin', label: 'Painel Admin', icon: ShieldCheck },
+  { path: '/admin/banking', label: 'Dados Bancários', icon: Wallet },
 ];
 
 export default function Sidebar() {

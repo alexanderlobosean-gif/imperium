@@ -12,7 +12,8 @@ const fetchDashboardStats = async () => {
     depositsResult,
     withdrawalsResult,
     investmentsResult,
-    yieldsResult
+    yieldsResult,
+    profilesResult
   ] = await Promise.all([
     // Total users
     supabase.from('profiles').select('id').eq('status', 'active'),
@@ -23,8 +24,15 @@ const fetchDashboardStats = async () => {
     // Active investments
     supabase.from('investments').select('amount, status').eq('status', 'active'),
     // Today's yields
-    supabase.from('yields').select('amount').gte('date', new Date().toISOString().split('T')[0])
+    supabase.from('yields').select('amount').gte('date', new Date().toISOString().split('T')[0]),
+    // Wallet data - total available balance
+    supabase.from('profiles').select('available_balance, total_earned, total_invested, total_withdrawn')
   ]);
+
+  const totalWalletBalance = profilesResult.data?.reduce((sum, p) => sum + parseFloat(p.available_balance || 0), 0) || 0;
+  const totalEarned = profilesResult.data?.reduce((sum, p) => sum + parseFloat(p.total_earned || 0), 0) || 0;
+  const totalInvested = profilesResult.data?.reduce((sum, p) => sum + parseFloat(p.total_invested || 0), 0) || 0;
+  const totalWithdrawn = profilesResult.data?.reduce((sum, p) => sum + parseFloat(p.total_withdrawn || 0), 0) || 0;
 
   const stats = {
     totalUsers: usersResult.data?.length || 0,
@@ -33,6 +41,11 @@ const fetchDashboardStats = async () => {
     activeInvestments: investmentsResult.data?.reduce((sum, i) => sum + parseFloat(i.amount), 0) || 0,
     todayYields: yieldsResult.data?.reduce((sum, y) => sum + parseFloat(y.amount), 0) || 0,
     activeInvestmentsCount: investmentsResult.data?.length || 0,
+    // New wallet stats
+    totalWalletBalance: totalWalletBalance,
+    totalEarned: totalEarned,
+    totalInvested: totalInvested,
+    totalWithdrawn: totalWithdrawn,
   };
 
   // Calculate net balance
@@ -80,6 +93,36 @@ export default function AdminStats() {
       changeType: 'positive'
     },
     {
+      title: 'Saldo Total da Carteira',
+      value: formatCurrency(stats?.totalWalletBalance || 0),
+      icon: Wallet,
+      color: 'text-purple-400',
+      bgColor: 'bg-purple-500/10',
+      borderColor: 'border-purple-500/30',
+      change: '+8%',
+      changeType: 'positive'
+    },
+    {
+      title: 'Total Investido',
+      value: formatCurrency(stats?.totalInvested || 0),
+      icon: TrendingUp,
+      color: 'text-gold',
+      bgColor: 'bg-gold/10',
+      borderColor: 'border-gold/30',
+      change: '+15%',
+      changeType: 'positive'
+    },
+    {
+      title: 'Total Ganho em Rendimentos',
+      value: formatCurrency(stats?.totalEarned || 0),
+      icon: ArrowUpRight,
+      color: 'text-emerald-400',
+      bgColor: 'bg-emerald-500/10',
+      borderColor: 'border-emerald-500/30',
+      change: '+20%',
+      changeType: 'positive'
+    },
+    {
       title: 'Total Depositado',
       value: formatCurrency(stats?.totalDeposits || 0),
       icon: DollarSign,
@@ -110,16 +153,6 @@ export default function AdminStats() {
       changeType: 'positive'
     },
     {
-      title: 'Saldo Líquido',
-      value: formatCurrency(stats?.netBalance || 0),
-      icon: Activity,
-      color: 'text-purple-400',
-      bgColor: 'bg-purple-500/10',
-      borderColor: 'border-purple-500/30',
-      change: '+10%',
-      changeType: 'positive'
-    },
-    {
       title: 'Rendimentos Hoje',
       value: formatCurrency(stats?.todayYields || 0),
       icon: ArrowUpRight,
@@ -141,7 +174,7 @@ export default function AdminStats() {
       </div>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
         {statCards.map((stat, index) => {
           const Icon = stat.icon;
           return (

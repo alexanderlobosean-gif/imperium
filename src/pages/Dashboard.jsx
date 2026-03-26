@@ -32,7 +32,8 @@ export default function Dashboard() {
       if (refCode) {
         localStorage.removeItem('referral_code');
         try {
-          await base44.functions.invoke('linkReferral', { referral_code: refCode });
+          // await base44.functions.invoke('linkReferral', { referral_code: refCode });
+          console.log('Referral code to link:', refCode);
         } catch (e) {
           console.error('Erro ao vincular indicação:', e);
         }
@@ -44,19 +45,54 @@ export default function Dashboard() {
 
   const { data: investments = [] } = useQuery({
     queryKey: ['investments', user?.id],
-    queryFn: () => base44.entities.Investment.filter({ user_id: user?.id, status: 'active' }),
+    queryFn: async () => {
+      const { data } = await supabase
+        .from('investments')
+        .select('*')
+        .eq('user_id', user?.id)
+        .eq('status', 'active');
+      return data || [];
+    },
     enabled: !!user?.id,
   });
 
   const { data: networkMembers = [] } = useQuery({
     queryKey: ['network', user?.id],
-    queryFn: () => base44.entities.NetworkRelation.filter({ user_id: user?.id }),
+    queryFn: async () => {
+      const { data } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('referred_by', user?.id);
+      return data || [];
+    },
     enabled: !!user?.id,
   });
 
   const { data: transactions = [] } = useQuery({
     queryKey: ['transactions', user?.id],
-    queryFn: () => base44.entities.Transaction.filter({ user_id: user?.id }, '-created_date', 10),
+    queryFn: async () => {
+      const [deposits, withdrawals] = await Promise.all([
+        supabase
+          .from('deposits')
+          .select('*')
+          .eq('user_id', user?.id)
+          .order('created_at', { ascending: false })
+          .limit(10),
+        supabase
+          .from('withdrawals')
+          .select('*')
+          .eq('user_id', user?.id)
+          .order('created_at', { ascending: false })
+          .limit(10)
+      ]);
+      
+      const allTransactions = [
+        ...(deposits.data || []).map(d => ({ ...d, type: 'deposit' })),
+        ...(withdrawals.data || []).map(w => ({ ...w, type: 'withdrawal' }))
+      ].sort((a, b) => new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime());
+      
+      return allTransactions.slice(0, 10);
+    },
     enabled: !!user?.id,
   });
 
@@ -64,7 +100,13 @@ export default function Dashboard() {
 
   const { data: networkInvestments = [] } = useQuery({
     queryKey: ['network-investments', networkMemberIds.join(',')],
-    queryFn: () => base44.entities.Investment.filter({ status: 'active' }),
+    queryFn: async () => {
+      const { data } = await supabase
+        .from('investments')
+        .select('*')
+        .eq('status', 'active');
+      return data || [];
+    },
     enabled: networkMemberIds.length > 0,
   });
 
