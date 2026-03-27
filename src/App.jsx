@@ -6,6 +6,7 @@ import PageNotFound from './lib/PageNotFound';
 import { AuthProvider, useAuth } from '@/lib/AuthContext';
 import UserNotRegisteredError from '@/components/UserNotRegisteredError';
 import AppLayout from '@/components/layout/AppLayout';
+import LandingLayout from '@/components/layout/LandingLayout';
 import Dashboard from '@/pages/Dashboard';
 import Wallet from '@/pages/Wallet';
 import Plans from '@/pages/Plans';
@@ -19,13 +20,19 @@ import Login from '@/pages/Login'
 import Register from '@/pages/Register';
 import LandingPage from '@/pages/LandingPage';
 import Deposit from '@/pages/Deposit';
+import Support from '@/pages/Support';
+import HelpCenter from '@/pages/HelpCenter';
+import Contact from '@/pages/Contact';
 
 const AuthenticatedApp = () => {
   // For landing page, we don't need auth checks
   return (
     <Routes>
-      <Route path="/" element={<LandingPage />} />
-      <Route path="/landing" element={<LandingPage />} />
+      <Route path="/" element={<LandingLayout><LandingPage /></LandingLayout>} />
+      <Route path="/landing" element={<LandingLayout><LandingPage /></LandingLayout>} />
+      <Route path="/support" element={<LandingLayout><Support /></LandingLayout>} />
+      <Route path="/help-center" element={<LandingLayout><HelpCenter /></LandingLayout>} />
+      <Route path="/contact" element={<LandingLayout><Contact /></LandingLayout>} />
       <Route element={<AppLayout />}>
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/wallet" element={<Wallet />} />
@@ -39,9 +46,9 @@ const AuthenticatedApp = () => {
         <Route path="/admin/banking" element={<AdminBanking />} />
         <Route path="/Dashboard" element={<Navigate to="/dashboard" replace />} />
       </Route>
-      <Route path="/login" element={<Login />} />
-      <Route path="/register" element={<Register />} />
-      <Route path="/registrar" element={<Register />} />
+      <Route path="/login" element={<LandingLayout><Login /></LandingLayout>} />
+      <Route path="/register" element={<LandingLayout><Register /></LandingLayout>} />
+      <Route path="/registrar" element={<LandingLayout><Register /></LandingLayout>} />
       <Route path="*" element={<PageNotFound />} />
     </Routes>
   );

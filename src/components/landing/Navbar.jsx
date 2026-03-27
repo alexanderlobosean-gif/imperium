@@ -42,32 +42,49 @@ const Navbar = () => {
           {/* Desktop Menu */}
           <div className="hidden md:block">
             <div className="ml-10 flex items-baseline space-x-8">
-              <a href="#home" className="text-slate-700 hover:text-yellow-500 transition-colors duration-200">
+              <Link to="/" className="text-slate-700 hover:text-yellow-500 transition-colors duration-200">
                 Início
-              </a>
-              <a href="#about" className="text-slate-700 hover:text-yellow-500 transition-colors duration-200">
+              </Link>
+              <Link to="/#about" className="text-slate-700 hover:text-yellow-500 transition-colors duration-200">
                 Sobre
-              </a>
+              </Link>
               <div className="relative group">
                 <button className="text-slate-700 hover:text-yellow-500 transition-colors duration-200 flex items-center">
                   Planos
                   <ChevronDown className="ml-1 h-4 w-4" />
                 </button>
                 <div className="absolute top-full left-0 mt-2 w-48 bg-white rounded-lg shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200">
-                  <a href="#plans" className="block px-4 py-2 text-sm text-slate-700 hover:bg-slate-100 hover:text-yellow-500">
+                  <Link to="/#plans" className="block px-4 py-2 text-sm text-slate-700 hover:bg-slate-100 hover:text-yellow-500">
                     Planos de Investimento
-                  </a>
-                  <a href="#plans" className="block px-4 py-2 text-sm text-slate-700 hover:bg-slate-100 hover:text-yellow-500">
+                  </Link>
+                  <Link to="/#plans" className="block px-4 py-2 text-sm text-slate-700 hover:bg-slate-100 hover:text-yellow-500">
                     Planos Leadership
-                  </a>
+                  </Link>
                 </div>
               </div>
-              <a href="#testimonials" className="text-slate-700 hover:text-yellow-500 transition-colors duration-200">
+              <Link to="/#testimonials" className="text-slate-700 hover:text-yellow-500 transition-colors duration-200">
                 Depoimentos
-              </a>
-              <a href="#faq" className="text-slate-700 hover:text-yellow-500 transition-colors duration-200">
+              </Link>
+              <Link to="/#faq" className="text-slate-700 hover:text-yellow-500 transition-colors duration-200">
                 FAQ
-              </a>
+              </Link>
+              <div className="relative group">
+                <button className="text-slate-700 hover:text-yellow-500 transition-colors duration-200 flex items-center">
+                  Suporte
+                  <ChevronDown className="ml-1 h-4 w-4" />
+                </button>
+                <div className="absolute top-full left-0 mt-2 w-48 bg-white rounded-lg shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200">
+                  <Link to="/support" className="block px-4 py-2 text-sm text-slate-700 hover:bg-slate-100 hover:text-yellow-500">
+                    Central de Suporte
+                  </Link>
+                  <Link to="/help-center" className="block px-4 py-2 text-sm text-slate-700 hover:bg-slate-100 hover:text-yellow-500">
+                    Ajuda
+                  </Link>
+                  <Link to="/contact" className="block px-4 py-2 text-sm text-slate-700 hover:bg-slate-100 hover:text-yellow-500">
+                    Contato
+                  </Link>
+                </div>
+              </div>
             </div>
           </div>
 
@@ -98,21 +115,32 @@ const Navbar = () => {
         {isOpen && (
           <div className="md:hidden bg-white/95 backdrop-blur-md rounded-lg mt-2 p-4 shadow-lg">
             <div className="space-y-2">
-              <a href="#home" className="block text-slate-700 hover:text-yellow-500 py-2" onClick={() => setIsOpen(false)}>
+              <Link to="/" className="block text-slate-700 hover:text-yellow-500 py-2" onClick={() => setIsOpen(false)}>
                 Início
-              </a>
-              <a href="#about" className="block text-slate-700 hover:text-yellow-500 py-2" onClick={() => setIsOpen(false)}>
+              </Link>
+              <Link to="/#about" className="block text-slate-700 hover:text-yellow-500 py-2" onClick={() => setIsOpen(false)}>
                 Sobre
-              </a>
-              <a href="#plans" className="block text-slate-700 hover:text-yellow-500 py-2" onClick={() => setIsOpen(false)}>
+              </Link>
+              <Link to="/#plans" className="block text-slate-700 hover:text-yellow-500 py-2" onClick={() => setIsOpen(false)}>
                 Planos
-              </a>
-              <a href="#testimonials" className="block text-slate-700 hover:text-yellow-500 py-2" onClick={() => setIsOpen(false)}>
+              </Link>
+              <Link to="/#testimonials" className="block text-slate-700 hover:text-yellow-500 py-2" onClick={() => setIsOpen(false)}>
                 Depoimentos
-              </a>
-              <a href="#faq" className="block text-slate-700 hover:text-yellow-500 py-2" onClick={() => setIsOpen(false)}>
+              </Link>
+              <Link to="/#faq" className="block text-slate-700 hover:text-yellow-500 py-2" onClick={() => setIsOpen(false)}>
                 FAQ
-              </a>
+              </Link>
+              <div className="border-t border-slate-200 pt-2 mt-2">
+                <Link to="/support" className="block text-slate-700 hover:text-yellow-500 py-2" onClick={() => setIsOpen(false)}>
+                  Central de Suporte
+                </Link>
+                <Link to="/help-center" className="block text-slate-700 hover:text-yellow-500 py-2" onClick={() => setIsOpen(false)}>
+                  Ajuda
+                </Link>
+                <Link to="/contact" className="block text-slate-700 hover:text-yellow-500 py-2" onClick={() => setIsOpen(false)}>
+                  Contato
+                </Link>
+              </div>
               <div className="pt-4 border-t border-slate-200 space-y-2">
                 <Link to="/login" className="block text-slate-700 hover:text-yellow-500 py-2">
                   Entrar
