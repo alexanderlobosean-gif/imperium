@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/lib/supabase';
+import { supabaseAdmin } from '@/lib/supabase';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -23,9 +23,9 @@ import {
   DollarSign 
 } from 'lucide-react';
 
-// Fetch users
+// Fetch users (usando supabaseAdmin para bypass RLS)
 const fetchUsers = async () => {
-  const { data, error } = await supabase
+  const { data, error } = await supabaseAdmin
     .from('profiles')
     .select('*')
     .order('created_at', { ascending: false });
@@ -34,9 +34,9 @@ const fetchUsers = async () => {
   return data;
 };
 
-// Fetch all user deposits
+// Fetch all user deposits (usando supabaseAdmin)
 const fetchAllDeposits = async () => {
-  const { data, error } = await supabase
+  const { data, error } = await supabaseAdmin
     .from('deposits')
     .select('*')
     .order('created_at', { ascending: false });
@@ -45,9 +45,9 @@ const fetchAllDeposits = async () => {
   return data;
 };
 
-// Fetch all user withdrawals
+// Fetch all user withdrawals (usando supabaseAdmin)
 const fetchAllWithdrawals = async () => {
-  const { data, error } = await supabase
+  const { data, error } = await supabaseAdmin
     .from('withdrawals')
     .select('*')
     .order('created_at', { ascending: false });
@@ -56,9 +56,9 @@ const fetchAllWithdrawals = async () => {
   return data;
 };
 
-// Fetch all user investments
+// Fetch all user investments (usando supabaseAdmin)
 const fetchAllInvestments = async () => {
-  const { data, error } = await supabase
+  const { data, error } = await supabaseAdmin
     .from('investments')
     .select('*')
     .order('created_at', { ascending: false });
@@ -67,9 +67,9 @@ const fetchAllInvestments = async () => {
   return data;
 };
 
-// Update user status
+// Update user status (usando supabaseAdmin)
 const updateUserStatus = async ({ userId, status }) => {
-  const { data, error } = await supabase
+  const { data, error } = await supabaseAdmin
     .from('profiles')
     .update({ status })
     .eq('id', userId)
@@ -80,9 +80,9 @@ const updateUserStatus = async ({ userId, status }) => {
   return data;
 };
 
-// Update user role
+// Update user role (usando supabaseAdmin)
 const updateUserRole = async ({ userId, role }) => {
-  const { data, error } = await supabase
+  const { data, error } = await supabaseAdmin
     .from('profiles')
     .update({ role })
     .eq('id', userId)

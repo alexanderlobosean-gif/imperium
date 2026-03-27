@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/lib/supabase';
+import { supabaseAdmin } from '@/lib/supabase';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -18,9 +18,9 @@ import {
   X
 } from 'lucide-react';
 
-// Fetch admin banking accounts
+// Fetch admin banking accounts (usando supabaseAdmin para bypass RLS)
 const fetchAdminBankingAccounts = async () => {
-  const { data, error } = await supabase
+  const { data, error } = await supabaseAdmin
     .from('admin_banking_accounts')
     .select('*')
     .eq('is_active', true)

@@ -1,11 +1,11 @@
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/lib/supabase';
+import { supabaseAdmin } from '@/lib/supabase';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Users, TrendingUp, DollarSign, Wallet, Activity, ArrowUpRight, ArrowDownRight } from 'lucide-react';
 import { formatCurrency } from '@/lib/planConfig';
 
-// Fetch dashboard statistics
+// Fetch dashboard statistics (usando supabaseAdmin para bypass RLS)
 const fetchDashboardStats = async () => {
   const [
     usersResult,
@@ -16,17 +16,17 @@ const fetchDashboardStats = async () => {
     profilesResult
   ] = await Promise.all([
     // Total users
-    supabase.from('profiles').select('id').eq('status', 'active'),
+    supabaseAdmin.from('profiles').select('id').eq('status', 'active'),
     // Total deposits
-    supabase.from('deposits').select('amount').eq('status', 'confirmed'),
+    supabaseAdmin.from('deposits').select('amount').eq('status', 'confirmed'),
     // Total withdrawals
-    supabase.from('withdrawals').select('amount').eq('status', 'confirmed'),
+    supabaseAdmin.from('withdrawals').select('amount').eq('status', 'confirmed'),
     // Active investments
-    supabase.from('investments').select('amount, status').eq('status', 'active'),
+    supabaseAdmin.from('investments').select('amount, status').eq('status', 'active'),
     // Today's yields
-    supabase.from('yields').select('amount').gte('date', new Date().toISOString().split('T')[0]),
+    supabaseAdmin.from('yields').select('amount').gte('date', new Date().toISOString().split('T')[0]),
     // Wallet data - total available balance
-    supabase.from('profiles').select('available_balance, total_earned, total_invested, total_withdrawn')
+    supabaseAdmin.from('profiles').select('available_balance, total_earned, total_invested, total_withdrawn')
   ]);
 
   const totalWalletBalance = profilesResult.data?.reduce((sum, p) => sum + parseFloat(p.available_balance || 0), 0) || 0;
@@ -53,16 +53,16 @@ const fetchDashboardStats = async () => {
 
   // Get recent activity
   const [recentDeposits, recentWithdrawals, recentUsers] = await Promise.all([
-    supabase.from('deposits').select('*').eq('status', 'confirmed').order('created_at', { ascending: false }).limit(5),
-    supabase.from('withdrawals').select('*').eq('status', 'confirmed').order('created_at', { ascending: false }).limit(5),
-    supabase.from('profiles').select('*').order('created_at', { ascending: false }).limit(5)
+    supabaseAdmin.from('deposits').select('*').eq('status', 'confirmed').order('created_at', { ascending: false }).limit(5),
+    supabaseAdmin.from('withdrawals').select('*').eq('status', 'confirmed').order('created_at', { ascending: false }).limit(5),
+    supabaseAdmin.from('profiles').select('*').order('created_at', { ascending: false }).limit(5)
   ]);
 
   stats.recentActivity = [
     ...recentDeposits.data?.map(d => ({ ...d, type: 'deposit' })) || [],
     ...recentWithdrawals.data?.map(w => ({ ...w, type: 'withdrawal' })) || [],
     ...recentUsers.data?.map(u => ({ ...u, type: 'user' })) || []
-  ].sort((a, b) => new Date(b.created_at) - new Date(a.created_at)).slice(0, 10);
+  ].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()).slice(0, 10);
 
   return stats;
 };

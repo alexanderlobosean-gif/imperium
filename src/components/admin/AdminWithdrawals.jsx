@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/lib/supabase';
+import { supabaseAdmin } from '@/lib/supabase';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -11,13 +11,13 @@ import { toast } from 'sonner';
 import { formatCurrency } from '@/lib/planConfig';
 import { Search, Filter, Eye, CheckCircle, XCircle, Clock, Wallet, ExternalLink } from 'lucide-react';
 
-// Fetch withdrawals
+// Fetch withdrawals (usando supabaseAdmin para bypass RLS)
 const fetchWithdrawals = async () => {
-  const { data, error } = await supabase
+  const { data, error } = await supabaseAdmin
     .from('withdrawals')
     .select(`
       *,
-      users!inner(
+      profiles!inner(
         full_name,
         email
       )
