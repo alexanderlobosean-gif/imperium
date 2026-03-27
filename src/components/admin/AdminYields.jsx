@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useContext } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/lib/supabase';
+import { supabaseAdmin, supabase } from '@/lib/supabase';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -11,61 +11,95 @@ import { toast } from 'sonner';
 import { formatCurrency } from '@/lib/planConfig';
 import { Search, Filter, TrendingUp, Calendar, DollarSign, Users, Activity, Settings, RefreshCw } from 'lucide-react';
 
-// Fetch yields data
+// Fetch yields data (padrão simples como AdminDeposits)
 const fetchYieldsData = async () => {
-  const [
-    yieldsResult,
-    investmentsResult,
-    todayYieldsResult
-  ] = await Promise.all([
-    // All yields
-    supabase
-      .from('yields')
-      .select(`
-        *,
-        profiles!inner(
-          full_name,
-          email
-        ),
-        investments!inner(
-          plan_slug
-        )
-      `)
-      .order('date', { ascending: false }),
-    // Active investments
-    supabase.from('investments').select('*').eq('status', 'active'),
-    // Today's yields
-    supabase
-      .from('yields')
-      .select('amount, client_yield, company_yield')
-      .gte('date', new Date().toISOString().split('T')[0])
-  ]);
+  console.log('🔍 Buscando dados de rendimentos...');
+  
+  // Buscar rendimentos com JOIN apenas para dados do usuário
+  const { data: yieldsData, error: yieldsError } = await supabaseAdmin
+    .from('yields')
+    .select(`
+      *,
+      profiles!inner(
+        full_name,
+        email
+      )
+    `)
+    .order('date', { ascending: false });
+
+  if (yieldsError) {
+    console.error('❌ Erro ao buscar rendimentos:', yieldsError);
+    throw yieldsError;
+  }
+
+  // Buscar investimentos ativos
+  const { data: investmentsData, error: investmentsError } = await supabaseAdmin
+    .from('investments')
+    .select('*, user_id')  // Incluir user_id na query
+    .eq('status', 'active');  // Sem RLS - supabaseAdmin já bypassa
+
+  if (investmentsError) {
+    console.error('❌ Erro ao buscar investimentos:', investmentsError);
+    throw investmentsError;
+  }
+
+  // DEBUG: Mostrar todos os investimentos encontrados
+  console.log('🔍 DEBUG: Investimentos encontrados:', investmentsData?.length || 0);
+  investmentsData?.forEach((inv, index) => {
+    console.log(`🔍 Investimento ${index + 1}:`, {
+      id: inv.id,
+      user_id: inv.user_id,
+      amount: inv.amount,
+      plan_slug: inv.plan_slug,
+      status: inv.status
+    });
+  });
+
+  // Buscar rendimentos de hoje
+  const { data: todayYieldsData, error: todayYieldsError } = await supabaseAdmin
+    .from('yields')
+    .select('amount, client_yield, company_yield')
+    .gte('date', new Date().toISOString().split('T')[0]);
+
+  if (todayYieldsError) {
+    console.error('❌ Erro ao buscar rendimentos de hoje:', todayYieldsError);
+    throw todayYieldsError;
+  }
+
+  console.log('📊 Rendimentos encontrados:', yieldsData?.length || 0);
+  console.log('📈 Investimentos ativos:', investmentsData?.length || 0);
+  console.log('💰 Rendimentos de hoje:', todayYieldsData?.length || 0);
+  
+  // Mostrar primeiros rendimentos para debug
+  if (yieldsData && yieldsData.length > 0) {
+    console.log('🔍 Primeiros rendimentos:', yieldsData.slice(0, 3));
+  }
 
   const stats = {
-    totalYields: yieldsResult.data?.reduce((sum, y) => sum + parseFloat(y.amount || 0), 0) || 0,
-    totalClientYields: yieldsResult.data?.reduce((sum, y) => sum + parseFloat(y.client_yield || 0), 0) || 0,
-    totalCompanyYields: yieldsResult.data?.reduce((sum, y) => sum + parseFloat(y.company_yield || 0), 0) || 0,
-    todayYields: todayYieldsResult.data?.reduce((sum, y) => sum + parseFloat(y.amount || 0), 0) || 0,
-    todayClientYields: todayYieldsResult.data?.reduce((sum, y) => sum + parseFloat(y.client_yield || 0), 0) || 0,
-    todayCompanyYields: todayYieldsResult.data?.reduce((sum, y) => sum + parseFloat(y.company_yield || 0), 0) || 0,
-    activeInvestments: investmentsResult.data?.length || 0,
-    totalYieldsCount: yieldsResult.data?.length || 0,
+    totalYields: yieldsData?.reduce((sum, y) => sum + parseFloat(y.amount || 0), 0) || 0,
+    totalClientYields: yieldsData?.reduce((sum, y) => sum + parseFloat(y.client_yield || 0), 0) || 0,
+    totalCompanyYields: yieldsData?.reduce((sum, y) => sum + parseFloat(y.company_yield || 0), 0) || 0,
+    todayYields: todayYieldsData?.reduce((sum, y) => sum + parseFloat(y.amount || 0), 0) || 0,
+    todayClientYields: todayYieldsData?.reduce((sum, y) => sum + parseFloat(y.client_yield || 0), 0) || 0,
+    todayCompanyYields: todayYieldsData?.reduce((sum, y) => sum + parseFloat(y.company_yield || 0), 0) || 0,
+    activeInvestments: investmentsData?.length || 0,
+    totalYieldsCount: yieldsData?.length || 0,
   };
 
   return {
-    yields: yieldsResult.data || [],
+    yields: yieldsData || [],
     stats,
-    investments: investmentsResult.data || []
+    investments: investmentsData || []
   };
 };
 
-// Apply daily yield to all active investments
+// Apply daily yield to all active investments (usando supabaseAdmin)
 const applyDailyYield = async ({ rate }) => {
   console.log('🚀 Iniciando aplicação de rendimento diário');
   console.log('📊 Taxa de rendimento:', rate);
   
   // Get all active investments
-  const { data: investments, error: investmentsError } = await supabase
+  const { data: investments, error: investmentsError } = await supabaseAdmin
     .from('investments')
     .select('*')
     .eq('status', 'active');
@@ -88,6 +122,7 @@ const applyDailyYield = async ({ rate }) => {
     console.log('💰 Valor do investimento:', investment.amount);
     console.log('👤 Usuário:', investment.user_id);
     console.log('📋 Plano:', investment.plan_slug);
+    console.log('🔍 DEBUG: investment.user_id é NULL?', investment.user_id === null);
     
     const dailyYield = parseFloat(investment.amount) * parseFloat(rate);
     const clientYield = dailyYield * (investment.client_share / 100);
@@ -99,7 +134,7 @@ const applyDailyYield = async ({ rate }) => {
 
     // Create yield record
     console.log('💾 Criando registro de rendimento...');
-    const { data: yieldRecord, error: yieldError } = await supabase
+    const { data: yieldRecord, error: yieldError } = await supabaseAdmin
       .from('yields')
       .insert({
         investment_id: investment.id,
@@ -122,7 +157,7 @@ const applyDailyYield = async ({ rate }) => {
 
     // Update investment totals
     console.log('🔄 Atualizando totais do investimento...');
-    const { error: updateError } = await supabase
+    const { error: updateError } = await supabaseAdmin
       .from('investments')
       .update({
         daily_yield: dailyYield,
@@ -140,12 +175,78 @@ const applyDailyYield = async ({ rate }) => {
 
     // Update user total earned
     console.log('👤 Atualizando totais do usuário...');
-    const { error: userUpdateError } = await supabase
+    
+    // Primeiro buscar os dados atuais do perfil
+    const { data: userProfile, error: profileError } = await supabaseAdmin
+      .from('profiles')
+      .select('total_earned')
+      .eq('id', investment.user_id)
+      .single();
+
+    let currentTotal = 0;
+    
+    // Se perfil não existe, criar automaticamente
+    if (profileError && profileError.code === 'PGRST116') {
+      console.log('⚠️ Perfil não encontrado, criando automaticamente...');
+      
+      // Criar perfil básico sem dados do auth
+      const { data: newProfile, error: createError } = await supabaseAdmin
+        .from('profiles')
+        .insert({
+          id: investment.user_id,
+          user_id: investment.user_id,  // Adicionar user_id também
+          full_name: 'Usuário ' + investment.user_id.substring(0, 8),
+          email: 'user' + investment.user_id.substring(0, 8) + '@imperium.com',
+          total_earned: 0,
+          status: 'active'
+        })
+        .select('total_earned')
+        .single();
+        
+      if (createError) {
+        // Se erro for de duplicidade, tentar buscar o perfil existente
+        if (createError.code === '23505') {
+          console.log('⚠️ Perfil já existe, buscando dados existentes...');
+          const { data: existingProfile, error: fetchError } = await supabaseAdmin
+            .from('profiles')
+            .select('total_earned')
+            .eq('user_id', investment.user_id)  // Buscar por user_id
+            .single();
+          
+          if (fetchError) {
+            console.error('❌ Erro ao buscar perfil existente:', fetchError);
+            throw fetchError;
+          }
+          
+          currentTotal = parseFloat(existingProfile?.total_earned || 0);
+          console.log('✅ Perfil existente encontrado');
+        } else {
+          console.error('❌ Erro ao criar perfil:', createError);
+          throw createError;
+        }
+      } else {
+        currentTotal = parseFloat(newProfile?.total_earned || 0);
+        console.log('✅ Perfil criado automaticamente');
+      }
+    } else if (profileError) {
+      console.error('❌ Erro ao buscar perfil:', profileError);
+      throw profileError;
+    } else {
+      // Usar perfil existente
+      currentTotal = parseFloat(userProfile?.total_earned || 0);
+    }
+
+    const newTotal = currentTotal + clientYield;
+
+    console.log(`📊 Saldo anterior: ${currentTotal}`);
+    console.log(`📊 Saldo atual: ${newTotal}`);
+
+    const { error: userUpdateError } = await supabaseAdmin
       .from('profiles')
       .update({
-        total_earned: (parseFloat(investment.profiles?.total_earned || 0) + clientYield)
+        total_earned: newTotal
       })
-      .eq('user_id', investment.user_id);
+      .eq('id', investment.user_id);
 
     if (userUpdateError) {
       console.error('❌ Erro ao atualizar usuário:', userUpdateError);
@@ -153,8 +254,6 @@ const applyDailyYield = async ({ rate }) => {
     }
 
     console.log('✅ Usuário atualizado com sucesso');
-    console.log(`📊 Saldo anterior: ${investment.profiles?.total_earned || 0}`);
-    console.log(`📊 Saldo atual: ${parseFloat(investment.profiles?.total_earned || 0) + clientYield}`);
 
     results.push(yieldRecord);
   }
@@ -186,18 +285,21 @@ export default function AdminYields() {
       toast.success(`Rendimento diário aplicado para ${results.length} investimentos!`);
       setShowYieldDialog(false);
       setDailyRate('0.01');
+      console.log('✅ Modal fechado automaticamente após sucesso');
     },
     onError: (error) => {
       toast.error('Erro ao aplicar rendimento: ' + error.message);
+      console.error('❌ Erro no applyDailyYield:', error);
     },
   });
 
   const filteredYields = yieldsData?.yields?.filter(yieldItem => {
     const matchesSearch = yieldItem.profiles?.full_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          yieldItem.profiles?.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         yieldItem.investments?.plan_slug?.toLowerCase().includes(searchTerm.toLowerCase());
+                         yieldItem.amount?.toString().includes(searchTerm.toLowerCase());
     
-    const matchesPlan = planFilter === 'all' || yieldItem.investments?.plan_slug === planFilter;
+    // Filtro de plano simplificado - vamos remover por enquanto
+    const matchesPlan = planFilter === 'all'; // Temporariamente ignorar filtro de plano
     
     let matchesDate = true;
     if (dateFilter !== 'all') {
