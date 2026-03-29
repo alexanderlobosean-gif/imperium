@@ -16,13 +16,34 @@ export default function Network() {
 
   const { data: networkMembers = [] } = useQuery({
     queryKey: ['network', user?.id],
-    queryFn: () => base44.entities.NetworkRelation.filter({ user_id: user?.id }),
+    queryFn: async () => {
+      if (!user?.id) return [];
+      const { data, error } = await supabase
+        .from('network_relations')
+        .select('*')
+        .or(`referrer_id.eq.${user.id},referred_id.eq.${user.id}`)
+        .order('created_at', { ascending: false });
+      
+      if (error) throw error;
+      return data || [];
+    },
     enabled: !!user?.id,
   });
 
   const { data: investments = [] } = useQuery({
     queryKey: ['investments', user?.id],
-    queryFn: () => base44.entities.Investment.filter({ user_id: user?.id, status: 'active' }),
+    queryFn: async () => {
+      if (!user?.id) return [];
+      const { data, error } = await supabase
+        .from('investments')
+        .select('*')
+        .eq('user_id', user?.id)
+        .eq('status', 'active')
+        .order('created_at', { ascending: false });
+      
+      if (error) throw error;
+      return data || [];
+    },
     enabled: !!user?.id,
   });
 
@@ -34,11 +55,21 @@ export default function Network() {
   const { data: indirectInvestments = [] } = useQuery({
     queryKey: ['indirect-investments', indirectIds.join(',')],
     queryFn: async () => {
+      if (indirectIds.length === 0) return {};
       const results = await Promise.all(
-        indirectIds.map((id) => base44.entities.Investment.filter({ user_id: id, status: 'active' }))
+        indirectIds.map((id) => supabase
+          .from('investments')
+          .select('*')
+          .eq('user_id', id)
+          .eq('status', 'active')
+        )
       );
       const map = {};
-      indirectIds.forEach((id, i) => { if (results[i]?.[0]) map[id] = results[i][0].amount; });
+      indirectIds.forEach((id, i) => { 
+        if (results[i]?.data && results[i].data[0]) {
+          map[id] = results[i].data[0].amount; 
+        }
+      });
       return map;
     },
     enabled: indirectIds.length > 0,
@@ -86,7 +117,7 @@ export default function Network() {
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
         <StatsCard title="Indicados Diretos" value={directMembers.length} icon={User} color="blue" isCurrency={false} />
         <StatsCard title="Indicados Indiretos" value={indirectMembers.length} icon={Users} color="purple" isCurrency={false} />
-        <StatsCard title="Total Gerado" value={totalGenerated} icon={TrendingUp} color="green" />
+        <StatsCard title="Total Gerado" value={totalGenerated} icon={TrendingUp} color="green" isCurrency={false} />
         <StatsCard title="Níveis Liberados" value={`${unlockedLevels} / 20`} icon={Users} color="gold" isCurrency={false} />
       </div>
 

@@ -32,7 +32,7 @@ export default function Dashboard() {
       if (refCode) {
         localStorage.removeItem('referral_code');
         try {
-          // await base44.functions.invoke('linkReferral', { referral_code: refCode });
+          // TODO: Implementar função de vinculação de indicação com Supabase
           console.log('Referral code to link:', refCode);
         } catch (e) {
           console.error('Erro ao vincular indicação:', e);

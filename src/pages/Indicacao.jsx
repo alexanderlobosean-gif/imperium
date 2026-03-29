@@ -22,7 +22,8 @@ export default function Indicacao() {
     try {
       const code = (user.full_name?.replace(/\s+/g, '').toUpperCase().slice(0, 4) || 'USER') +
         Math.random().toString(36).substring(2, 7).toUpperCase();
-      await base44.auth.updateMe({ referral_code: code });
+      // TODO: Implementar geração de código de indicação com Supabase
+      console.log('Generated referral code:', code);
       window.location.reload();
     } catch (e) {
       toast.error('Erro ao gerar código de indicação');

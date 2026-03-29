@@ -328,9 +328,9 @@ const Register = () => {
               <div className="flex justify-center mb-8">
                 <div className="flex items-center">
                   <img 
-                    src="/icone.png" 
+                    src="/logo_p.png" 
                     alt="Imperium Club" 
-                    className="w-12 h-12 mr-3"
+                    className="w-20 h-20 mr-3"
                   />
                   <div>
                     <h1 className="text-3xl font-bold bg-gradient-to-r from-yellow-400 to-yellow-600 bg-clip-text text-transparent">

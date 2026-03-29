@@ -15,10 +15,14 @@ const Footer = () => {
             {/* Company Info */}
             <div className="lg:col-span-1">
               <div className="mb-4">
-                <h1 className="text-2xl font-bold bg-gradient-to-r from-yellow-400 to-yellow-600 bg-clip-text text-transparent">
-                  IMPERIUM
-                </h1>
-                <p className="text-xs text-gray-400 -mt-1">CLUB</p>
+                <div className="flex items-center">
+                  <img 
+                    src="/logo_p.png" 
+                    alt="Imperium Club" 
+                    className="h-25 w-auto mr-3"
+                  />
+                  
+                </div>
               </div>
               <p className="text-gray-300 mb-6 leading-relaxed">
                 Transformando vidas através de investimentos inteligentes e oportunidades exclusivas.

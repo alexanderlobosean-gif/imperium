@@ -41,7 +41,8 @@ export const AuthProvider = ({ children }) => {
       async (event, session) => {
         console.log('Auth state changed:', { event, session: session?.user });
         
-        if (session) {
+        // Evitar loop infinito - só processar mudanças reais
+        if (event === 'SIGNED_IN' && session?.user) {
           // Fetch user profile to get role from profiles table
           const { data: profile } = await supabase
             .from('profiles')
@@ -54,7 +55,7 @@ export const AuthProvider = ({ children }) => {
             role: profile?.role || 'user' // Default to 'user' if not found
           })
           setIsAuthenticated(true)
-        } else {
+        } else if (event === 'SIGNED_OUT') {
           setUser(null)
           setIsAuthenticated(false)
         }
