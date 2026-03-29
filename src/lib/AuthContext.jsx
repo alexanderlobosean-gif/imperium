@@ -17,16 +17,18 @@ export const AuthProvider = ({ children }) => {
       const { data: { session }, error } = await supabase.auth.getSession()
       
       if (session) {
-        // Fetch user profile to get role from profiles table
+        // Fetch user profile to get role and referral_code from profiles table
         const { data: profile } = await supabase
           .from('profiles')
-          .select('role')
+          .select('role, referral_code, full_name, email')
           .eq('user_id', session.user.id)
           .single();
         
         setUser({
           ...session.user,
-          role: profile?.role || 'user' // Default to 'user' if not found
+          role: profile?.role || 'user',
+          referral_code: profile?.referral_code || null,
+          full_name: profile?.full_name || session.user.email
         })
         setIsAuthenticated(true)
       }
@@ -43,16 +45,18 @@ export const AuthProvider = ({ children }) => {
         
         // Evitar loop infinito - só processar mudanças reais
         if (event === 'SIGNED_IN' && session?.user) {
-          // Fetch user profile to get role from profiles table
+          // Fetch user profile to get role and referral_code from profiles table
           const { data: profile } = await supabase
             .from('profiles')
-            .select('role')
+            .select('role, referral_code, full_name, email')
             .eq('user_id', session.user.id)
             .single();
           
           setUser({
             ...session.user,
-            role: profile?.role || 'user' // Default to 'user' if not found
+            role: profile?.role || 'user',
+            referral_code: profile?.referral_code || null,
+            full_name: profile?.full_name || session.user.email
           })
           setIsAuthenticated(true)
         } else if (event === 'SIGNED_OUT') {

@@ -20,7 +20,11 @@ import {
   XCircle, 
   Clock, 
   ArrowDownCircle, 
-  DollarSign 
+  DollarSign, 
+  Plus,
+  Trash2,
+  Save,
+  UserPlus
 } from 'lucide-react';
 
 // Fetch users (usando supabaseAdmin para bypass RLS)
@@ -93,12 +97,91 @@ const updateUserRole = async ({ userId, role }) => {
   return data;
 };
 
+// Delete user (usando supabaseAdmin)
+const deleteUser = async (userId) => {
+  const { error } = await supabaseAdmin
+    .from('profiles')
+    .delete()
+    .eq('id', userId);
+
+  if (error) throw error;
+  return userId;
+};
+
+// Create new user (usando supabaseAdmin)
+const createUser = async (userData) => {
+  const { data, error } = await supabaseAdmin
+    .from('profiles')
+    .insert({
+      full_name: userData.full_name,
+      email: userData.email,
+      document_number: userData.document_number,
+      phone: userData.phone,
+      status: userData.status || 'active',
+      role: userData.role || 'user',
+      referral_code: userData.referral_code || null,
+      referred_by: userData.referred_by || null,
+      available_balance: 0,
+      total_earned: 0
+    })
+    .select()
+    .single();
+
+  if (error) throw error;
+  return data;
+};
+
+// Update user details (usando supabaseAdmin)
+const updateUserDetails = async ({ userId, userData }) => {
+  const { data, error } = await supabaseAdmin
+    .from('profiles')
+    .update({
+      full_name: userData.full_name,
+      email: userData.email,
+      document_number: userData.document_number,
+      phone: userData.phone,
+      status: userData.status,
+      role: userData.role,
+      referral_code: userData.referral_code || null,
+      referred_by: userData.referred_by || null
+    })
+    .eq('id', userId)
+    .select()
+    .single();
+
+  if (error) throw error;
+  return data;
+};
+
 export default function AdminUsers() {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [roleFilter, setRoleFilter] = useState('all');
   const [selectedUser, setSelectedUser] = useState(null);
   const [showUserDialog, setShowUserDialog] = useState(false);
+  const [showCreateDialog, setShowCreateDialog] = useState(false);
+  const [showEditDialog, setShowEditDialog] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [newUser, setNewUser] = useState({
+    full_name: '',
+    email: '',
+    document_number: '',
+    phone: '',
+    status: 'active',
+    role: 'user',
+    referral_code: '',
+    referred_by: ''
+  });
+  const [editUserData, setEditUserData] = useState({
+    full_name: '',
+    email: '',
+    document_number: '',
+    phone: '',
+    status: 'active',
+    role: 'user',
+    referral_code: '',
+    referred_by: ''
+  });
   const queryClient = useQueryClient();
 
   const { data: users = [], isLoading } = useQuery({
@@ -143,6 +226,52 @@ export default function AdminUsers() {
     },
   });
 
+  const deleteUserMutation = useMutation({
+    mutationFn: deleteUser,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-users'] });
+      toast.success('Usuário excluído com sucesso!');
+      setShowDeleteDialog(false);
+    },
+    onError: (error) => {
+      toast.error('Erro ao excluir usuário: ' + error.message);
+    },
+  });
+
+  const createUserMutation = useMutation({
+    mutationFn: createUser,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-users'] });
+      toast.success('Usuário criado com sucesso!');
+      setShowCreateDialog(false);
+      setNewUser({
+        full_name: '',
+        email: '',
+        document_number: '',
+        phone: '',
+        status: 'active',
+        role: 'user',
+        referral_code: '',
+        referred_by: ''
+      });
+    },
+    onError: (error) => {
+      toast.error('Erro ao criar usuário: ' + error.message);
+    },
+  });
+
+  const updateUserDetailsMutation = useMutation({
+    mutationFn: updateUserDetails,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-users'] });
+      toast.success('Dados do usuário atualizados com sucesso!');
+      setShowEditDialog(false);
+    },
+    onError: (error) => {
+      toast.error('Erro ao atualizar dados do usuário: ' + error.message);
+    },
+  });
+
   const filteredUsers = users.filter(user => {
     const matchesSearch = user.full_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          user.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -165,6 +294,41 @@ export default function AdminUsers() {
 
   const handleUpdateRole = (userId, newRole) => {
     updateRoleMutation.mutate({ userId, role: newRole });
+  };
+
+  const handleDeleteUser = (userId) => {
+    deleteUserMutation.mutate(userId);
+  };
+
+  const handleCreateUser = () => {
+    createUserMutation.mutate(newUser);
+  };
+
+  const handleEditUser = (user) => {
+    setSelectedUser(user);
+    setEditUserData({
+      full_name: user.full_name || '',
+      email: user.email || '',
+      document_number: user.document_number || '',
+      phone: user.phone || '',
+      status: user.status || 'active',
+      role: user.role || 'user',
+      referral_code: user.referral_code || '',
+      referred_by: user.referred_by || ''
+    });
+    setShowEditDialog(true);
+  };
+
+  const handleUpdateUserDetails = () => {
+    updateUserDetailsMutation.mutate({
+      userId: selectedUser.id,
+      userData: editUserData
+    });
+  };
+
+  const openDeleteDialog = (user) => {
+    setSelectedUser(user);
+    setShowDeleteDialog(true);
   };
 
   const getStatusBadge = (status) => {
@@ -349,6 +513,13 @@ export default function AdminUsers() {
                 <SelectItem value="super_admin">Super Admin</SelectItem>
               </SelectContent>
             </Select>
+            <Button
+              onClick={() => setShowCreateDialog(true)}
+              className="bg-blue-600 hover:bg-blue-700"
+            >
+              <UserPlus className="w-4 h-4 mr-2" />
+              Novo Usuário
+            </Button>
           </div>
         </CardContent>
       </Card>
@@ -414,6 +585,13 @@ export default function AdminUsers() {
                           <Button
                             variant="ghost"
                             size="sm"
+                            onClick={() => handleEditUser(user)}
+                          >
+                            <Edit className="w-4 h-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
                             onClick={() => handleUpdateStatus(user.id, user.status === 'active' ? 'inactive' : 'active')}
                           >
                             {user.status === 'active' ? (
@@ -421,6 +599,14 @@ export default function AdminUsers() {
                             ) : (
                               <CheckCircle className="w-4 h-4" />
                             )}
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => openDeleteDialog(user)}
+                            className="text-red-500 hover:text-red-700"
+                          >
+                            <Trash2 className="w-4 h-4" />
                           </Button>
                         </div>
                       </td>
@@ -465,6 +651,18 @@ export default function AdminUsers() {
                 <div>
                   <p className="text-sm text-muted-foreground">Role</p>
                   <div>{getRoleBadge(selectedUser.role)}</div>
+                </div>
+              </div>
+
+              {/* Referral Info */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <p className="text-sm text-muted-foreground">Código de Indicação (próprio)</p>
+                  <p className="font-medium">{selectedUser.referral_code || 'N/A'}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Indicado por (ID)</p>
+                  <p className="font-medium">{selectedUser.referred_by || 'N/A'}</p>
                 </div>
               </div>
 
@@ -520,6 +718,274 @@ export default function AdminUsers() {
           <DialogFooter>
             <Button variant="outline" onClick={() => setShowUserDialog(false)}>
               Fechar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Create User Dialog */}
+      <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Criar Novo Usuário</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div>
+              <label className="block text-sm font-medium mb-2">Nome Completo</label>
+              <Input
+                value={newUser.full_name}
+                onChange={(e) => setNewUser({...newUser, full_name: e.target.value})}
+                placeholder="João Silva"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-2">Email</label>
+              <Input
+                type="email"
+                value={newUser.email}
+                onChange={(e) => setNewUser({...newUser, email: e.target.value})}
+                placeholder="joao@email.com"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-2">CPF/CNPJ</label>
+              <Input
+                value={newUser.document_number}
+                onChange={(e) => setNewUser({...newUser, document_number: e.target.value})}
+                placeholder="000.000.000-00"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-2">Telefone</label>
+              <Input
+                value={newUser.phone}
+                onChange={(e) => setNewUser({...newUser, phone: e.target.value})}
+                placeholder="(11) 99999-9999"
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium mb-2">Status</label>
+                <Select
+                  value={newUser.status}
+                  onValueChange={(value) => setNewUser({...newUser, status: value})}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="active">Ativo</SelectItem>
+                    <SelectItem value="inactive">Inativo</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-2">Role</label>
+                <Select
+                  value={newUser.role}
+                  onValueChange={(value) => setNewUser({...newUser, role: value})}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="user">Usuário</SelectItem>
+                    <SelectItem value="admin">Admin</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-4 mt-4">
+              <div>
+                <label className="block text-sm font-medium mb-2">Código de Indicação (próprio)</label>
+                <Input
+                  value={newUser.referral_code}
+                  onChange={(e) => setNewUser({...newUser, referral_code: e.target.value})}
+                  placeholder="Código do usuário"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-2">Indicado por</label>
+                <Select
+                  value={newUser.referred_by || "none"}
+                  onValueChange={(value) => setNewUser({...newUser, referred_by: value === "none" ? "" : value})}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione um usuário" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">Nenhum</SelectItem>
+                    {users.map((user) => (
+                      <SelectItem key={user.user_id} value={user.user_id}>
+                        {user.full_name} ({user.referral_code || "sem código"})
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowCreateDialog(false)}>
+              Cancelar
+            </Button>
+            <Button 
+              onClick={handleCreateUser}
+              disabled={createUserMutation.isPending || !newUser.full_name || !newUser.email}
+              className="bg-blue-600 hover:bg-blue-700"
+            >
+              {createUserMutation.isPending ? 'Criando...' : 'Criar Usuário'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit User Dialog */}
+      <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Editar Usuário</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div>
+              <label className="block text-sm font-medium mb-2">Nome Completo</label>
+              <Input
+                value={editUserData.full_name}
+                onChange={(e) => setEditUserData({...editUserData, full_name: e.target.value})}
+                placeholder="João Silva"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-2">Email</label>
+              <Input
+                type="email"
+                value={editUserData.email}
+                onChange={(e) => setEditUserData({...editUserData, email: e.target.value})}
+                placeholder="joao@email.com"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-2">CPF/CNPJ</label>
+              <Input
+                value={editUserData.document_number}
+                onChange={(e) => setEditUserData({...editUserData, document_number: e.target.value})}
+                placeholder="000.000.000-00"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-2">Telefone</label>
+              <Input
+                value={editUserData.phone}
+                onChange={(e) => setEditUserData({...editUserData, phone: e.target.value})}
+                placeholder="(11) 99999-9999"
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium mb-2">Status</label>
+                <Select
+                  value={editUserData.status}
+                  onValueChange={(value) => setEditUserData({...editUserData, status: value})}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="active">Ativo</SelectItem>
+                    <SelectItem value="inactive">Inativo</SelectItem>
+                    <SelectItem value="suspended">Suspenso</SelectItem>
+                    <SelectItem value="banned">Banido</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-2">Role</label>
+                <Select
+                  value={editUserData.role}
+                  onValueChange={(value) => setEditUserData({...editUserData, role: value})}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="user">Usuário</SelectItem>
+                    <SelectItem value="admin">Admin</SelectItem>
+                    <SelectItem value="super_admin">Super Admin</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-4 mt-4">
+              <div>
+                <label className="block text-sm font-medium mb-2">Código de Indicação (próprio)</label>
+                <Input
+                  value={editUserData.referral_code}
+                  onChange={(e) => setEditUserData({...editUserData, referral_code: e.target.value})}
+                  placeholder="Código do usuário"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-2">Indicado por</label>
+                <Select
+                  value={editUserData.referred_by || "none"}
+                  onValueChange={(value) => setEditUserData({...editUserData, referred_by: value === "none" ? "" : value})}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione um usuário" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">Nenhum</SelectItem>
+                    {users.map((user) => (
+                      <SelectItem key={user.user_id} value={user.user_id}>
+                        {user.full_name} ({user.referral_code || "sem código"})
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowEditDialog(false)}>
+              Cancelar
+            </Button>
+            <Button 
+              onClick={handleUpdateUserDetails}
+              disabled={updateUserDetailsMutation.isPending}
+              className="bg-green-600 hover:bg-green-700"
+            >
+              <Save className="w-4 h-4 mr-2" />
+              {updateUserDetailsMutation.isPending ? 'Salvando...' : 'Salvar Alterações'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete User Dialog */}
+      <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-red-600">Excluir Usuário</DialogTitle>
+          </DialogHeader>
+          <div className="py-4">
+            <p className="text-muted-foreground mb-4">
+              Tem certeza que deseja excluir o usuário <strong>{selectedUser?.full_name}</strong>?
+            </p>
+            <p className="text-sm text-red-500">
+              Esta ação não pode ser desfeita. Todos os dados do usuário serão permanentemente removidos.
+            </p>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowDeleteDialog(false)}>
+              Cancelar
+            </Button>
+            <Button 
+              onClick={() => handleDeleteUser(selectedUser?.id)}
+              disabled={deleteUserMutation.isPending}
+              variant="destructive"
+            >
+              <Trash2 className="w-4 h-4 mr-2" />
+              {deleteUserMutation.isPending ? 'Excluindo...' : 'Excluir Usuário'}
             </Button>
           </DialogFooter>
         </DialogContent>
