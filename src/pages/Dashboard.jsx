@@ -113,17 +113,33 @@ export default function Dashboard() {
   const investmentByUser = {};
   networkInvestments.forEach((inv) => { investmentByUser[inv.user_id] = inv; });
 
+  // Calcular totais reais a partir dos investimentos
+  const totalInvested = investments.reduce((sum, i) => sum + (parseFloat(i.amount) || 0), 0);
+  const totalEarnings = investments.reduce((sum, i) => sum + (parseFloat(i.total_earned) || 0), 0);
+  
+  // Saldo disponível = depósitos confirmados - investimentos
+  const { data: confirmedDeposits = [] } = useQuery({
+    queryKey: ['confirmed-deposits', user?.id],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from('deposits')
+        .select('amount')
+        .eq('user_id', user?.id)
+        .eq('status', 'confirmed');
+      return data || [];
+    },
+    enabled: !!user?.id,
+  });
+  
+  const totalDeposits = confirmedDeposits.reduce((sum, d) => sum + (parseFloat(d.amount) || 0), 0);
+  const availableBalance = totalDeposits - totalInvested + totalEarnings;
+
   const activeInvestment = investments.find((i) => i.status === 'active');
-  const totalInvested = investments.reduce((sum, i) => sum + (i.amount || 0), 0);
-  const totalEarnings = user?.total_earnings || 0;
   const networkEarnings = networkMembers.reduce((sum, m) => {
     const inv = investmentByUser[m.referred_id];
     const pct = (RESIDUAL_PERCENTAGES[m.level] || 0) / 100;
     return sum + (inv?.total_earned || 0) * pct;
   }, 0);
-  // Saldo disponível = saldo aportado (deposits aprovados - planos comprados) + rendimentos + ganhos de rede
-  const depositBalance = user?.available_balance || 0;
-  const availableBalance = depositBalance + totalEarnings + networkEarnings;
   const totalValue = availableBalance;
 
   const referralLink = user?.referral_code
@@ -162,10 +178,10 @@ export default function Dashboard() {
 
       {/* Stats */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-        <StatsCard title="Valor Investido" value={totalInvested} icon={TrendingUp} color="blue" />
-        <StatsCard title="Rendimento" value={totalEarnings} icon={TrendingUp} color="green" />
-        <StatsCard title="Ganhos de Rede" value={networkEarnings} icon={Users} color="purple" />
-        <StatsCard title="Saldo Disponível" value={availableBalance} icon={Wallet} color="amber" />
+        <StatsCard title="Valor Investido" value={totalInvested} icon={TrendingUp} color="blue" subtitle="" />
+        <StatsCard title="Rendimento" value={totalEarnings} icon={TrendingUp} color="green" subtitle="" />
+        <StatsCard title="Ganhos de Rede" value={networkEarnings} icon={Users} color="purple" subtitle="" />
+        <StatsCard title="Saldo Disponível" value={availableBalance} icon={Wallet} color="amber" subtitle="" />
       </div>
 
       {/* Quick Actions */}

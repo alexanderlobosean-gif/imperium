@@ -30,7 +30,9 @@ const fetchWithdrawals = async () => {
 
 // Update withdrawal status
 const updateWithdrawalStatus = async ({ withdrawalId, status, adminNotes }) => {
-  const { data, error } = await supabase
+  console.log('🔄 Atualizando status do saque:', { withdrawalId, status, adminNotes });
+  
+  const { data, error } = await supabaseAdmin
     .from('withdrawals')
     .update({ 
       status,
@@ -40,8 +42,13 @@ const updateWithdrawalStatus = async ({ withdrawalId, status, adminNotes }) => {
     .eq('id', withdrawalId)
     .select()
     .single();
+  
+  console.log('📊 Resposta update:', { data, error });
 
-  if (error) throw error;
+  if (error) {
+    console.error('❌ Erro ao atualizar:', error);
+    throw error;
+  }
   return data;
 };
 
@@ -61,8 +68,14 @@ export default function AdminWithdrawals() {
 
   const updateStatusMutation = useMutation({
     mutationFn: updateWithdrawalStatus,
-    onSuccess: () => {
-      queryClient.invalidateQueries(['admin-withdrawals']);
+    onSuccess: (data) => {
+      // Invalidar query do admin
+      queryClient.invalidateQueries({ queryKey: ['admin-withdrawals'] });
+      // Invalidar query do usuário (usando user_id do saque atualizado)
+      if (data?.user_id) {
+        queryClient.invalidateQueries({ queryKey: ['withdrawals', data.user_id] });
+        console.log('🔄 Query de withdrawals do usuário invalidada:', data.user_id);
+      }
       toast.success('Status do saque atualizado!');
       setShowWithdrawalDialog(false);
       setSelectedWithdrawal(null);

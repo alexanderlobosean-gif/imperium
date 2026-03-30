@@ -38,20 +38,24 @@ export default function Profile() {
 
   const fetchProfile = async () => {
     try {
+      const userIdStr = String(user?.id);
+      console.log('Fetching profile for user:', userIdStr);
+      
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
-        .filter('user_id', 'eq', user.id)
+        .eq('user_id', userIdStr)
         .single();
 
       if (error) throw error;
 
+      console.log('Profile fetched:', data);
       setProfile(data);
       setForm({
         full_name: data.full_name || '',
         phone: data.phone || '',
         document_number: data.document_number || '',
-        birth_date: data.birth_date || '', // Mantém como string para o input
+        birth_date: data.birth_date || '',
         address: data.address || '',
         city: data.city || '',
         state: data.state || '',

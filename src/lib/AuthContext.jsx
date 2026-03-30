@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react'
+import React, { createContext, useContext, useState, useEffect, useRef } from 'react'
 import { supabase } from '@/lib/supabase'
 
 const AuthContext = createContext()
@@ -10,13 +10,15 @@ export const AuthProvider = ({ children }) => {
   const [isLoadingPublicSettings, setIsLoadingPublicSettings] = useState(false)
   const [authError, setAuthError] = useState(null)
   const [appPublicSettings, setAppPublicSettings] = useState(null)
+  const hasInitialized = useRef(false)
+  const currentUserId = useRef(null)
 
   useEffect(() => {
     // Get initial session
     const getInitialSession = async () => {
       const { data: { session }, error } = await supabase.auth.getSession()
       
-      if (session) {
+      if (session?.user) {
         // Fetch user profile to get role and referral_code from profiles table
         const { data: profile } = await supabase
           .from('profiles')
@@ -24,13 +26,17 @@ export const AuthProvider = ({ children }) => {
           .eq('user_id', session.user.id)
           .single();
         
-        setUser({
+        const userData = {
           ...session.user,
           role: profile?.role || 'user',
           referral_code: profile?.referral_code || null,
           full_name: profile?.full_name || session.user.email
-        })
+        }
+        
+        setUser(userData)
         setIsAuthenticated(true)
+        currentUserId.current = session.user.id
+        hasInitialized.current = true
       }
       
       setIsLoadingAuth(false)
@@ -41,27 +47,37 @@ export const AuthProvider = ({ children }) => {
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        console.log('Auth state changed:', { event, session: session?.user });
+        // Só loga eventos importantes, ignorando INITIAL_SESSION
+        if (event !== 'INITIAL_SESSION') {
+          console.log('Auth event:', event, '- User:', session?.user?.email || 'none');
+        }
         
-        // Evitar loop infinito - só processar mudanças reais
+        // Ignora eventos se o usuário não mudou
+        if (session?.user?.id === currentUserId.current && hasInitialized.current) {
+          return;
+        }
+        
         if (event === 'SIGNED_IN' && session?.user) {
-          // Fetch user profile to get role and referral_code from profiles table
           const { data: profile } = await supabase
             .from('profiles')
             .select('role, referral_code, full_name, email')
             .eq('user_id', session.user.id)
             .single();
           
-          setUser({
+          const userData = {
             ...session.user,
             role: profile?.role || 'user',
             referral_code: profile?.referral_code || null,
             full_name: profile?.full_name || session.user.email
-          })
+          }
+          
+          setUser(userData)
           setIsAuthenticated(true)
-        } else if (event === 'SIGNED_OUT') {
+          currentUserId.current = session.user.id
+        } else if (event === 'SIGNED_OUT' || event === 'USER_DELETED') {
           setUser(null)
           setIsAuthenticated(false)
+          currentUserId.current = null
         }
         setIsLoadingAuth(false)
       }

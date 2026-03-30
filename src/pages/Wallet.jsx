@@ -32,14 +32,30 @@ import {
 import {
   ArrowUpCircle, 
   ArrowDownCircle,
+  ArrowUpRight,
+  ArrowDownLeft,
   Send, 
   Wallet as WalletIcon,
   Building2,
   Copy,
   Check,
   QrCode,
-  DollarSign
+  DollarSign,
+  Clock
 } from 'lucide-react';
+
+// Funções utilitárias
+const formatDateTime = (dateString) => {
+  if (!dateString) return '';
+  const date = new Date(dateString);
+  return date.toLocaleDateString('pt-BR', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit'
+  });
+};
 
 // Função para formatar moeda
 const formatCurrency = (value) => {
@@ -185,34 +201,19 @@ const calculateCRC16 = (data) => {
 const fetchAdminBankingAccounts = async () => {
   console.log('🔍 Buscando contas admin...');
   
-  // Usar service role key para bypass RLS e buscar contas admin
+  // Simplificar: buscar apenas contas ativas
   const { data, error } = await supabase
     .from('admin_banking_accounts')
     .select('*')
     .eq('is_active', true)
-    .eq('is_default', true)
     .limit(1);
 
   console.log('📊 Resultado query admin accounts:', { data, error });
   
   if (error) {
     console.error('❌ Erro ao buscar contas admin:', error);
-    // Tentar buscar todas as contas ativas se não encontrar padrão
-    const { data: allData, error: allError } = await supabase
-      .from('admin_banking_accounts')
-      .select('*')
-      .eq('is_active', true)
-      .limit(1);
-    
-    console.log('🔄 Tentativa 2 - todas as contas ativas:', { allData, allError });
-    
-    if (allError) {
-      console.error('❌ Erro na segunda tentativa:', allError);
-      throw allError;
-    }
-    
-    console.log('✅ Contas admin encontradas (tentativa 2):', allData);
-    return allData || [];
+    // Retornar array vazio em vez de throw para não quebrar a UI
+    return [];
   }
   
   console.log('✅ Contas admin encontradas:', data);
@@ -243,6 +244,47 @@ const fetchUserInvestments = async (userId) => {
 
   if (error) throw error;
   return data || [];
+};
+
+// Find user by email
+const findUserByEmail = async (email) => {
+  const { data, error } = await supabase
+    .from('profiles')
+    .select('user_id, email, full_name')
+    .eq('email', email)
+    .single();
+  
+  if (error) throw new Error('Usuário não encontrado');
+  return data;
+};
+
+// Fetch user transfers
+const fetchUserTransfers = async (userId) => {
+  const { data, error } = await supabase
+    .from('transfers')
+    .select('*')
+    .or(`from_user_id.eq.${userId},to_user_id.eq.${userId}`)
+    .order('created_at', { ascending: false })
+    .limit(20);
+
+  if (error) throw error;
+  return data || [];
+};
+
+// Create transfer
+const createTransfer = async (transferData) => {
+  const { data, error } = await supabase
+    .from('transfers')
+    .insert({
+      ...transferData,
+      status: 'completed',
+      created_at: new Date().toISOString()
+    })
+    .select()
+    .single();
+
+  if (error) throw error;
+  return data;
 };
 
 // Create deposit
@@ -328,12 +370,75 @@ export default function Wallet() {
     enabled: !!user?.id,
   });
 
+  // Buscar depósitos confirmados para calcular saldo real
+  const { data: confirmedDeposits = [] } = useQuery({
+    queryKey: ['confirmed-deposits', user?.id],
+    queryFn: async () => {
+      console.log('🔍 Buscando depósitos para user_id:', user?.id);
+      const { data, error } = await supabase
+        .from('deposits')
+        .select('amount, id, created_at, status, description')
+        .eq('user_id', user?.id)
+        .eq('status', 'confirmed');
+      if (error) {
+        console.error('❌ Erro ao buscar depósitos:', {
+          code: error.code,
+          message: error.message,
+          details: error.details,
+          hint: error.hint
+        });
+        throw error;
+      }
+      console.log('✅ Depósitos encontrados:', data?.length || 0, data);
+      return data || [];
+    },
+    enabled: !!user?.id,
+  });
+
+  // Buscar saques do usuário
+  const { data: withdrawals = [] } = useQuery({
+    queryKey: ['withdrawals', user?.id],
+    queryFn: async () => {
+      console.log('🔍 Buscando saques para user_id:', user?.id);
+      const { data, error } = await supabase
+        .from('withdrawals')
+        .select('*')
+        .eq('user_id', user?.id)
+        .order('created_at', { ascending: false });
+      if (error) {
+        console.error('❌ Erro ao buscar saques:', {
+          code: error.code,
+          message: error.message,
+          details: error.details,
+          hint: error.hint
+        });
+        throw error;
+      }
+      console.log('✅ Saques encontrados:', data?.length || 0, data);
+      return data || [];
+    },
+    enabled: !!user?.id,
+  });
+
   const { data: adminAccounts = [], isLoading: accountsLoading } = useQuery({
-    queryKey: ['admin-banking-accounts-default'],
+    queryKey: ['admin-banking-accounts'],
     queryFn: fetchAdminBankingAccounts,
-    retry: 3,
-    retryDelay: 1000,
+    retry: 2,
+    retryDelay: 2000,
+    staleTime: 300000, // 5 minutos
+    cacheTime: 600000, // 10 minutos
     enabled: !!user // Só executar se tiver usuário
+  });
+
+  // Query para buscar transferências do usuário
+  const { data: transfers = [], isLoading: isLoadingTransfers } = useQuery({
+    queryKey: ['transfers', user?.id],
+    queryFn: async () => {
+      if (!user?.id) return [];
+      const data = await fetchUserTransfers(user.id);
+      return data;
+    },
+    enabled: !!user?.id,
   });
 
   const createDepositMutation = useMutation({
@@ -370,25 +475,143 @@ export default function Wallet() {
     console.log('📊 Admin accounts carregadas:', adminAccounts);
   }, [adminAccounts]);
 
+  // Create withdrawal mutation
   const createWithdrawalMutation = useMutation({
-    mutationFn: createWithdrawal,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['transactions', user?.id] });
+    mutationFn: async (withdrawalData) => {
+      console.log('🚀 createWithdrawalMutation chamada:', withdrawalData);
+      console.log('  - user?.id:', user?.id);
+      
+      try {
+        const { data, error } = await supabase
+          .from('withdrawals')
+          .insert({
+            user_id: user?.id,
+            amount: withdrawalData.amount,
+            method: 'pix',
+            destination_address: withdrawalData.wallet_address,
+            status: 'pending'
+          })
+          .select()
+          .single();
+        
+        console.log('📊 Resposta do Supabase:', { data, error });
+        
+        if (error) {
+          console.error('❌ Erro do Supabase:', error);
+          throw error;
+        }
+        
+        console.log('✅ Saque criado com sucesso:', data);
+        return data;
+      } catch (err) {
+        console.error('❌ Erro na mutation:', err);
+        throw err;
+      }
+    },
+    onSuccess: (data) => {
+      console.log('✅ onSuccess chamado:', data);
+      toast.success('Saque solicitado com sucesso! Aguarde aprovação.');
       setWithdrawAmount('');
-      setShowTerms(false);
+      setWithdrawWallet('');
       setAcceptedTerms(false);
-      toast.success('Saque solicitado com sucesso!');
+      // Refetch withdrawals list
+      queryClient.invalidateQueries({ queryKey: ['withdrawals', user?.id] });
     },
     onError: (error) => {
+      console.error('❌ onError chamado:', error);
       toast.error(`Erro ao solicitar saque: ${error.message}`);
     }
   });
 
-  const handleCopy = (text, fieldName) => {
-    navigator.clipboard.writeText(text);
-    setCopiedField(fieldName);
-    setTimeout(() => setCopiedField(null), 2000);
-  };
+  const createTransferMutation = useMutation({
+  mutationFn: async (transferData) => {
+    try {
+      console.log('🚀 createTransferMutation chamada:', transferData);
+      
+      // 1. Buscar usuário destinatário pelo email
+      console.log('🔍 Buscando destinatário:', transferData.email);
+      const recipient = await findUserByEmail(transferData.email);
+      console.log('✅ Destinatário encontrado:', recipient);
+      
+      // 2. Calcular saldo disponível (igual ao cálculo na UI)
+      console.log('💰 Calculando saldo para user:', user.id);
+      const { data: depositsData, error: depositsError } = await supabase
+        .from('deposits')
+        .select('amount')
+        .eq('user_id', user.id)
+        .eq('status', 'confirmed');
+      
+      if (depositsError) {
+        console.error('❌ Erro ao buscar depósitos:', depositsError);
+        throw depositsError;
+      }
+      
+      const { data: investmentsData, error: investmentsError } = await supabase
+        .from('investments')
+        .select('amount, total_earned')
+        .eq('user_id', user.id);
+      
+      if (investmentsError) {
+        console.error('❌ Erro ao buscar investimentos:', investmentsError);
+        throw investmentsError;
+      }
+        
+      const totalDeposits = (depositsData || []).reduce((sum, d) => sum + (parseFloat(d.amount) || 0), 0);
+      const totalInvested = (investmentsData || []).reduce((sum, i) => sum + (parseFloat(i.amount) || 0), 0);
+      const totalEarnings = (investmentsData || []).reduce((sum, i) => sum + (parseFloat(i.total_earned) || 0), 0);
+      const availableBalance = totalDeposits - totalInvested + totalEarnings;
+        
+      console.log('💰 Cálculo do saldo:', {
+        totalDeposits,
+        totalInvested,
+        totalEarnings,
+        availableBalance,
+        requestedAmount: transferData.amount
+      });
+        
+      if (availableBalance < parseFloat(transferData.amount)) {
+        console.log('❌ Saldo insuficiente:', availableBalance, '<', transferData.amount);
+        throw new Error(`Saldo insuficiente. Disponível: R$ ${availableBalance.toFixed(2)}`);
+      }
+      
+      // 3. Criar registro de transferência
+      console.log('💾 Criando registro de transferência...');
+      const { data: transfer, error: transferError } = await supabase
+        .from('transfers')
+        .insert({
+          from_user_id: user.id,
+          to_user_id: recipient.user_id,
+          amount: transferData.amount,
+          status: 'completed',
+          description: transferData.description || 'Transferência entre usuários'
+        })
+        .select()
+        .single();
+        
+      if (transferError) {
+        console.error('❌ Erro ao criar transferência:', transferError);
+        throw transferError;
+      }
+      
+      console.log('✅ Transferência criada com sucesso:', transfer);
+      return transfer;
+    } catch (error) {
+      console.error('❌ Erro completo na mutation:', error);
+      throw error;
+    }
+  },
+  onSuccess: () => {
+    toast.success('Transferência realizada com sucesso!');
+    setTransferAmount('');
+    setTransferEmail('');
+    queryClient.invalidateQueries({ queryKey: ['transfers', user?.id] });
+    queryClient.invalidateQueries({ queryKey: ['confirmed-deposits', user?.id] });
+  },
+  onError: (error) => {
+    console.error('❌ Erro na transferência:', error);
+    toast.error(`Erro na transferência: ${error.message}`);
+  }
+});
 
   const handleDeposit = () => {
     console.log('🚀 handleDeposit called');
@@ -435,35 +658,80 @@ export default function Wallet() {
   };
 
   const handleWithdrawal = () => {
+    console.log('🚀 handleWithdrawal chamado!');
+    console.log('  - withdrawAmount:', withdrawAmount);
+    console.log('  - withdrawWallet:', withdrawWallet);
+    console.log('  - acceptedTerms:', acceptedTerms);
+    
     if (!withdrawAmount) {
+      console.log('❌ Erro: Valor não informado');
       toast.error('Informe o valor do saque');
       return;
     }
 
     if (!withdrawWallet) {
+      console.log('❌ Erro: Carteira não informada');
       toast.error('Informe a carteira de destino');
       return;
     }
 
     if (!acceptedTerms) {
+      console.log('❌ Erro: Termos não aceitos');
       toast.error('Aceite os termos de saque');
       return;
     }
 
-    createWithdrawalMutation.mutate({
-      user_id: user?.id,
-      amount: parseFloat(withdrawAmount),
-      wallet_address: withdrawWallet,
-      type: withdrawType,
-      description: `Saque - ${withdrawType === 'yield' ? 'Rendimentos' : 'Capital'}`
+    console.log('✅ Todos validações passaram, enviando...');
+    try {
+      createWithdrawalMutation.mutate({
+        user_id: user?.id,
+        amount: parseFloat(withdrawAmount),
+        wallet_address: withdrawWallet,
+        type: withdrawType,
+        description: `Saque - ${withdrawType === 'yield' ? 'Rendimentos' : 'Capital'}`
+      });
+    } catch (err) {
+      console.error('❌ Erro ao chamar mutation:', err);
+      toast.error(`Erro inesperado: ${err.message}`);
+    }
+  };
+
+  const handleTransfer = () => {
+    console.log('🚀 handleTransfer chamado!');
+    console.log('  - transferAmount:', transferAmount);
+    console.log('  - transferEmail:', transferEmail);
+
+    if (!transferAmount || parseFloat(transferAmount) <= 0) {
+      console.log('❌ Erro: Valor não informado');
+      toast.error('Informe o valor da transferência');
+      return;
+    }
+
+    if (!transferEmail) {
+      console.log('❌ Erro: Email não informado');
+      toast.error('Informe o email do destinatário');
+      return;
+    }
+
+    if (transferEmail === user?.email) {
+      console.log('❌ Erro: Não pode transferir para si mesmo');
+      toast.error('Não é possível transferir para você mesmo');
+      return;
+    }
+
+    console.log('✅ Todas validações passaram, enviando...');
+    createTransferMutation.mutate({
+      email: transferEmail,
+      amount: parseFloat(transferAmount),
+      description: `Transferência para ${transferEmail}`
     });
   };
 
   const activeInvestment = investments.find(inv => inv.status === 'active');
-  const totalInvested = investments.reduce((sum, inv) => sum + (inv.amount || 0), 0);
-  const totalEarnings = user?.total_earned || 0;
-  const depositBalance = user?.available_balance || 0;
-  const availableBalance = depositBalance + totalEarnings;
+  const totalInvested = investments.reduce((sum, inv) => sum + (parseFloat(inv.amount) || 0), 0);
+  const totalEarnings = investments.reduce((sum, inv) => sum + (parseFloat(inv.total_earned) || 0), 0);
+  const totalDeposits = confirmedDeposits.reduce((sum, d) => sum + (parseFloat(d.amount) || 0), 0);
+  const availableBalance = totalDeposits - totalInvested + totalEarnings;
   const totalValue = availableBalance;
 
   return (
@@ -656,6 +924,66 @@ export default function Wallet() {
               )}
             </CardContent>
           </Card>
+
+          {/* Listagem de Depósitos */}
+          {confirmedDeposits.length > 0 ? (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <ArrowDownCircle className="w-5 h-5" />
+                  Histórico de Depósitos
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3">
+                  {confirmedDeposits.map((deposit, index) => (
+                    <div 
+                      key={deposit.id || `deposit-${index}`} 
+                      className="flex items-center justify-between p-3 bg-secondary/50 rounded-lg"
+                    >
+                      <div>
+                        <p className="font-medium text-foreground">
+                          {formatCurrency(parseFloat(deposit.amount))}
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          {new Date(deposit.created_at).toLocaleDateString('pt-BR')}
+                        </p>
+                      </div>
+                      <div className="text-right">
+                        <span className={`text-xs px-2 py-1 rounded ${
+                          deposit.status === 'approved' 
+                            ? 'bg-green-100 text-green-700' 
+                            : deposit.status === 'rejected'
+                            ? 'bg-red-100 text-red-700'
+                            : 'bg-amber-100 text-amber-700'
+                        }`}>
+                          {deposit.status === 'approved' 
+                            ? 'Aprovado' 
+                            : deposit.status === 'rejected'
+                            ? 'Rejeitado'
+                            : 'Pendente'}
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          ) : (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <ArrowDownCircle className="w-5 h-5" />
+                  Histórico de Depósitos
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-muted-foreground text-center py-4">
+                  Nenhum depósito encontrado. Faça seu primeiro depósito acima.
+                </p>
+              </CardContent>
+            </Card>
+          )}
         </TabsContent>
 
         {/* Withdraw Tab */}
@@ -686,6 +1014,20 @@ export default function Wallet() {
                     Saldo disponível: {formatCurrency(availableBalance)}
                   </p>
                 </div>
+
+                {/* Aviso sobre saques aos sábados */}
+                <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
+                  <div className="flex items-start gap-2">
+                    <Clock className="w-5 h-5 text-amber-600 mt-0.5" />
+                    <div>
+                      <p className="text-sm font-medium text-amber-800">Observação Importante</p>
+                      <p className="text-xs text-amber-700 mt-1">
+                        Os saques são processados e repassados <strong>exclusivamente aos sábados</strong>. 
+                        Solicitações feitas durante a semana serão agendadas para o próximo sábado.
+                      </p>
+                    </div>
+                  </div>
+                </div>
                 <div>
                   <label htmlFor="withdraw-wallet" className="text-sm font-medium">Carteira de Destino</label>
                   <Input
@@ -701,10 +1043,10 @@ export default function Wallet() {
                     id="withdraw-type"
                     value={withdrawType}
                     onChange={(e) => setWithdrawType(e.target.value)}
-                    className="w-full p-2 border rounded-md"
+                    className="w-full p-2 border rounded-md bg-background text-foreground border-border focus:outline-none focus:ring-2 focus:ring-gold/50"
                   >
-                    <option value="yield">Rendimentos</option>
-                    <option value="capital">Capital</option>
+                    <option value="yield" className="bg-background text-foreground">Rendimentos</option>
+                    <option value="capital" className="bg-background text-foreground">Capital</option>
                   </select>
                 </div>
                 <div className="flex items-center space-x-2">
@@ -714,9 +1056,17 @@ export default function Wallet() {
                     onCheckedChange={setAcceptedTerms}
                   />
                   <label htmlFor="accept-terms" className="text-sm">
-                    Aceito os termos de saque e a taxa de processamento
+                    Li e aceito os termos de saque
                   </label>
                 </div>
+
+                {/* Mensagem informativa quando termos não aceitos */}
+                {!acceptedTerms && (
+                  <p className="text-xs text-amber-600 bg-amber-50 p-2 rounded">
+                    Clique em "Ver Termos de Saque" e aceite-os para habilitar o botão de solicitação
+                  </p>
+                )}
+
                 <Button 
                   onClick={() => setShowTerms(true)}
                   variant="outline"
@@ -772,12 +1122,78 @@ export default function Wallet() {
                   />
                 </div>
                 <Button 
+                  onClick={handleTransfer}
                   className="w-full"
-                  disabled={!transferAmount || !transferEmail}
+                  disabled={!transferAmount || !transferEmail || createTransferMutation.isPending}
                 >
-                  Enviar Transferência
+                  {createTransferMutation.isPending ? 'Enviando...' : 'Enviar Transferência'}
                 </Button>
               </div>
+            </CardContent>
+          </Card>
+
+          {/* Listagem de Transferências */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Send className="w-5 h-5" />
+                Histórico de Transferências
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {isLoadingTransfers ? (
+                <p className="text-center text-muted-foreground py-4">Carregando...</p>
+              ) : transfers.length === 0 ? (
+                <p className="text-center text-muted-foreground py-4">
+                  Nenhuma transferência realizada ainda.
+                </p>
+              ) : (
+                <div className="space-y-4 max-h-[400px] overflow-y-auto">
+                  {transfers.map((transfer) => {
+                    const isOutgoing = transfer.from_user_id === user?.id;
+                    return (
+                      <div
+                        key={transfer.id}
+                        className={`flex items-center justify-between p-3 rounded-lg border ${
+                          isOutgoing 
+                            ? 'bg-red-50 border-red-200' 
+                            : 'bg-green-50 border-green-200'
+                        }`}
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className={`p-2 rounded-full ${
+                            isOutgoing ? 'bg-red-100' : 'bg-green-100'
+                          }`}>
+                            {isOutgoing ? (
+                              <ArrowUpRight className="w-4 h-4 text-red-600" />
+                            ) : (
+                              <ArrowDownLeft className="w-4 h-4 text-green-600" />
+                            )}
+                          </div>
+                          <div>
+                            <p className="font-medium text-sm">
+                              {isOutgoing ? 'Enviado para' : 'Recebido de'} {transfer.to_email || transfer.from_email}
+                            </p>
+                            <p className="text-xs text-muted-foreground">
+                              {formatDateTime(transfer.created_at)}
+                            </p>
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <p className={`font-bold ${
+                            isOutgoing ? 'text-red-600' : 'text-green-600'
+                          }`}>
+                            {isOutgoing ? '-' : '+'} R$ {parseFloat(transfer.amount).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                          </p>
+                          <Badge variant={transfer.status === 'completed' ? 'success' : 'default'}>
+                            {transfer.status === 'completed' ? 'Concluída' : transfer.status}
+                          </Badge>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
@@ -880,6 +1296,69 @@ export default function Wallet() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Listagem de Saques */}
+      {withdrawals.length > 0 ? (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <ArrowUpCircle className="w-5 h-5" />
+              Histórico de Saques
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              {withdrawals.map((withdrawal, index) => (
+                <div 
+                  key={withdrawal.id || `withdrawal-${index}`} 
+                  className="flex items-center justify-between p-3 bg-secondary/50 rounded-lg"
+                >
+                  <div>
+                    <p className="font-medium text-foreground">
+                      {formatCurrency(parseFloat(withdrawal.amount))}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      {withdrawal.type === 'yield' ? 'Rendimentos' : 'Capital'} • {new Date(withdrawal.created_at).toLocaleDateString('pt-BR')}
+                    </p>
+                    <p className="text-xs text-muted-foreground truncate max-w-[200px]">
+                      Carteira: {withdrawal.wallet_address}
+                    </p>
+                  </div>
+                  <div className="text-right">
+                    <span className={`text-xs px-2 py-1 rounded ${
+                      withdrawal.status === 'approved' 
+                        ? 'bg-green-100 text-green-700' 
+                        : withdrawal.status === 'rejected'
+                        ? 'bg-red-100 text-red-700'
+                        : 'bg-amber-100 text-amber-700'
+                    }`}>
+                      {withdrawal.status === 'approved' 
+                        ? 'Aprovado' 
+                        : withdrawal.status === 'rejected'
+                        ? 'Rejeitado'
+                        : 'Pendente'}
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      ) : (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <ArrowUpCircle className="w-5 h-5" />
+              Histórico de Saques
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-muted-foreground text-center py-4">
+              Nenhum saque encontrado. Faça sua primeira solicitação acima.
+            </p>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }
