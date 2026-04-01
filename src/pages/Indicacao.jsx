@@ -62,7 +62,7 @@ export default function Indicacao() {
   }, [user]);
 
   const referralLink = referralCode
-    ? `${window.location.origin}?ref=${referralCode}`
+    ? `${window.location.origin}/register?ref=${referralCode}`
     : '';
 
   const handleCopy = () => {

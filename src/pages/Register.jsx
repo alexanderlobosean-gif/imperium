@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
-import { Eye, EyeOff, Shield, Lock, Mail, User, Phone, FileText } from 'lucide-react'
+import { Eye, EyeOff, Shield, Lock, Mail, User } from 'lucide-react'
 import { authService } from '@/api/supabaseServices'
 
 const Register = () => {
@@ -10,8 +10,6 @@ const Register = () => {
   const [formData, setFormData] = useState({
     fullName: '',
     email: '',
-    phone: '',
-    documentNumber: '',
     password: '',
     confirmPassword: '',
     referralCode: referralCode || '',
@@ -71,8 +69,6 @@ const Register = () => {
         formData.password,
         {
           full_name: formData.fullName,
-          phone: formData.phone,
-          document_number: formData.documentNumber,
           referral_code: formData.referralCode
         }
       )
@@ -181,42 +177,6 @@ const Register = () => {
                       required
                       className="w-full pl-10 pr-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 transition-colors text-gray-900"
                       placeholder="seu@email.com"
-                    />
-                  </div>
-                </div>
-
-                {/* Phone */}
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-2">
-                    Telefone
-                  </label>
-                  <div className="relative">
-                    <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-slate-400" />
-                    <input
-                      type="tel"
-                      name="phone"
-                      value={formData.phone}
-                      onChange={handleChange}
-                      className="w-full pl-10 pr-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 transition-colors text-gray-900"
-                      placeholder="(11) 99999-9999"
-                    />
-                  </div>
-                </div>
-
-                {/* Document */}
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-2">
-                    CPF/CNPJ
-                  </label>
-                  <div className="relative">
-                    <FileText className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-slate-400" />
-                    <input
-                      type="text"
-                      name="documentNumber"
-                      value={formData.documentNumber}
-                      onChange={handleChange}
-                      className="w-full pl-10 pr-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 transition-colors text-gray-900"
-                      placeholder="000.000.000-00"
                     />
                   </div>
                 </div>

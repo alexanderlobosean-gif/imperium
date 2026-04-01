@@ -137,7 +137,7 @@ export default function Dashboard() {
   const totalValue = availableBalance;
 
   const referralLink = user?.referral_code
-    ? `${window.location.origin}?ref=${user.referral_code}`
+    ? `${window.location.origin}/register?ref=${user.referral_code}`
     : '';
 
   const handleCopyLink = () => {
