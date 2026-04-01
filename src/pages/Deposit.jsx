@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
+import { financialAPI } from '@/services/api';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -31,21 +32,9 @@ const fetchAdminBankingAccounts = async () => {
   return data || [];
 };
 
-// Create deposit record
+// Create deposit via API backend
 const createDeposit = async (depositData) => {
-  const { data, error } = await supabase
-    .from('deposits')
-    .insert({
-      ...depositData,
-      status: 'pending',
-      transaction_hash: `DEP_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-      created_at: new Date().toISOString()
-    })
-    .select()
-    .single();
-
-  if (error) throw error;
-  return data;
+  return await financialAPI.deposit(depositData);
 };
 
 export default function Deposit() {

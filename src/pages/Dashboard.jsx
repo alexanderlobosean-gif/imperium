@@ -1,7 +1,8 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/lib/AuthContext';
-// import { base44 } from '@/api/base44Client'; // Removido - agora usa Supabase
-import { supabase } from '@/lib/supabase'; // Adicionado
+import { supabase } from '@/lib/supabase';
+import { financialAPI } from '@/services/api';
 import { useQuery } from '@tanstack/react-query';
 import { TrendingUp, Users, Wallet, Copy, CheckCheck } from 'lucide-react';
 import StatsCard from '@/components/dashboard/StatsCard';
@@ -13,8 +14,26 @@ import { formatCurrency, RESIDUAL_PERCENTAGES } from '@/lib/planConfig';
 import { toast } from 'sonner';
 
 export default function Dashboard() {
-  const { user } = useAuth();
+  const { user, isAuthenticated, isLoadingAuth } = useAuth();
+  const navigate = useNavigate();
   const [copied, setCopied] = React.useState(false);
+
+  // Redirect para login se não autenticado
+  React.useEffect(() => {
+    if (!isLoadingAuth && !isAuthenticated) {
+      console.log('Dashboard: Usuário não autenticado, redirecionando para login...');
+      navigate('/login', { replace: true });
+    }
+  }, [isLoadingAuth, isAuthenticated, navigate]);
+
+  // Não renderiza nada enquanto carrega ou se não autenticado
+  if (isLoadingAuth || !isAuthenticated) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gold"></div>
+      </div>
+    );
+  }
 
   React.useEffect(() => {
     if (!user?.id) return;
@@ -71,27 +90,8 @@ export default function Dashboard() {
   const { data: transactions = [] } = useQuery({
     queryKey: ['transactions', user?.id],
     queryFn: async () => {
-      const [deposits, withdrawals] = await Promise.all([
-        supabase
-          .from('deposits')
-          .select('*')
-          .eq('user_id', user?.id)
-          .order('created_at', { ascending: false })
-          .limit(10),
-        supabase
-          .from('withdrawals')
-          .select('*')
-          .eq('user_id', user?.id)
-          .order('created_at', { ascending: false })
-          .limit(10)
-      ]);
-      
-      const allTransactions = [
-        ...(deposits.data || []).map(d => ({ ...d, type: 'deposit' })),
-        ...(withdrawals.data || []).map(w => ({ ...w, type: 'withdrawal' }))
-      ].sort((a, b) => new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime());
-      
-      return allTransactions.slice(0, 10);
+      const txs = await financialAPI.getTransactions({ limit: 20 });
+      return txs.slice(0, 10);
     },
     enabled: !!user?.id,
   });
@@ -116,23 +116,17 @@ export default function Dashboard() {
   // Calcular totais reais a partir dos investimentos
   const totalInvested = investments.reduce((sum, i) => sum + (parseFloat(i.amount) || 0), 0);
   const totalEarnings = investments.reduce((sum, i) => sum + (parseFloat(i.total_earned) || 0), 0);
-  
-  // Saldo disponível = depósitos confirmados - investimentos
-  const { data: confirmedDeposits = [] } = useQuery({
-    queryKey: ['confirmed-deposits', user?.id],
+
+  // Saldo disponível via API
+  const { data: balanceData } = useQuery({
+    queryKey: ['balance', user?.id],
     queryFn: async () => {
-      const { data } = await supabase
-        .from('deposits')
-        .select('amount')
-        .eq('user_id', user?.id)
-        .eq('status', 'confirmed');
-      return data || [];
+      return await financialAPI.getBalance();
     },
     enabled: !!user?.id,
   });
-  
-  const totalDeposits = confirmedDeposits.reduce((sum, d) => sum + (parseFloat(d.amount) || 0), 0);
-  const availableBalance = totalDeposits - totalInvested + totalEarnings;
+
+  const availableBalance = balanceData?.available_balance || 0;
 
   const activeInvestment = investments.find((i) => i.status === 'active');
   const networkEarnings = networkMembers.reduce((sum, m) => {

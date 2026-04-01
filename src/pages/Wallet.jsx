@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/lib/AuthContext';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
+import { financialAPI } from '@/services/api';
 import { toast } from 'sonner';
 import {
   Card,
@@ -271,54 +272,19 @@ const fetchUserTransfers = async (userId) => {
   return data || [];
 };
 
-// Create transfer
+// Create transfer via API backend
 const createTransfer = async (transferData) => {
-  const { data, error } = await supabase
-    .from('transfers')
-    .insert({
-      ...transferData,
-      status: 'completed',
-      created_at: new Date().toISOString()
-    })
-    .select()
-    .single();
-
-  if (error) throw error;
-  return data;
+  return await financialAPI.transfer(transferData);
 };
 
-// Create deposit
+// Create deposit via API backend
 const createDeposit = async (depositData) => {
-  const { data, error } = await supabase
-    .from('deposits')
-    .insert({
-      ...depositData,
-      status: 'pending',
-      transaction_hash: `DEP_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-      created_at: new Date().toISOString()
-    })
-    .select()
-    .single();
-
-  if (error) throw error;
-  return data;
+  return await financialAPI.deposit(depositData);
 };
 
-// Create withdrawal
+// Create withdrawal via API backend
 const createWithdrawal = async (withdrawalData) => {
-  const { data, error } = await supabase
-    .from('withdrawals')
-    .insert({
-      ...withdrawalData,
-      status: 'pending',
-      transaction_hash: `WD_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-      created_at: new Date().toISOString()
-    })
-    .select()
-    .single();
-
-  if (error) throw error;
-  return data;
+  return await financialAPI.withdrawal(withdrawalData);
 };
 
 export default function Wallet() {
@@ -357,6 +323,12 @@ export default function Wallet() {
   // Transfer
   const [transferAmount, setTransferAmount] = useState('');
   const [transferEmail, setTransferEmail] = useState('');
+  
+  // Transfer verification
+  const [showVerificationDialog, setShowVerificationDialog] = useState(false);
+  const [verificationCode, setVerificationCode] = useState('');
+  const [pendingTransferId, setPendingTransferId] = useState(null);
+  const [isInitiatingTransfer, setIsInitiatingTransfer] = useState(false);
 
   const { data: transactions = [] } = useQuery({
     queryKey: ['transactions', user?.id],
@@ -523,95 +495,60 @@ export default function Wallet() {
     }
   });
 
-  const createTransferMutation = useMutation({
-  mutationFn: async (transferData) => {
-    try {
-      console.log('🚀 createTransferMutation chamada:', transferData);
-      
-      // 1. Buscar usuário destinatário pelo email
-      console.log('🔍 Buscando destinatário:', transferData.email);
-      const recipient = await findUserByEmail(transferData.email);
-      console.log('✅ Destinatário encontrado:', recipient);
-      
-      // 2. Calcular saldo disponível (igual ao cálculo na UI)
-      console.log('💰 Calculando saldo para user:', user.id);
-      const { data: depositsData, error: depositsError } = await supabase
-        .from('deposits')
-        .select('amount')
-        .eq('user_id', user.id)
-        .eq('status', 'confirmed');
-      
-      if (depositsError) {
-        console.error('❌ Erro ao buscar depósitos:', depositsError);
-        throw depositsError;
-      }
-      
-      const { data: investmentsData, error: investmentsError } = await supabase
-        .from('investments')
-        .select('amount, total_earned')
-        .eq('user_id', user.id);
-      
-      if (investmentsError) {
-        console.error('❌ Erro ao buscar investimentos:', investmentsError);
-        throw investmentsError;
-      }
-        
-      const totalDeposits = (depositsData || []).reduce((sum, d) => sum + (parseFloat(d.amount) || 0), 0);
-      const totalInvested = (investmentsData || []).reduce((sum, i) => sum + (parseFloat(i.amount) || 0), 0);
-      const totalEarnings = (investmentsData || []).reduce((sum, i) => sum + (parseFloat(i.total_earned) || 0), 0);
-      const availableBalance = totalDeposits - totalInvested + totalEarnings;
-        
-      console.log('💰 Cálculo do saldo:', {
-        totalDeposits,
-        totalInvested,
-        totalEarnings,
-        availableBalance,
-        requestedAmount: transferData.amount
+  // Mutation para iniciar transferência (envia email com código)
+  const initiateTransferMutation = useMutation({
+    mutationFn: async (transferData) => {
+      console.log('🚀 Iniciando transferência:', transferData);
+      const response = await financialAPI.initiateTransfer({
+        amount: transferData.amount,
+        recipient_email: transferData.email,
+        description: transferData.description
       });
-        
-      if (availableBalance < parseFloat(transferData.amount)) {
-        console.log('❌ Saldo insuficiente:', availableBalance, '<', transferData.amount);
-        throw new Error(`Saldo insuficiente. Disponível: R$ ${availableBalance.toFixed(2)}`);
-      }
-      
-      // 3. Criar registro de transferência
-      console.log('💾 Criando registro de transferência...');
-      const { data: transfer, error: transferError } = await supabase
-        .from('transfers')
-        .insert({
-          from_user_id: user.id,
-          to_user_id: recipient.user_id,
-          amount: transferData.amount,
-          status: 'completed',
-          description: transferData.description || 'Transferência entre usuários'
-        })
-        .select()
-        .single();
-        
-      if (transferError) {
-        console.error('❌ Erro ao criar transferência:', transferError);
-        throw transferError;
-      }
-      
-      console.log('✅ Transferência criada com sucesso:', transfer);
-      return transfer;
-    } catch (error) {
-      console.error('❌ Erro completo na mutation:', error);
-      throw error;
+      return response;
+    },
+    onSuccess: (data) => {
+      console.log('✅ Código enviado:', data);
+      setPendingTransferId(data.transfer_id);
+      setShowVerificationDialog(true);
+      toast.success('Código de verificação enviado para seu email!');
+    },
+    onError: (error) => {
+      console.error('❌ Erro ao iniciar transferência:', error);
+      toast.error(`Erro: ${error.message}`);
     }
-  },
-  onSuccess: () => {
-    toast.success('Transferência realizada com sucesso!');
-    setTransferAmount('');
-    setTransferEmail('');
-    queryClient.invalidateQueries({ queryKey: ['transfers', user?.id] });
-    queryClient.invalidateQueries({ queryKey: ['confirmed-deposits', user?.id] });
-  },
-  onError: (error) => {
-    console.error('❌ Erro na transferência:', error);
-    toast.error(`Erro na transferência: ${error.message}`);
-  }
-});
+  });
+
+  // Mutation para confirmar transferência com código
+  const confirmTransferMutation = useMutation({
+    mutationFn: async ({ transferId, code }) => {
+      console.log('� Confirmando transferência:', { transferId, code });
+      const response = await financialAPI.confirmTransfer({
+        transfer_id: transferId,
+        verification_code: code
+      });
+      return response;
+    },
+    onSuccess: (data) => {
+      console.log('✅ Transferência confirmada:', data);
+      toast.success('Transferência realizada com sucesso!');
+      setShowVerificationDialog(false);
+      setVerificationCode('');
+      setPendingTransferId(null);
+      setTransferAmount('');
+      setTransferEmail('');
+      // Atualizar saldo na tela
+      refetchBalance();
+      // Invalidar queries para forçar refresh de dados
+      queryClient.invalidateQueries({ queryKey: ['balance'] });
+      queryClient.invalidateQueries({ queryKey: ['transactions'] });
+      queryClient.invalidateQueries({ queryKey: ['transfers', user?.id] });
+      queryClient.invalidateQueries({ queryKey: ['confirmed-deposits', user?.id] });
+    },
+    onError: (error) => {
+      console.error('❌ Erro ao confirmar:', error);
+      toast.error(`Código inválido ou expirado: ${error.message}`);
+    }
+  });
 
   const handleDeposit = () => {
     console.log('🚀 handleDeposit called');
@@ -696,7 +633,7 @@ export default function Wallet() {
     }
   };
 
-  const handleTransfer = () => {
+  const handleTransfer = async () => {
     console.log('🚀 handleTransfer chamado!');
     console.log('  - transferAmount:', transferAmount);
     console.log('  - transferEmail:', transferEmail);
@@ -719,19 +656,44 @@ export default function Wallet() {
       return;
     }
 
-    console.log('✅ Todas validações passaram, enviando...');
-    createTransferMutation.mutate({
+    console.log('✅ Todas validações passaram, iniciando transferência...');
+    setIsInitiatingTransfer(true);
+    
+    initiateTransferMutation.mutate({
       email: transferEmail,
       amount: parseFloat(transferAmount),
       description: `Transferência para ${transferEmail}`
+    }, {
+      onSettled: () => setIsInitiatingTransfer(false)
     });
   };
+  
+  const handleConfirmTransfer = () => {
+    if (!verificationCode || verificationCode.length !== 6) {
+      toast.error('Digite o código de 6 dígitos');
+      return;
+    }
+    
+    confirmTransferMutation.mutate({
+      transferId: pendingTransferId,
+      code: verificationCode
+    });
+  };
+
+  // Buscar saldo da API
+  const { data: balanceData, refetch: refetchBalance } = useQuery({
+    queryKey: ['balance', user?.id],
+    queryFn: async () => {
+      return await financialAPI.getBalance();
+    },
+    enabled: !!user?.id,
+  });
 
   const activeInvestment = investments.find(inv => inv.status === 'active');
   const totalInvested = investments.reduce((sum, inv) => sum + (parseFloat(inv.amount) || 0), 0);
   const totalEarnings = investments.reduce((sum, inv) => sum + (parseFloat(inv.total_earned) || 0), 0);
   const totalDeposits = confirmedDeposits.reduce((sum, d) => sum + (parseFloat(d.amount) || 0), 0);
-  const availableBalance = totalDeposits - totalInvested + totalEarnings;
+  const availableBalance = balanceData?.available_balance || 0;
   const totalValue = availableBalance;
 
   return (
@@ -1124,9 +1086,16 @@ export default function Wallet() {
                 <Button 
                   onClick={handleTransfer}
                   className="w-full"
-                  disabled={!transferAmount || !transferEmail || createTransferMutation.isPending}
+                  disabled={!transferAmount || !transferEmail || isInitiatingTransfer}
                 >
-                  {createTransferMutation.isPending ? 'Enviando...' : 'Enviar Transferência'}
+                  {isInitiatingTransfer ? (
+                    <>
+                      <div className="animate-spin mr-2 h-4 w-4 border-2 border-white border-t-transparent rounded-full" />
+                      Enviando código...
+                    </>
+                  ) : (
+                    'Enviar Transferência'
+                  )}
                 </Button>
               </div>
             </CardContent>
@@ -1359,6 +1328,59 @@ export default function Wallet() {
           </CardContent>
         </Card>
       )}
+      {/* Diálogo de Verificação de Código */}
+      <Dialog open={showVerificationDialog} onOpenChange={setShowVerificationDialog}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-center">
+              Verificação de Transferência
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <p className="text-center text-sm text-muted-foreground">
+              Digite o código de 6 dígitos enviado para seu email
+            </p>
+            <div className="flex justify-center">
+              <Input
+                type="text"
+                inputMode="numeric"
+                pattern="[0-9]*"
+                maxLength={6}
+                value={verificationCode}
+                onChange={(e) => setVerificationCode(e.target.value.replace(/\D/g, ''))}
+                placeholder="000000"
+                className="text-center text-2xl tracking-widest w-40"
+              />
+            </div>
+            <p className="text-center text-xs text-muted-foreground">
+              O código expira em 10 minutos
+            </p>
+          </div>
+          <DialogFooter className="flex flex-col sm:flex-row gap-2">
+            <Button
+              variant="outline"
+              onClick={() => setShowVerificationDialog(false)}
+              className="w-full sm:w-auto"
+            >
+              Cancelar
+            </Button>
+            <Button
+              onClick={handleConfirmTransfer}
+              disabled={verificationCode.length !== 6 || confirmTransferMutation.isPending}
+              className="w-full sm:w-auto bg-gold hover:bg-gold/90"
+            >
+              {confirmTransferMutation.isPending ? (
+                <>
+                  <div className="animate-spin mr-2 h-4 w-4 border-2 border-white border-t-transparent rounded-full" />
+                  Confirmando...
+                </>
+              ) : (
+                'Confirmar Transferência'
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

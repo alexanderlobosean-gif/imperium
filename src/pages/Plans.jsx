@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { formatCurrency, getPlanForAmount } from '@/lib/planConfig';
 import { useAuth } from '@/lib/AuthContext';
 import { supabase } from '@/lib/supabase';
+import { financialAPI } from '@/services/api';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import PlanCard from '@/components/plans/PlanCard';
 import ActiveInvestments from '@/components/plans/ActiveInvestments';
@@ -33,36 +34,27 @@ export default function Plans() {
   const [showSuccessModal, setShowSuccessModal] = useState(false);
 
   // Fetch plans from database
-  const { data: plans = [], isLoading } = useQuery({
+  const { data: allPlans = [], isLoading } = useQuery({
     queryKey: ['plans'],
     queryFn: fetchPlans,
   });
   
-  // Fetch confirmed deposits to calculate real available balance
+  // Filtrar planos: não-admin só vê planos não-liderança
+  const plans = allPlans.filter(plan => {
+    // Se é plano de liderança e usuário não é admin, esconder
+    if (plan.is_leadership && user?.role !== 'admin') {
+      return false;
+    }
+    return true;
+  });
+  
+  // Fetch confirmed deposits to calculate real available balance via API
   const { data: confirmedDeposits = [], error: depositsError } = useQuery({
     queryKey: ['confirmed-deposits', user?.id],
     queryFn: async () => {
-      const userIdStr = String(user?.id);
-      console.log('Fetching confirmed deposits for user:', userIdStr);
-      
-      // Simpler approach - fetch all then filter client-side
-      const { data, error } = await supabase
-        .from('deposits')
-        .select('*');
-        
-      if (error) {
-        console.error('Error fetching deposits:', error);
-        throw error;
-      }
-      
-      // Filter client-side for this user and confirmed status
-      const userDeposits = (data || []).filter(d => 
-        String(d.user_id) === userIdStr && d.status === 'confirmed'
-      );
-      
-      console.log('All deposits:', data);
-      console.log('Filtered deposits for user:', userDeposits);
-      return userDeposits;
+      console.log('Fetching confirmed deposits via API for user:', user?.id);
+      const transactions = await financialAPI.getTransactions({ type: 'deposit', status: 'confirmed' });
+      return transactions.filter(t => t.status === 'confirmed');
     },
     enabled: !!user?.id,
   });
@@ -94,14 +86,19 @@ export default function Plans() {
     console.error('Investments query error:', investmentsError);
   }
   
-  // Calculate real available balance
-  const totalDeposits = confirmedDeposits.reduce((sum, d) => sum + (parseFloat(d.amount) || 0), 0);
-  const totalInvested = investments.reduce((sum, i) => sum + (parseFloat(i.amount) || 0), 0);
-  // Use total_yield instead of total_earned based on actual table schema
-  const totalEarnings = investments.reduce((sum, i) => sum + (parseFloat(i.total_yield || 0) || 0), 0);
-  const availableBalance = totalDeposits - totalInvested + totalEarnings;
+  // Buscar saldo real da API
+  const { data: balanceData } = useQuery({
+    queryKey: ['balance', user?.id],
+    queryFn: async () => {
+      return await financialAPI.getBalance();
+    },
+    enabled: !!user?.id,
+  });
   
-  console.log('Balance calculation:', { totalDeposits, totalInvested, totalEarnings, availableBalance });
+  const availableBalance = balanceData?.available_balance || 0;
+  const totalInvested = investments.reduce((sum, i) => sum + (parseFloat(i.amount) || 0), 0);
+  
+  console.log('Balance from API:', { availableBalance, totalInvested });
   
   // Function to generate network commissions (direct and indirect)
   const generateNetworkCommissions = async (investment) => {
@@ -275,9 +272,8 @@ export default function Plans() {
             <p className="text-2xl font-bold text-gold">{formatCurrency(availableBalance)}</p>
           </div>
           <div className="text-right text-sm text-muted-foreground">
-            <p>Depósitos: {formatCurrency(totalDeposits)}</p>
+            <p>Saldo: {formatCurrency(availableBalance)}</p>
             <p>Investido: {formatCurrency(totalInvested)}</p>
-            <p>Ganhos: {formatCurrency(totalEarnings)}</p>
           </div>
         </div>
       </div>

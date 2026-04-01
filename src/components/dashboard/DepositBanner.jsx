@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { X, TrendingUp, Clock, DollarSign, ArrowRight } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
+import { financialAPI } from '@/services/api'
 import { useAuth } from '@/lib/AuthContext'
 
 const DepositBanner = () => {
@@ -18,27 +19,25 @@ const DepositBanner = () => {
       }
 
       try {
-        console.log('DepositBanner: Verificando depósitos para usuário:', user.id)
+        console.log('DepositBanner: Verificando depósitos via API para usuário:', user.id)
         
-        const { data: deposits, error: depositError } = await supabase
-          .from('deposits')
-          .select('id')
-          .eq('user_id', user.id)
-          .limit(1)
+        // Usar API backend para verificar transações
+        const transactions = await financialAPI.getTransactions({ limit: 1 })
+        const hasDeposits = transactions.length > 0
         
+        // Verificar investimentos via Supabase (readonly)
         const { data: investments, error: investmentError } = await supabase
           .from('investments')
           .select('id')
           .eq('user_id', user.id)
           .limit(1)
 
-        console.log('DepositBanner: Depósitos encontrados:', deposits?.length || 0)
+        console.log('DepositBanner: Tem depósitos:', hasDeposits)
         console.log('DepositBanner: Investimentos encontrados:', investments?.length || 0)
-        console.log('DepositBanner: Erro depósitos:', depositError)
         console.log('DepositBanner: Erro investimentos:', investmentError)
 
         // Mostrar banner se não tiver depósitos ou investimentos
-        if ((!deposits || deposits.length === 0) && (!investments || investments.length === 0)) {
+        if (!hasDeposits && (!investments || investments.length === 0)) {
           console.log('DepositBanner: Mostrando banner - sem depósitos/investimentos')
           setIsVisible(true)
         } else {
