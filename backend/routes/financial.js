@@ -6,13 +6,26 @@ const { sendTransferVerificationEmail, generateVerificationCode } = require('../
 // Validações
 const depositSchema = Joi.object({
   amount: Joi.number().positive().precision(2).required(),
-  method: Joi.string().valid('pix', 'credit_card', 'bank_transfer').required(),
+  method: Joi.string().valid('pix', 'credit_card', 'bank_transfer', 'usdt').required(),
   reference: Joi.string().optional()
+});
+
+// Schema para depósito USDT
+const usdtDepositSchema = Joi.object({
+  amount: Joi.number().positive().precision(2).required(),
+  tx_hash: Joi.string().optional().allow('')
+});
+
+// Schema para aprovação de depósito (admin)
+const approveDepositSchema = Joi.object({
+  deposit_id: Joi.string().uuid().required(),
+  action: Joi.string().valid('approve', 'reject').required(),
+  notes: Joi.string().optional().allow('')
 });
 
 const withdrawalSchema = Joi.object({
   amount: Joi.number().positive().precision(2).required(),
-  method: Joi.string().valid('pix', 'bank_transfer').required(),
+  method: Joi.string().valid('pix', 'bank_transfer', 'usdt', 'crypto', 'manual').required(),
   destination_address: Joi.string().required()
 });
 
@@ -93,27 +106,300 @@ router.post('/deposit', async (req, res) => {
   }
 });
 
+// @route   POST /api/financial/deposit/usdt
+// @desc    Criar depósito USDT - gera QR Code e aguarda confirmação do admin
+// @access  Private
+router.post('/deposit/usdt', async (req, res) => {
+  try {
+    console.log('🚀 === DEPÓSITO USDT INICIADO ===');
+    console.log('📥 Request body:', req.body);
+    console.log('👤 Usuário:', req.user?.email, req.user?.id);
+    
+    const { error } = usdtDepositSchema.validate(req.body);
+    if (error) {
+      console.log('❌ Erro de validação:', error.details[0].message);
+      return res.status(400).json({ error: error.details[0].message });
+    }
+
+    const { amount, tx_hash } = req.body;
+    const userId = req.user.id;
+    const userEmail = req.user.email;
+
+    // Verificar se já existe depósito USDT pendente
+    const { data: existingDeposit } = await req.supabase
+      .from('deposits')
+      .select('id')
+      .eq('user_id', userId)
+      .eq('method', 'usdt')
+      .eq('status', 'pending')
+      .single();
+
+    if (existingDeposit) {
+      return res.status(400).json({ 
+        error: 'Já existe um depósito USDT pendente de aprovação',
+        deposit_id: existingDeposit.id
+      });
+    }
+
+    // Criar depósito USDT pendente
+    console.log('💰 Criando depósito USDT:', {
+      user_id: userId,
+      amount,
+      method: 'usdt',
+      method_type: typeof 'usdt',
+      method_length: 'usdt'.length,
+      reference: tx_hash || null,
+      wallet_address: process.env.USDT_WALLET,
+      user_email: userEmail
+    });
+
+    const { data: deposit, error: depositError } = await req.supabase
+      .from('deposits')
+      .insert({
+        user_id: userId,
+        amount,
+        method: 'usdt',
+        reference: tx_hash || null,
+        status: 'pending',
+        wallet_address: process.env.USDT_WALLET,
+        user_email: userEmail
+      })
+      .select()
+      .single();
+
+    if (depositError) {
+      console.error('❌ Erro detalhado ao criar depósito USDT:', {
+        code: depositError.code,
+        message: depositError.message,
+        details: depositError.details,
+        hint: depositError.hint
+      });
+      return res.status(500).json({ 
+        error: 'Erro ao criar depósito USDT', 
+        details: depositError.message,
+        code: depositError.code 
+      });
+    }
+
+    // Gerar QR Code URL (usando API externa)
+    const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(process.env.USDT_WALLET)}`;
+
+    res.json({
+      message: 'Depósito USDT criado. Envie o valor para a carteira abaixo e aguarde aprovação do admin.',
+      deposit: {
+        id: deposit.id,
+        amount: deposit.amount,
+        method: 'usdt',
+        status: 'pending',
+        wallet_address: process.env.USDT_WALLET,
+        qr_code_url: qrCodeUrl,
+        created_at: deposit.created_at
+      },
+      instructions: {
+        wallet: process.env.USDT_WALLET,
+        network: 'TRC20 (Tron)',
+        amount: amount,
+        note: `Depósito #${deposit.id}`
+      }
+    });
+
+  } catch (error) {
+    console.error('Erro no endpoint deposit/usdt:', error);
+    res.status(500).json({ error: 'Erro interno do servidor' });
+  }
+});
+
+// @route   POST /api/financial/deposit/approve
+// @desc    Aprovar ou rejeitar depósito (somente admin)
+// @access  Admin
+router.post('/deposit/approve', async (req, res) => {
+  try {
+    const { error } = approveDepositSchema.validate(req.body);
+    if (error) {
+      return res.status(400).json({ error: error.details[0].message });
+    }
+
+    const { deposit_id, action, notes } = req.body;
+    const adminId = req.user.id;
+
+    // Verificar se usuário é admin pelo campo role na tabela profiles
+    const { data: profile, error: profileError } = await req.supabase
+      .from('profiles')
+      .select('role')
+      .eq('user_id', adminId)
+      .single();
+    
+    if (profileError || !profile) {
+      return res.status(403).json({ error: 'Perfil não encontrado' });
+    }
+
+    const isAdmin = profile.role === 'admin';
+
+    if (!isAdmin) {
+      return res.status(403).json({ error: 'Acesso negado. Somente admin pode aprovar depósitos.' });
+    }
+
+    // Buscar depósito
+    const { data: deposit, error: depositError } = await req.supabase
+      .from('deposits')
+      .select('*')
+      .eq('id', deposit_id)
+      .single();
+
+    if (depositError || !deposit) {
+      return res.status(404).json({ error: 'Depósito não encontrado' });
+    }
+
+    if (deposit.status !== 'pending') {
+      return res.status(400).json({ error: 'Depósito já foi processado' });
+    }
+
+    const newStatus = action === 'approve' ? 'confirmed' : 'rejected';
+
+    // Atualizar status do depósito
+    const { data: updatedDeposit, error: updateError } = await req.supabase
+      .from('deposits')
+      .update({
+        status: newStatus,
+        approved_by: adminId,
+        approved_at: new Date().toISOString(),
+        admin_notes: notes || null
+      })
+      .eq('id', deposit_id)
+      .select()
+      .single();
+
+    if (updateError) {
+      console.error('Erro ao atualizar depósito:', updateError);
+      return res.status(500).json({ error: 'Erro ao processar depósito' });
+    }
+
+    // Se aprovado, creditar na carteira do usuário
+    if (action === 'approve') {
+      console.log('💰 Creditando depósito aprovado na carteira do usuário:', deposit.user_id);
+
+      // Buscar saldo atual
+      const { data: userBalance, error: balanceError } = await req.supabase
+        .from('wallet_balances')
+        .select('wallet_balance')
+        .eq('user_id', deposit.user_id)
+        .single();
+
+      if (balanceError && balanceError.code !== 'PGRST116') {
+        console.error('Erro ao buscar saldo:', balanceError);
+        return res.status(500).json({ error: 'Erro ao buscar saldo do usuário' });
+      }
+
+      // Atualizar ou criar saldo
+      const { error: creditError } = await req.supabase
+        .from('wallet_balances')
+        .upsert({
+          user_id: deposit.user_id,
+          wallet_balance: (userBalance?.wallet_balance || 0) + deposit.amount,
+          updated_at: new Date().toISOString()
+        });
+
+      if (creditError) {
+        console.error('Erro ao creditar saldo:', creditError);
+        return res.status(500).json({ error: 'Erro ao creditar saldo na carteira' });
+      }
+
+      console.log('✅ Saldo creditado com sucesso:', deposit.amount);
+    }
+
+    res.json({
+      message: action === 'approve' ? 'Depósito aprovado e creditado' : 'Depósito rejeitado',
+      deposit: updatedDeposit
+    });
+
+  } catch (error) {
+    console.error('Erro no endpoint deposit/approve:', error);
+    res.status(500).json({ error: 'Erro interno do servidor' });
+  }
+});
+
+// @route   GET /api/financial/deposits/pending
+// @desc    Listar depósitos pendentes (somente admin)
+// @access  Admin
+router.get('/deposits/pending', async (req, res) => {
+  try {
+    const adminId = req.user.id;
+
+    // Verificar se é admin pelo campo role na tabela profiles
+    const { data: profile, error: profileError } = await req.supabase
+      .from('profiles')
+      .select('role')
+      .eq('user_id', adminId)
+      .single();
+    
+    if (profileError || !profile) {
+      return res.status(403).json({ error: 'Perfil não encontrado' });
+    }
+
+    const isAdmin = profile.role === 'admin';
+
+    if (!isAdmin) {
+      return res.status(403).json({ error: 'Acesso negado' });
+    }
+
+    const { data: deposits, error } = await req.supabase
+      .from('deposits')
+      .select(`
+        *,
+        user:profiles(user_id, full_name, email)
+      `)
+      .eq('status', 'pending')
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error('Erro ao buscar depósitos:', error);
+      return res.status(500).json({ error: 'Erro ao buscar depósitos' });
+    }
+
+    res.json({ deposits });
+
+  } catch (error) {
+    console.error('Erro no endpoint deposits/pending:', error);
+    res.status(500).json({ error: 'Erro interno do servidor' });
+  }
+});
+
 // @route   POST /api/financial/withdrawal
 // @desc    Solicitar saque
 // @access  Private
 router.post('/withdrawal', async (req, res) => {
   try {
+    console.log('🚀 === SAQUE INICIADO ===');
+    console.log('📥 Request body:', req.body);
+    console.log('👤 Usuário:', req.user?.email, req.user?.id);
+
     const { error } = withdrawalSchema.validate(req.body);
     if (error) {
+      console.log('❌ Erro de validação:', error.details[0].message);
       return res.status(400).json({ error: error.details[0].message });
     }
 
     const { amount, method, destination_address } = req.body;
     const userId = req.user.id;
 
-    // Verificar saldo disponível
-    const { data: availableBalance, error: balanceError } = await req.supabase
-      .rpc('get_available_balance', { p_user_id: userId });
+    console.log('💰 Processando saque:', { amount, method, destination_address, userId });
 
-    if (balanceError) {
+    // Verificar saldo disponível (buscando direto da tabela)
+    const { data: userBalance, error: balanceError } = await req.supabase
+      .from('wallet_balances')
+      .select('wallet_balance, yield_balance, bonus_balance')
+      .eq('user_id', userId)
+      .single();
+
+    if (balanceError && balanceError.code !== 'PGRST116') {
       console.error('Erro ao buscar saldo:', balanceError);
       return res.status(500).json({ error: 'Erro ao verificar saldo' });
     }
+
+    const availableBalance = 
+      (userBalance?.wallet_balance || 0) + 
+      (userBalance?.yield_balance || 0) + 
+      (userBalance?.bonus_balance || 0);
 
     if (availableBalance < amount) {
       return res.status(400).json({
@@ -134,6 +420,7 @@ router.post('/withdrawal', async (req, res) => {
     }
 
     // Criar saque pendente
+    console.log('📝 Criando registro de saque na tabela...');
     const { data: withdrawal, error: withdrawalError } = await req.supabase
       .from('withdrawals')
       .insert({
@@ -147,9 +434,11 @@ router.post('/withdrawal', async (req, res) => {
       .single();
 
     if (withdrawalError) {
-      console.error('Erro ao criar saque:', withdrawalError);
+      console.error('❌ Erro ao criar saque:', withdrawalError);
       return res.status(500).json({ error: 'Erro ao criar saque' });
     }
+
+    console.log('✅ Saque criado com sucesso:', withdrawal);
 
     res.json({
       message: 'Saque solicitado com sucesso',
@@ -164,6 +453,238 @@ router.post('/withdrawal', async (req, res) => {
 
   } catch (error) {
     console.error('Erro no endpoint withdrawal:', error);
+    res.status(500).json({ error: 'Erro interno do servidor' });
+  }
+});
+
+// @route   POST /api/financial/withdrawal/approve
+// @desc    Aprovar ou rejeitar saque (somente admin)
+// @access  Admin
+router.post('/withdrawal/approve', async (req, res) => {
+  try {
+    console.log('🚀 === APROVAÇÃO DE SAQUE INICIADA ===');
+    console.log('📥 Request body:', req.body);
+    console.log('👤 Admin:', req.user?.email, req.user?.id);
+
+    const { withdrawal_id, action, notes } = req.body;
+    const adminId = req.user.id;
+
+    // Verificar se usuário é admin pelo campo role na tabela profiles
+    const { data: profile, error: profileError } = await req.supabase
+      .from('profiles')
+      .select('role')
+      .eq('user_id', adminId)
+      .single();
+    
+    if (profileError || !profile) {
+      return res.status(403).json({ error: 'Perfil não encontrado' });
+    }
+
+    const isAdmin = profile.role === 'admin' || profile.role === 'super_admin';
+
+    if (!isAdmin) {
+      console.log('❌ Acesso negado. Role do usuário:', profile.role);
+      return res.status(403).json({ error: 'Acesso negado. Somente admin pode aprovar saques.' });
+    }
+
+    console.log('✅ Admin verificado. Role:', profile.role);
+
+    // Buscar saque
+    const { data: withdrawal, error: withdrawalError } = await req.supabase
+      .from('withdrawals')
+      .select('*')
+      .eq('id', withdrawal_id)
+      .single();
+
+    if (withdrawalError || !withdrawal) {
+      return res.status(404).json({ error: 'Saque não encontrado' });
+    }
+
+    if (withdrawal.status !== 'pending') {
+      return res.status(400).json({ error: `Saque já está ${withdrawal.status}` });
+    }
+
+    let updatedWithdrawal;
+
+    if (action === 'approve') {
+      console.log('✅ Ação: APROVAR saque');
+      // Aprovar saque - deduzir saldo do usuário
+      console.log('💰 Buscando saldo do usuário:', withdrawal.user_id);
+      const { data: userBalance } = await req.supabase
+        .from('wallet_balances')
+        .select('wallet_balance, yield_balance, bonus_balance')
+        .eq('user_id', withdrawal.user_id)
+        .single();
+
+      console.log('💰 Saldo encontrado:', userBalance);
+
+      const availableBalance = 
+        (userBalance?.wallet_balance || 0) + 
+        (userBalance?.yield_balance || 0) + 
+        (userBalance?.bonus_balance || 0);
+
+      console.log('💰 Saldo disponível:', availableBalance, 'Valor saque:', withdrawal.amount);
+
+      if (availableBalance < withdrawal.amount) {
+        console.log('❌ Saldo insuficiente');
+        return res.status(400).json({ 
+          error: `Saldo insuficiente do usuário. Disponível: R$ ${availableBalance.toFixed(2)}` 
+        });
+      }
+
+      console.log('✅ Saldo suficiente, prosseguindo com dedução...');
+
+      // Deduzir do saldo (prioridade: wallet_balance -> yield_balance -> bonus_balance)
+      let remainingAmount = withdrawal.amount;
+      let newWalletBalance = userBalance.wallet_balance || 0;
+      let newYieldBalance = userBalance.yield_balance || 0;
+      let newBonusBalance = userBalance.bonus_balance || 0;
+
+      console.log('💰 Saldos antes:', { newWalletBalance, newYieldBalance, newBonusBalance });
+
+      if (newWalletBalance >= remainingAmount) {
+        newWalletBalance -= remainingAmount;
+        remainingAmount = 0;
+      } else {
+        remainingAmount -= newWalletBalance;
+        newWalletBalance = 0;
+
+        if (newYieldBalance >= remainingAmount) {
+          newYieldBalance -= remainingAmount;
+          remainingAmount = 0;
+        } else {
+          remainingAmount -= newYieldBalance;
+          newYieldBalance = 0;
+          newBonusBalance -= remainingAmount;
+        }
+      }
+
+      console.log('💰 Saldos depois:', { newWalletBalance, newYieldBalance, newBonusBalance });
+
+      // Atualizar saldo do usuário
+      console.log('📝 Atualizando saldo do usuário...');
+      const { error: updateError } = await req.supabase
+        .from('wallet_balances')
+        .update({
+          wallet_balance: newWalletBalance,
+          yield_balance: newYieldBalance,
+          bonus_balance: newBonusBalance,
+          updated_at: new Date().toISOString()
+        })
+        .eq('user_id', withdrawal.user_id);
+
+      if (updateError) {
+        console.error('❌ Erro ao atualizar saldo:', updateError);
+        return res.status(500).json({ error: 'Erro ao processar saque' });
+      }
+
+      console.log('✅ Saldo atualizado com sucesso');
+
+      // Atualizar status do saque
+      console.log('📝 Atualizando status do saque para approved...');
+      const { data: updated, error: updateWithdrawalError } = await req.supabase
+        .from('withdrawals')
+        .update({
+          status: 'approved',
+          admin_notes: notes || null
+        })
+        .eq('id', withdrawal_id)
+        .select()
+        .single();
+
+      if (updateWithdrawalError) {
+        console.error('❌ Erro ao aprovar saque:', updateWithdrawalError);
+        return res.status(500).json({ error: 'Erro ao aprovar saque' });
+      }
+
+      console.log('✅ Saque aprovado com sucesso:', updated);
+      updatedWithdrawal = updated;
+
+      console.log('✅ Saque aprovado:', {
+        withdrawal_id,
+        user_id: withdrawal.user_id,
+        amount: withdrawal.amount
+      });
+
+    } else {
+      // Rejeitar saque
+      console.log('📝 Rejeitando saque...');
+      const { data: updated, error: updateError } = await req.supabase
+        .from('withdrawals')
+        .update({
+          status: 'rejected',
+          admin_notes: notes || null
+        })
+        .eq('id', withdrawal_id)
+        .select()
+        .single();
+
+      if (updateError) {
+        console.error('❌ Erro ao rejeitar saque:', updateError);
+        return res.status(500).json({ error: 'Erro ao rejeitar saque' });
+      }
+
+      updatedWithdrawal = updated;
+
+      console.log('❌ Saque rejeitado:', {
+        withdrawal_id,
+        notes
+      });
+    }
+
+    res.json({
+      message: action === 'approve' ? 'Saque aprovado e processado' : 'Saque rejeitado',
+      withdrawal: updatedWithdrawal
+    });
+
+  } catch (error) {
+    console.error('Erro no endpoint withdrawal/approve:', error);
+    res.status(500).json({ error: 'Erro interno do servidor' });
+  }
+});
+
+// @route   GET /api/financial/withdrawals/pending
+// @desc    Listar saques pendentes (somente admin)
+// @access  Admin
+router.get('/withdrawals/pending', async (req, res) => {
+  try {
+    const adminId = req.user.id;
+
+    // Verificar se é admin pelo campo role na tabela profiles
+    const { data: profile, error: profileError } = await req.supabase
+      .from('profiles')
+      .select('role')
+      .eq('user_id', adminId)
+      .single();
+    
+    if (profileError || !profile) {
+      return res.status(403).json({ error: 'Perfil não encontrado' });
+    }
+
+    const isAdmin = profile.role === 'admin';
+
+    if (!isAdmin) {
+      return res.status(403).json({ error: 'Acesso negado' });
+    }
+
+    const { data: withdrawals, error } = await req.supabase
+      .from('withdrawals')
+      .select(`
+        *,
+        user:profiles(user_id, full_name, email)
+      `)
+      .eq('status', 'pending')
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error('Erro ao buscar saques:', error);
+      return res.status(500).json({ error: 'Erro ao buscar saques' });
+    }
+
+    res.json({ withdrawals });
+
+  } catch (error) {
+    console.error('Erro no endpoint withdrawals/pending:', error);
     res.status(500).json({ error: 'Erro interno do servidor' });
   }
 });

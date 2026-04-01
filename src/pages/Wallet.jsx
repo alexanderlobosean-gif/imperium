@@ -311,12 +311,19 @@ export default function Wallet() {
   const [showQR, setShowQR] = useState(false);
   const [copiedField, setCopiedField] = useState(null);
 
+  // USDT Deposit
+  const [showUSDTDeposit, setShowUSDTDeposit] = useState(false);
+  const [usdtQRCode, setUsdtQRCode] = useState(null);
+  const [usdtWallet, setUsdtWallet] = useState('');
+  const [pendingDepositId, setPendingDepositId] = useState(null);
+
   // Deposit
   const [depositAmount, setDepositAmount] = useState('');
   const [depositDescription, setDepositDescription] = useState('');
 
   // Withdraw
   const [withdrawAmount, setWithdrawAmount] = useState('');
+  const [withdrawMethod, setWithdrawMethod] = useState('usdt'); // 'usdt' | 'pix'
   const [withdrawWallet, setWithdrawWallet] = useState(user?.crypto_wallet || '');
   const [withdrawType, setWithdrawType] = useState('yield');
 
@@ -432,6 +439,26 @@ export default function Wallet() {
     }
   });
 
+  // Mutation para depósito USDT
+  const createUSDTDepositMutation = useMutation({
+    mutationFn: async (depositData) => {
+      console.log('🚀 Criando depósito USDT:', depositData);
+      return await financialAPI.createUSDTDeposit(depositData);
+    },
+    onSuccess: (data) => {
+      console.log('✅ Depósito USDT criado:', data);
+      setUsdtQRCode(data.deposit.qr_code_url);
+      setUsdtWallet(data.instructions.wallet);
+      setPendingDepositId(data.deposit.id);
+      setShowUSDTDeposit(true);
+      toast.success('QR Code gerado! Envie o USDT para a carteira e aguarde aprovação.');
+    },
+    onError: (error) => {
+      console.error('❌ Erro ao criar depósito USDT:', error);
+      toast.error(`Erro: ${error.message}`);
+    }
+  });
+
   // Add debug logs to track state changes
   useEffect(() => {
     console.log('🔄 Estado atualizado:');
@@ -454,27 +481,17 @@ export default function Wallet() {
       console.log('  - user?.id:', user?.id);
       
       try {
-        const { data, error } = await supabase
-          .from('withdrawals')
-          .insert({
-            user_id: user?.id,
-            amount: withdrawalData.amount,
-            method: 'pix',
-            destination_address: withdrawalData.wallet_address,
-            status: 'pending'
-          })
-          .select()
-          .single();
+        const response = await financialAPI.withdrawal(withdrawalData);
         
-        console.log('📊 Resposta do Supabase:', { data, error });
+        console.log('📊 Resposta da API:', response);
         
-        if (error) {
-          console.error('❌ Erro do Supabase:', error);
-          throw error;
+        if (response.error) {
+          console.error('❌ Erro da API:', response.error);
+          throw new Error(response.error);
         }
         
-        console.log('✅ Saque criado com sucesso:', data);
-        return data;
+        console.log('✅ Saque criado com sucesso:', response.withdrawal);
+        return response.withdrawal;
       } catch (err) {
         console.error('❌ Erro na mutation:', err);
         throw err;
@@ -551,10 +568,9 @@ export default function Wallet() {
   });
 
   const handleDeposit = () => {
-    console.log('🚀 handleDeposit called');
+    console.log('🚀 handleDeposit USDT called');
     console.log('✅ depositAmount:', depositAmount);
     console.log('✅ acceptedTerms:', acceptedTerms);
-    console.log('✅ adminAccounts.length:', adminAccounts.length);
     console.log('✅ user:', user);
     
     if (!depositAmount) {
@@ -569,28 +585,12 @@ export default function Wallet() {
       return;
     }
 
-    if (!adminAccounts.length) {
-      console.log('❌ Erro: Nenhuma conta bancária disponível');
-      toast.error('Nenhuma conta bancária disponível');
-      return;
-    }
-
     console.log('✅ Todas validações passaram');
-    console.log('✅ Mostrando QR Code...');
-    setShowQR(true);
+    console.log('✅ Iniciando depósito USDT...');
     
-    const defaultAccount = adminAccounts[0];
-    console.log('✅ Conta padrão:', defaultAccount);
-    
-    console.log('✅ Iniciando mutação de depósito...');
-    createDepositMutation.mutate({
-      user_id: user?.id,
-      amount: parseFloat(depositAmount),
-      method: 'pix',
-      description: depositDescription || 'Depósito via PIX',
-      admin_account_id: defaultAccount.id,
-      bank_name: defaultAccount.bank_name,
-      account_holder: defaultAccount.account_holder
+    // Criar depósito USDT
+    createUSDTDepositMutation.mutate({
+      amount: parseFloat(depositAmount)
     });
   };
 
@@ -618,19 +618,14 @@ export default function Wallet() {
       return;
     }
 
-    console.log('✅ Todos validações passaram, enviando...');
-    try {
-      createWithdrawalMutation.mutate({
-        user_id: user?.id,
-        amount: parseFloat(withdrawAmount),
-        wallet_address: withdrawWallet,
-        type: withdrawType,
-        description: `Saque - ${withdrawType === 'yield' ? 'Rendimentos' : 'Capital'}`
-      });
-    } catch (err) {
-      console.error('❌ Erro ao chamar mutation:', err);
-      toast.error(`Erro inesperado: ${err.message}`);
-    }
+    console.log('✅ Todas validações passaram, enviando para backend...');
+    
+    // Enviar saque para o backend
+    createWithdrawalMutation.mutate({
+      amount: parseFloat(withdrawAmount),
+      method: withdrawMethod,
+      destination_address: withdrawWallet
+    });
   };
 
   const handleTransfer = async () => {
@@ -800,22 +795,13 @@ export default function Wallet() {
                 <div className="flex gap-2">
                   <Button 
                     onClick={() => {
-                      console.log('🔘 Botão Confirmar Depósito clicado!');
+                      console.log('🔘 Botão Confirmar Depósito USDT clicado!');
                       handleDeposit();
                     }}
-                    disabled={createDepositMutation.isPending || !depositAmount || !acceptedTerms}
+                    disabled={createUSDTDepositMutation.isPending || !depositAmount || !acceptedTerms}
                     className="flex-1"
                   >
-                    {createDepositMutation.isPending ? 'Processando...' : 'Confirmar Depósito'}
-                  </Button>
-                  <Button
-                    variant="outline"
-                    onClick={() => setShowQR(!showQR)}
-                    disabled={!depositAmount}
-                    className="flex-1"
-                  >
-                    <QrCode className="w-4 h-4 mr-2" />
-                    {showQR ? 'Ocultar QR Code' : 'Gerar QR Code'}
+                    {createUSDTDepositMutation.isPending ? 'Gerando QR Code...' : 'Gerar QR Code USDT'}
                   </Button>
                 </div>
               </div>
@@ -881,6 +867,78 @@ export default function Wallet() {
                         </Button>
                       </div>
                     </div>
+                  </div>
+                </div>
+              )}
+
+              {/* USDT QR Code Display */}
+              {showUSDTDeposit && usdtQRCode && (
+                <div className="mt-6 p-6 bg-white rounded-lg border border-yellow-200 bg-yellow-50">
+                  <h4 className="text-center font-semibold mb-4 text-yellow-800">
+                    <DollarSign className="w-5 h-5 inline mr-2" />
+                    Depósito USDT - Aguardando Aprovação
+                  </h4>
+                  <div className="flex justify-center mb-4">
+                    <div className="bg-white p-4 rounded-lg shadow-sm">
+                      <img 
+                        src={usdtQRCode}
+                        alt="QR Code USDT"
+                        className="w-48 h-48"
+                      />
+                      <p className="text-xs text-center text-gray-500 mt-2">
+                        Escaneie para copiar carteira
+                      </p>
+                    </div>
+                  </div>
+                  <div className="text-center space-y-3">
+                    <div className="bg-white p-3 rounded-lg shadow-sm">
+                      <p className="text-xs text-muted-foreground mb-1">Carteira USDT (TRC20):</p>
+                      <div className="flex items-center gap-2">
+                        <p className="text-xs font-mono text-gray-800 break-all flex-1">
+                          {usdtWallet}
+                        </p>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => {
+                            navigator.clipboard.writeText(usdtWallet);
+                            toast.success('Carteira USDT copiada!');
+                          }}
+                        >
+                          <Copy className="w-3 h-3" />
+                        </Button>
+                      </div>
+                    </div>
+                    <p className="text-sm font-semibold text-yellow-800">
+                      <strong>Valor:</strong> {formatCurrency(parseFloat(depositAmount))}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      1. Envie o USDT para a carteira acima
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      2. Aguarde a confirmação do admin
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      3. O saldo será creditado automaticamente
+                    </p>
+                    {pendingDepositId && (
+                      <p className="text-xs text-gray-500">
+                        ID do Depósito: {pendingDepositId}
+                      </p>
+                    )}
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        setShowUSDTDeposit(false);
+                        setUsdtQRCode(null);
+                        setDepositAmount('');
+                        setAcceptedTerms(false);
+                      }}
+                      className="mt-2"
+                    >
+                      Fechar
+                    </Button>
                   </div>
                 </div>
               )}
@@ -991,10 +1049,27 @@ export default function Wallet() {
                   </div>
                 </div>
                 <div>
-                  <label htmlFor="withdraw-wallet" className="text-sm font-medium">Carteira de Destino</label>
+                  <label htmlFor="withdraw-method" className="text-sm font-medium">Método de Saque</label>
+                  <select
+                    id="withdraw-method"
+                    value={withdrawMethod}
+                    onChange={(e) => {
+                      setWithdrawMethod(e.target.value);
+                      setWithdrawWallet(''); // Limpa o campo ao trocar método
+                    }}
+                    className="w-full p-2 border rounded-md bg-background text-foreground border-border focus:outline-none focus:ring-2 focus:ring-gold/50"
+                  >
+                    <option value="usdt" className="bg-background text-foreground">USDT (TRC20)</option>
+                    <option value="pix" className="bg-background text-foreground">PIX</option>
+                  </select>
+                </div>
+                <div>
+                  <label htmlFor="withdraw-wallet" className="text-sm font-medium">
+                    {withdrawMethod === 'usdt' ? 'Carteira USDT (TRC20)' : 'Chave PIX'}
+                  </label>
                   <Input
                     id="withdraw-wallet"
-                    placeholder="Endereço da carteira"
+                    placeholder={withdrawMethod === 'usdt' ? 'Endereço da carteira USDT' : 'Chave PIX (CPF, CNPJ, Email, Celular ou Chave Aleatória)'}
                     value={withdrawWallet}
                     onChange={(e) => setWithdrawWallet(e.target.value)}
                   />

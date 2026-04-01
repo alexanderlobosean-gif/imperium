@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabaseAdmin } from '@/lib/supabase';
+import { financialAPI } from '@/services/api';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -28,28 +29,24 @@ const fetchWithdrawals = async () => {
   return data;
 };
 
-// Update withdrawal status
-const updateWithdrawalStatus = async ({ withdrawalId, status, adminNotes }) => {
-  console.log('🔄 Atualizando status do saque:', { withdrawalId, status, adminNotes });
+// Update withdrawal status via API backend
+const approveWithdrawalAPI = async ({ withdrawalId, action, adminNotes }) => {
+  console.log('� Chamando API de aprovação:', { withdrawalId, action, adminNotes });
   
-  const { data, error } = await supabaseAdmin
-    .from('withdrawals')
-    .update({ 
-      status,
-      admin_notes: adminNotes,
-      confirmed_at: status === 'confirmed' ? new Date().toISOString() : null
-    })
-    .eq('id', withdrawalId)
-    .select()
-    .single();
+  const response = await financialAPI.approveWithdrawal({
+    withdrawal_id: withdrawalId,
+    action: action, // 'approve' ou 'reject'
+    notes: adminNotes
+  });
   
-  console.log('📊 Resposta update:', { data, error });
+  console.log('📊 Resposta API:', response);
 
-  if (error) {
-    console.error('❌ Erro ao atualizar:', error);
-    throw error;
+  if (response.error) {
+    console.error('❌ Erro da API:', response.error);
+    throw new Error(response.error);
   }
-  return data;
+  
+  return response.withdrawal;
 };
 
 export default function AdminWithdrawals() {
@@ -67,22 +64,23 @@ export default function AdminWithdrawals() {
   });
 
   const updateStatusMutation = useMutation({
-    mutationFn: updateWithdrawalStatus,
+    mutationFn: approveWithdrawalAPI,
     onSuccess: (data) => {
       // Invalidar query do admin
       queryClient.invalidateQueries({ queryKey: ['admin-withdrawals'] });
       // Invalidar query do usuário (usando user_id do saque atualizado)
       if (data?.user_id) {
         queryClient.invalidateQueries({ queryKey: ['withdrawals', data.user_id] });
-        console.log('🔄 Query de withdrawals do usuário invalidada:', data.user_id);
+        queryClient.invalidateQueries({ queryKey: ['balance', data.user_id] });
+        console.log('🔄 Queries invalidadas:', data.user_id);
       }
-      toast.success('Status do saque atualizado!');
+      toast.success(data?.status === 'approved' ? 'Saque aprovado com sucesso!' : 'Saque rejeitado!');
       setShowWithdrawalDialog(false);
       setSelectedWithdrawal(null);
       setAdminNotes('');
     },
     onError: (error) => {
-      toast.error('Erro ao atualizar status: ' + error.message);
+      toast.error('Erro ao processar saque: ' + error.message);
     },
   });
 
@@ -103,10 +101,18 @@ export default function AdminWithdrawals() {
     setShowWithdrawalDialog(true);
   };
 
-  const handleUpdateStatus = (newStatus) => {
+  const handleApprove = () => {
     updateStatusMutation.mutate({
       withdrawalId: selectedWithdrawal.id,
-      status: newStatus,
+      action: 'approve',
+      adminNotes: adminNotes
+    });
+  };
+
+  const handleReject = () => {
+    updateStatusMutation.mutate({
+      withdrawalId: selectedWithdrawal.id,
+      action: 'reject',
       adminNotes: adminNotes
     });
   };
@@ -114,15 +120,19 @@ export default function AdminWithdrawals() {
   const getStatusBadge = (status) => {
     const variants = {
       pending: 'secondary',
-      confirmed: 'default',
+      approved: 'default',
       rejected: 'destructive',
+      processing: 'outline',
+      completed: 'default',
       cancelled: 'outline'
     };
     
     const labels = {
       pending: 'Pendente',
-      confirmed: 'Confirmado',
+      approved: 'Aprovado',
       rejected: 'Rejeitado',
+      processing: 'Processando',
+      completed: 'Concluído',
       cancelled: 'Cancelado'
     };
     
@@ -137,6 +147,7 @@ export default function AdminWithdrawals() {
     const labels = {
       pix: 'PIX',
       bank_transfer: 'Transferência',
+      usdt: 'USDT',
       crypto: 'Cripto'
     };
     
@@ -383,13 +394,13 @@ export default function AdminWithdrawals() {
               <>
                 <Button
                   variant="destructive"
-                  onClick={() => handleUpdateStatus('rejected')}
+                  onClick={handleReject}
                   disabled={updateStatusMutation.isPending}
                 >
                   {updateStatusMutation.isPending ? 'Processando...' : 'Rejeitar'}
                 </Button>
                 <Button
-                  onClick={() => handleUpdateStatus('confirmed')}
+                  onClick={handleApprove}
                   disabled={updateStatusMutation.isPending}
                 >
                   {updateStatusMutation.isPending ? 'Processando...' : 'Aprovar'}

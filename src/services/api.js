@@ -123,17 +123,35 @@ export const financialAPI = {
     body: JSON.stringify(data),
   }),
   
-  // Criar depósito
-  deposit: (data) => apiRequest('/financial/deposit', {
+  // Criar depósito USDT - gera QR Code
+  createUSDTDeposit: (data) => apiRequest('/financial/deposit/usdt', {
     method: 'POST',
     body: JSON.stringify(data),
   }),
+
+  // Aprovar/Rejeitar depósito (Admin)
+  approveDeposit: (data) => apiRequest('/financial/deposit/approve', {
+    method: 'POST',
+    body: JSON.stringify(data),
+  }),
+
+  // Listar depósitos pendentes (Admin)
+  getPendingDeposits: () => apiRequest('/financial/deposits/pending'),
   
   // Solicitar saque
   withdrawal: (data) => apiRequest('/financial/withdrawal', {
     method: 'POST',
     body: JSON.stringify(data),
   }),
+  
+  // Aprovar/Rejeitar saque (Admin)
+  approveWithdrawal: (data) => apiRequest('/financial/withdrawal/approve', {
+    method: 'POST',
+    body: JSON.stringify(data),
+  }),
+  
+  // Listar saques pendentes (Admin)
+  getPendingWithdrawals: () => apiRequest('/financial/withdrawals/pending'),
   
   // Consultar saldo
   getBalance: () => apiRequest('/financial/balance'),
