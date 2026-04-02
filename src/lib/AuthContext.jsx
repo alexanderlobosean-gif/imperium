@@ -47,13 +47,18 @@ export const AuthProvider = ({ children }) => {
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        // Só loga eventos importantes, ignorando INITIAL_SESSION
-        if (event !== 'INITIAL_SESSION') {
+        // Só loga eventos importantes, ignorando INITIAL_SESSION e TOKEN_REFRESHED
+        if (event !== 'INITIAL_SESSION' && event !== 'TOKEN_REFRESHED') {
           console.log('Auth event:', event, '- User:', session?.user?.email || 'none');
         }
         
-        // Ignora eventos se o usuário não mudou
-        if (session?.user?.id === currentUserId.current && hasInitialized.current) {
+        // TOKEN_REFRESHED não deve causar logout ou recarregar estado
+        if (event === 'TOKEN_REFRESHED') {
+          return;
+        }
+        
+        // Ignora eventos se o usuário não mudou (exceto SIGNED_OUT)
+        if (event !== 'SIGNED_OUT' && session?.user?.id === currentUserId.current && hasInitialized.current) {
           return;
         }
         
@@ -74,7 +79,7 @@ export const AuthProvider = ({ children }) => {
           setUser(userData)
           setIsAuthenticated(true)
           currentUserId.current = session.user.id
-        } else if (event === 'SIGNED_OUT' || event === 'USER_DELETED') {
+        } else if (event === 'SIGNED_OUT') {
           setUser(null)
           setIsAuthenticated(false)
           currentUserId.current = null
