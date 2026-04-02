@@ -36,9 +36,14 @@ const PORT = process.env.PORT || 3001;
 // Middleware de segurança
 app.use(helmet());
 app.use(cors({
-  origin: process.env.FRONTEND_URL || 'http://localhost:5173',
-  credentials: true
+  origin: '*',
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin']
 }));
+
+// Handle OPTIONS preflight
+app.options('*', cors());
 
 // Rate limiting
 const limiter = rateLimit({
