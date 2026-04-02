@@ -22,19 +22,19 @@ const Hero = () => {
           </div>
 
           {/* Main Heading */}
-          <h1 className="text-5xl md:text-7xl font-bold text-white mb-6">
-            <span className="bg-gradient-to-r from-yellow-400 via-yellow-500 to-yellow-600 bg-clip-text text-transparent">
-              IMPERIUM
-            </span>
-            <br />
-            <span className="text-3xl md:text-5xl text-gray-300">CLUB</span>
-          </h1>
+          <div className="flex justify-center mb-8">
+            <img 
+              src="/logo.png" 
+              alt="Imperium Club" 
+              className="w-80 h-80"
+            />
+          </div>
 
           {/* Subtitle */}
           <p className="text-xl md:text-2xl text-gray-300 mb-8 max-w-3xl mx-auto leading-relaxed">
             Transforme seu futuro com investimentos inteligentes e 
             <span className="text-yellow-400 font-semibold"> rendimentos excepcionais</span>. 
-            Junte-se à elite de investidores do Imperium Club.
+            Junte-se à elite de investidores.
           </p>
 
           {/* Stats */}

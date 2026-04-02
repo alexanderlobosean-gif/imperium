@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Debug Variáveis de Ambiente</title>
+</head>
+<body>
+    <h1>Debug Variáveis de Ambiente</h1>
+    <p>Abra o console do navegador (F12) e veja os logs para identificar qual .env está sendo usado.</p>
+    
+    <h2>Passos:</h2>
+    <ol>
+        <li>Abra: http://localhost:5173</li>
+        <li>Abra o console do navegador (F12)</li>
+        <li>Procure por logs como:</li>
+        <ul>
+            <li><code>import.meta.env.VITE_SUPABASE_URL</code></li>
+            <li><code>import.meta.env.VITE_SUPABASE_ANON_KEY</code></li>
+            <li><code>Invalid API key</code></li>
+            <li><code>Auth state changed</code></li>
+        </ul>
+        <li>Se vir "Invalid API key", o .env atual tem chaves erradas</li>
+        <li>Se vir "undefined", as variáveis não estão sendo carregadas</li>
+    </ol>
+    
+    <h2>Arquivos .env existentes:</h2>
+    <ul>
+        <li><strong>.env</strong> - Chaves antigas/inválidas</li>
+        <li><strong>.env.local</strong> - Chaves corretas (se você atualizou)</li>
+        <li><strong>.env.example</strong> - Template de exemplo</li>
+    </ul>
+    
+    <h2>Solução:</h2>
+    <p>Se as chaves do <strong>.env</strong> estiverem erradas, copie as chaves corretas do dashboard Supabase e substitua no arquivo.</p>
+    
+    <button onclick="location.reload()">Recarregar Página</button>
+    
+    <script>
+        // Adicionar debug na página
+        console.log('=== PÁGINA DE DEBUG CARREGADA ===');
+        console.log('Verifique os logs acima para identificar o problema');
+    </script>
+</body>
+</html>

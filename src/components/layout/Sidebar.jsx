@@ -65,10 +65,11 @@ export default function Sidebar() {
       <div className="p-4 flex items-center justify-between border-b border-border">
         {!collapsed && (
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-gold/20 flex items-center justify-center">
-              <span className="text-gold font-bold text-sm">IC</span>
-            </div>
-            <span className="font-bold text-lg gold-text">Imperium</span>
+            <img 
+              src="/logo_p.png" 
+              alt="Imperium Club" 
+              className="h-25 w-auto mr-3"
+            />
           </div>
         )}
         <button

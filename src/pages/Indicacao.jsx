@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/lib/AuthContext';
-// import { base44 } from '@/api/base44Client'; // Removido - agora usa Supabase
-import { supabase } from '@/lib/supabase'; // Adicionado
+import { supabase } from '@/lib/supabase'; 
 import { Copy, CheckCheck, Users, Share2, Link } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -9,30 +8,61 @@ export default function Indicacao() {
   const { user, setUser } = useAuth();
   const [copied, setCopied] = useState(false);
   const [generatingCode, setGeneratingCode] = useState(false);
-
-  useEffect(() => {
-    if (user && !user.referral_code) {
-      generateReferralCode();
-    }
-  }, [user]);
+  const [referralCode, setReferralCode] = useState(user?.referral_code || null);
 
   const generateReferralCode = async () => {
     if (generatingCode) return;
     setGeneratingCode(true);
     try {
-      const code = (user.full_name?.replace(/\s+/g, '').toUpperCase().slice(0, 4) || 'USER') +
+      const code = (user?.full_name?.replace(/\s+/g, '').toUpperCase().slice(0, 4) || 'USER') +
         Math.random().toString(36).substring(2, 7).toUpperCase();
-      await base44.auth.updateMe({ referral_code: code });
-      window.location.reload();
+      
+      // Salvar código no Supabase
+      const { error } = await supabase
+        .from('profiles')
+        .update({ referral_code: code })
+        .eq('user_id', user.id);
+      
+      if (error) throw error;
+      
+      setReferralCode(code);
+      setUser({ ...user, referral_code: code });
+      toast.success('Código de indicação gerado com sucesso!');
     } catch (e) {
-      toast.error('Erro ao gerar código de indicação');
+      toast.error('Erro ao gerar código de indicação: ' + e.message);
     } finally {
       setGeneratingCode(false);
     }
   };
 
-  const referralLink = user?.referral_code
-    ? `${window.location.origin}?ref=${user.referral_code}`
+  useEffect(() => {
+    // Fetch referral code from Supabase if not in user context
+    const fetchReferralCode = async () => {
+      if (user && !user.referral_code && !referralCode) {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('referral_code, full_name')
+          .eq('user_id', user.id)
+          .single();
+        
+        if (profile?.referral_code) {
+          setReferralCode(profile.referral_code);
+          // Update user context
+          setUser({ ...user, referral_code: profile.referral_code, full_name: profile.full_name });
+        } else {
+          // Generate code if doesn't exist
+          generateReferralCode();
+        }
+      } else if (user?.referral_code) {
+        setReferralCode(user.referral_code);
+      }
+    };
+
+    fetchReferralCode();
+  }, [user]);
+
+  const referralLink = referralCode
+    ? `${window.location.origin}/register?ref=${referralCode}`
     : '';
 
   const handleCopy = () => {
@@ -102,14 +132,14 @@ export default function Indicacao() {
       </div>
 
       {/* Código de indicação */}
-      {user?.referral_code && (
+      {referralCode && (
         <div className="rounded-xl border border-border bg-card p-5 flex items-center justify-between">
           <div>
             <p className="text-xs text-muted-foreground uppercase tracking-wider">Seu Código</p>
-            <p className="text-2xl font-bold gold-text mt-1">{user.referral_code}</p>
+            <p className="text-2xl font-bold gold-text mt-1">{referralCode}</p>
           </div>
           <button
-            onClick={() => { navigator.clipboard.writeText(user.referral_code); toast.success('Código copiado!'); }}
+            onClick={() => { navigator.clipboard.writeText(referralCode); toast.success('Código copiado!'); }}
             className="p-3 rounded-lg bg-gold/10 hover:bg-gold/20 transition border border-gold/20"
           >
             <Copy className="w-5 h-5 text-gold" />

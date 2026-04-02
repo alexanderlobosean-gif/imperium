@@ -9,15 +9,54 @@ import { Users } from 'lucide-react';
 export default function NetworkMembersTable() {
   const { user } = useAuth();
 
-  const { data: networkMembers = [] } = useQuery({
+  const { data: networkMembers = [], isLoading: isLoadingNetwork, error: networkError } = useQuery({
     queryKey: ['network', user?.id],
-    queryFn: () => base44.entities.NetworkRelation.filter({ user_id: user?.id }),
+    queryFn: async () => {
+      if (!user?.id) return [];
+      
+      console.log('Buscando membros da rede para user:', user.id);
+      
+      // Buscar perfis onde referred_by = user.id (quem foi indicado por este usuário)
+      const userIdStr = String(user.id);
+      
+      const { data: referredProfiles, error: profilesError } = await supabase
+        .from('profiles')
+        .select('user_id, full_name, email, referred_by, referral_cod, created_at')
+        .eq('referred_by', userIdStr);
+      
+      if (profilesError) {
+        console.error('Erro ao buscar profiles:', profilesError);
+        throw profilesError;
+      }
+      
+      console.log('Membros da rede encontrados:', referredProfiles);
+      
+      if (!referredProfiles || referredProfiles.length === 0) return [];
+
+      // Mapear para o formato esperado pelo componente
+      return referredProfiles.map((profile, index) => ({
+        id: profile.user_id,
+        referred_id: profile.user_id,
+        referred_name: profile.full_name || 'N/A',
+        referred_email: profile.email || '',
+        level: 1, // Nível 1 = indicação direta
+        referral_code: profile.referral_cod || '',
+        created_at: profile.created_at
+      }));
+    },
     enabled: !!user?.id,
   });
 
   const { data: allInvestments = [] } = useQuery({
     queryKey: ['all-investments'],
-    queryFn: () => base44.entities.Investment.filter({ status: 'active' }),
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('investments')
+        .select('*')
+        .eq('status', 'active');
+      if (error) throw error;
+      return data || [];
+    },
     enabled: !!user?.id,
   });
 

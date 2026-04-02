@@ -18,11 +18,16 @@
    - Antes de implementar qualquer nova funcionalidade: CONSULTAR
    - Antes de modificar comportamento existente: CONSULTAR
    - Antes de alterar configurações: CONSULTAR
+   - Antes de enviar para o GIT: CONSULTAR
+   - Antes de reiniciar o servidor: CONSULTAR
 
 5. **Proibição de Exclusão/Alteração Sem Permissão**
    - NUNCA excluir arquivos sem permissão explícita
    - NUNCA alterar código existente sem aprovação
    - NUNCA modificar configurações sem confirmação
+   - NUNCA enviar para o GIT sem aprovação
+   - NUNCA reiniciar o servidor sem confirmação
+
 
 6. **Fluxo de Trabalho**
    ```
@@ -32,6 +37,8 @@
    4. Aguardar aprovação
    5. Executar conforme aprovado
    6. Validar resultado
+   7. Manter organizado os arquivos
+   8. script SQL deve ser salvo na pasta supabase/migrations
    ```
 
 ## Comandos de Segurança

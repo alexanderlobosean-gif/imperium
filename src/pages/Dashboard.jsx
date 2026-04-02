@@ -1,7 +1,8 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/lib/AuthContext';
-// import { base44 } from '@/api/base44Client'; // Removido - agora usa Supabase
-import { supabase } from '@/lib/supabase'; // Adicionado
+import { supabase } from '@/lib/supabase';
+import { financialAPI } from '@/services/api';
 import { useQuery } from '@tanstack/react-query';
 import { TrendingUp, Users, Wallet, Copy, CheckCheck } from 'lucide-react';
 import StatsCard from '@/components/dashboard/StatsCard';
@@ -13,8 +14,26 @@ import { formatCurrency, RESIDUAL_PERCENTAGES } from '@/lib/planConfig';
 import { toast } from 'sonner';
 
 export default function Dashboard() {
-  const { user } = useAuth();
+  const { user, isAuthenticated, isLoadingAuth } = useAuth();
+  const navigate = useNavigate();
   const [copied, setCopied] = React.useState(false);
+
+  // Redirect para login se não autenticado
+  React.useEffect(() => {
+    if (!isLoadingAuth && !isAuthenticated) {
+      console.log('Dashboard: Usuário não autenticado, redirecionando para login...');
+      navigate('/login', { replace: true });
+    }
+  }, [isLoadingAuth, isAuthenticated, navigate]);
+
+  // Não renderiza nada enquanto carrega ou se não autenticado
+  if (isLoadingAuth || !isAuthenticated) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gold"></div>
+      </div>
+    );
+  }
 
   React.useEffect(() => {
     if (!user?.id) return;
@@ -32,7 +51,7 @@ export default function Dashboard() {
       if (refCode) {
         localStorage.removeItem('referral_code');
         try {
-          // await base44.functions.invoke('linkReferral', { referral_code: refCode });
+          // TODO: Implementar função de vinculação de indicação com Supabase
           console.log('Referral code to link:', refCode);
         } catch (e) {
           console.error('Erro ao vincular indicação:', e);
@@ -71,27 +90,8 @@ export default function Dashboard() {
   const { data: transactions = [] } = useQuery({
     queryKey: ['transactions', user?.id],
     queryFn: async () => {
-      const [deposits, withdrawals] = await Promise.all([
-        supabase
-          .from('deposits')
-          .select('*')
-          .eq('user_id', user?.id)
-          .order('created_at', { ascending: false })
-          .limit(10),
-        supabase
-          .from('withdrawals')
-          .select('*')
-          .eq('user_id', user?.id)
-          .order('created_at', { ascending: false })
-          .limit(10)
-      ]);
-      
-      const allTransactions = [
-        ...(deposits.data || []).map(d => ({ ...d, type: 'deposit' })),
-        ...(withdrawals.data || []).map(w => ({ ...w, type: 'withdrawal' }))
-      ].sort((a, b) => new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime());
-      
-      return allTransactions.slice(0, 10);
+      const txs = await financialAPI.getTransactions({ limit: 20 });
+      return txs.slice(0, 10);
     },
     enabled: !!user?.id,
   });
@@ -113,21 +113,31 @@ export default function Dashboard() {
   const investmentByUser = {};
   networkInvestments.forEach((inv) => { investmentByUser[inv.user_id] = inv; });
 
+  // Calcular totais reais a partir dos investimentos
+  const totalInvested = investments.reduce((sum, i) => sum + (parseFloat(i.amount) || 0), 0);
+  const totalEarnings = investments.reduce((sum, i) => sum + (parseFloat(i.total_earned) || 0), 0);
+
+  // Saldo disponível via API
+  const { data: balanceData } = useQuery({
+    queryKey: ['balance', user?.id],
+    queryFn: async () => {
+      return await financialAPI.getBalance();
+    },
+    enabled: !!user?.id,
+  });
+
+  const availableBalance = balanceData?.available_balance || 0;
+
   const activeInvestment = investments.find((i) => i.status === 'active');
-  const totalInvested = investments.reduce((sum, i) => sum + (i.amount || 0), 0);
-  const totalEarnings = user?.total_earnings || 0;
   const networkEarnings = networkMembers.reduce((sum, m) => {
     const inv = investmentByUser[m.referred_id];
     const pct = (RESIDUAL_PERCENTAGES[m.level] || 0) / 100;
     return sum + (inv?.total_earned || 0) * pct;
   }, 0);
-  // Saldo disponível = saldo aportado (deposits aprovados - planos comprados) + rendimentos + ganhos de rede
-  const depositBalance = user?.available_balance || 0;
-  const availableBalance = depositBalance + totalEarnings + networkEarnings;
   const totalValue = availableBalance;
 
   const referralLink = user?.referral_code
-    ? `${window.location.origin}?ref=${user.referral_code}`
+    ? `${window.location.origin}/register?ref=${user.referral_code}`
     : '';
 
   const handleCopyLink = () => {
@@ -162,10 +172,10 @@ export default function Dashboard() {
 
       {/* Stats */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-        <StatsCard title="Valor Investido" value={totalInvested} icon={TrendingUp} color="blue" />
-        <StatsCard title="Rendimento" value={totalEarnings} icon={TrendingUp} color="green" />
-        <StatsCard title="Ganhos de Rede" value={networkEarnings} icon={Users} color="purple" />
-        <StatsCard title="Saldo Disponível" value={availableBalance} icon={Wallet} color="amber" />
+        <StatsCard title="Valor Investido" value={totalInvested} icon={TrendingUp} color="blue" subtitle="" />
+        <StatsCard title="Rendimento" value={totalEarnings} icon={TrendingUp} color="green" subtitle="" />
+        <StatsCard title="Ganhos de Rede" value={networkEarnings} icon={Users} color="purple" subtitle="" />
+        <StatsCard title="Saldo Disponível" value={availableBalance} icon={Wallet} color="amber" subtitle="" />
       </div>
 
       {/* Quick Actions */}

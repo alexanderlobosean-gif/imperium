@@ -20,7 +20,15 @@ export default function ActiveInvestments() {
 
   const { data: investments = [], isLoading } = useQuery({
     queryKey: ['investments', user?.id],
-    queryFn: () => base44.entities.Investment.filter({ user_id: user?.id }),
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('investments')
+        .select('*')
+        .eq('user_id', user?.id)
+        .order('created_at', { ascending: false });
+      if (error) throw error;
+      return data || [];
+    },
     enabled: !!user?.id,
   });
 

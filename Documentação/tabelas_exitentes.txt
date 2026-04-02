@@ -1,0 +1,2247 @@
+[
+  {
+    "table_name": "admin_banking_accounts",
+    "column_name": "id",
+    "data_type": "uuid",
+    "is_nullable": "NO",
+    "column_default": "gen_random_uuid()"
+  },
+  {
+    "table_name": "admin_banking_accounts",
+    "column_name": "bank_name",
+    "data_type": "character varying",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "table_name": "admin_banking_accounts",
+    "column_name": "account_type",
+    "data_type": "character varying",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "table_name": "admin_banking_accounts",
+    "column_name": "bank_agency",
+    "data_type": "character varying",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "table_name": "admin_banking_accounts",
+    "column_name": "bank_account",
+    "data_type": "character varying",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "table_name": "admin_banking_accounts",
+    "column_name": "account_holder",
+    "data_type": "character varying",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "table_name": "admin_banking_accounts",
+    "column_name": "document_cpf",
+    "data_type": "character varying",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "table_name": "admin_banking_accounts",
+    "column_name": "pix_key",
+    "data_type": "character varying",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "table_name": "admin_banking_accounts",
+    "column_name": "pix_key_type",
+    "data_type": "character varying",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "table_name": "admin_banking_accounts",
+    "column_name": "is_default",
+    "data_type": "boolean",
+    "is_nullable": "YES",
+    "column_default": "false"
+  },
+  {
+    "table_name": "admin_banking_accounts",
+    "column_name": "is_active",
+    "data_type": "boolean",
+    "is_nullable": "YES",
+    "column_default": "true"
+  },
+  {
+    "table_name": "admin_banking_accounts",
+    "column_name": "created_at",
+    "data_type": "timestamp with time zone",
+    "is_nullable": "YES",
+    "column_default": "now()"
+  },
+  {
+    "table_name": "admin_banking_accounts",
+    "column_name": "updated_at",
+    "data_type": "timestamp with time zone",
+    "is_nullable": "YES",
+    "column_default": "now()"
+  },
+  {
+    "table_name": "commission_history",
+    "column_name": "id",
+    "data_type": "uuid",
+    "is_nullable": "NO",
+    "column_default": "gen_random_uuid()"
+  },
+  {
+    "table_name": "commission_history",
+    "column_name": "commission_id",
+    "data_type": "uuid",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "commission_history",
+    "column_name": "user_id",
+    "data_type": "uuid",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "commission_history",
+    "column_name": "amount",
+    "data_type": "numeric",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "table_name": "commission_history",
+    "column_name": "previous_balance",
+    "data_type": "numeric",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "table_name": "commission_history",
+    "column_name": "new_balance",
+    "data_type": "numeric",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "table_name": "commission_history",
+    "column_name": "description",
+    "data_type": "text",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "commission_history",
+    "column_name": "created_at",
+    "data_type": "timestamp with time zone",
+    "is_nullable": "YES",
+    "column_default": "now()"
+  },
+  {
+    "table_name": "commissions",
+    "column_name": "id",
+    "data_type": "uuid",
+    "is_nullable": "NO",
+    "column_default": "gen_random_uuid()"
+  },
+  {
+    "table_name": "commissions",
+    "column_name": "user_id",
+    "data_type": "uuid",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "commissions",
+    "column_name": "source_user_id",
+    "data_type": "uuid",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "commissions",
+    "column_name": "investment_id",
+    "data_type": "uuid",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "commissions",
+    "column_name": "yield_id",
+    "data_type": "uuid",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "commissions",
+    "column_name": "commission_type",
+    "data_type": "text",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "table_name": "commissions",
+    "column_name": "amount",
+    "data_type": "numeric",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "table_name": "commissions",
+    "column_name": "percentage",
+    "data_type": "numeric",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "table_name": "commissions",
+    "column_name": "level",
+    "data_type": "integer",
+    "is_nullable": "YES",
+    "column_default": "1"
+  },
+  {
+    "table_name": "commissions",
+    "column_name": "status",
+    "data_type": "text",
+    "is_nullable": "YES",
+    "column_default": "'pending'::text"
+  },
+  {
+    "table_name": "commissions",
+    "column_name": "paid_at",
+    "data_type": "timestamp with time zone",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "commissions",
+    "column_name": "created_at",
+    "data_type": "timestamp with time zone",
+    "is_nullable": "YES",
+    "column_default": "now()"
+  },
+  {
+    "table_name": "commissions",
+    "column_name": "updated_at",
+    "data_type": "timestamp with time zone",
+    "is_nullable": "YES",
+    "column_default": "now()"
+  },
+  {
+    "table_name": "deposits",
+    "column_name": "id",
+    "data_type": "uuid",
+    "is_nullable": "NO",
+    "column_default": "gen_random_uuid()"
+  },
+  {
+    "table_name": "deposits",
+    "column_name": "user_id",
+    "data_type": "uuid",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "deposits",
+    "column_name": "amount",
+    "data_type": "numeric",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "table_name": "deposits",
+    "column_name": "method",
+    "data_type": "text",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "table_name": "deposits",
+    "column_name": "status",
+    "data_type": "text",
+    "is_nullable": "YES",
+    "column_default": "'pending'::text"
+  },
+  {
+    "table_name": "deposits",
+    "column_name": "transaction_hash",
+    "data_type": "text",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "deposits",
+    "column_name": "proof_url",
+    "data_type": "text",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "deposits",
+    "column_name": "description",
+    "data_type": "text",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "deposits",
+    "column_name": "admin_notes",
+    "data_type": "text",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "deposits",
+    "column_name": "confirmed_at",
+    "data_type": "timestamp with time zone",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "deposits",
+    "column_name": "created_at",
+    "data_type": "timestamp with time zone",
+    "is_nullable": "YES",
+    "column_default": "now()"
+  },
+  {
+    "table_name": "deposits",
+    "column_name": "updated_at",
+    "data_type": "timestamp with time zone",
+    "is_nullable": "YES",
+    "column_default": "now()"
+  },
+  {
+    "table_name": "deposits",
+    "column_name": "admin_account_id",
+    "data_type": "uuid",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "deposits",
+    "column_name": "bank_name",
+    "data_type": "text",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "deposits",
+    "column_name": "account_holder",
+    "data_type": "text",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "financial_ledger",
+    "column_name": "id",
+    "data_type": "uuid",
+    "is_nullable": "NO",
+    "column_default": "gen_random_uuid()"
+  },
+  {
+    "table_name": "financial_ledger",
+    "column_name": "user_id",
+    "data_type": "uuid",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "table_name": "financial_ledger",
+    "column_name": "type",
+    "data_type": "text",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "table_name": "financial_ledger",
+    "column_name": "amount",
+    "data_type": "numeric",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "table_name": "financial_ledger",
+    "column_name": "balance_before",
+    "data_type": "numeric",
+    "is_nullable": "NO",
+    "column_default": "0"
+  },
+  {
+    "table_name": "financial_ledger",
+    "column_name": "balance_after",
+    "data_type": "numeric",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "table_name": "financial_ledger",
+    "column_name": "reference_id",
+    "data_type": "uuid",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "financial_ledger",
+    "column_name": "description",
+    "data_type": "text",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "financial_ledger",
+    "column_name": "created_at",
+    "data_type": "timestamp with time zone",
+    "is_nullable": "YES",
+    "column_default": "now()"
+  },
+  {
+    "table_name": "investments",
+    "column_name": "id",
+    "data_type": "uuid",
+    "is_nullable": "NO",
+    "column_default": "gen_random_uuid()"
+  },
+  {
+    "table_name": "investments",
+    "column_name": "user_id",
+    "data_type": "uuid",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "table_name": "investments",
+    "column_name": "amount",
+    "data_type": "numeric",
+    "is_nullable": "NO",
+    "column_default": "0.00"
+  },
+  {
+    "table_name": "investments",
+    "column_name": "plan_slug",
+    "data_type": "character varying",
+    "is_nullable": "NO",
+    "column_default": "'basic'::character varying"
+  },
+  {
+    "table_name": "investments",
+    "column_name": "client_share",
+    "data_type": "integer",
+    "is_nullable": "NO",
+    "column_default": "50"
+  },
+  {
+    "table_name": "investments",
+    "column_name": "company_share",
+    "data_type": "integer",
+    "is_nullable": "NO",
+    "column_default": "50"
+  },
+  {
+    "table_name": "investments",
+    "column_name": "status",
+    "data_type": "character varying",
+    "is_nullable": "NO",
+    "column_default": "'active'::character varying"
+  },
+  {
+    "table_name": "investments",
+    "column_name": "daily_yield",
+    "data_type": "numeric",
+    "is_nullable": "NO",
+    "column_default": "0.00"
+  },
+  {
+    "table_name": "investments",
+    "column_name": "total_yield",
+    "data_type": "numeric",
+    "is_nullable": "NO",
+    "column_default": "0.00"
+  },
+  {
+    "table_name": "investments",
+    "column_name": "last_yield_calculated",
+    "data_type": "timestamp without time zone",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "investments",
+    "column_name": "created_at",
+    "data_type": "timestamp without time zone",
+    "is_nullable": "YES",
+    "column_default": "now()"
+  },
+  {
+    "table_name": "investments",
+    "column_name": "updated_at",
+    "data_type": "timestamp without time zone",
+    "is_nullable": "YES",
+    "column_default": "now()"
+  },
+  {
+    "table_name": "network_relations",
+    "column_name": "id",
+    "data_type": "uuid",
+    "is_nullable": "NO",
+    "column_default": "gen_random_uuid()"
+  },
+  {
+    "table_name": "network_relations",
+    "column_name": "user_id",
+    "data_type": "text",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "table_name": "network_relations",
+    "column_name": "user_email",
+    "data_type": "text",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "network_relations",
+    "column_name": "user_name",
+    "data_type": "text",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "network_relations",
+    "column_name": "referred_id",
+    "data_type": "text",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "table_name": "network_relations",
+    "column_name": "referred_email",
+    "data_type": "text",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "network_relations",
+    "column_name": "referred_name",
+    "data_type": "text",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "network_relations",
+    "column_name": "level",
+    "data_type": "integer",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "table_name": "network_relations",
+    "column_name": "total_generated",
+    "data_type": "numeric",
+    "is_nullable": "YES",
+    "column_default": "0"
+  },
+  {
+    "table_name": "network_relations",
+    "column_name": "status",
+    "data_type": "text",
+    "is_nullable": "YES",
+    "column_default": "'active'::text"
+  },
+  {
+    "table_name": "network_relations",
+    "column_name": "created_at",
+    "data_type": "timestamp with time zone",
+    "is_nullable": "YES",
+    "column_default": "now()"
+  },
+  {
+    "table_name": "network_relations",
+    "column_name": "updated_at",
+    "data_type": "timestamp with time zone",
+    "is_nullable": "YES",
+    "column_default": "now()"
+  },
+  {
+    "table_name": "plans",
+    "column_name": "id",
+    "data_type": "uuid",
+    "is_nullable": "NO",
+    "column_default": "gen_random_uuid()"
+  },
+  {
+    "table_name": "plans",
+    "column_name": "slug",
+    "data_type": "character varying",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "table_name": "plans",
+    "column_name": "name",
+    "data_type": "character varying",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "table_name": "plans",
+    "column_name": "description",
+    "data_type": "text",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "plans",
+    "column_name": "is_active",
+    "data_type": "boolean",
+    "is_nullable": "YES",
+    "column_default": "true"
+  },
+  {
+    "table_name": "plans",
+    "column_name": "is_leadership",
+    "data_type": "boolean",
+    "is_nullable": "YES",
+    "column_default": "false"
+  },
+  {
+    "table_name": "plans",
+    "column_name": "sort_order",
+    "data_type": "integer",
+    "is_nullable": "YES",
+    "column_default": "0"
+  },
+  {
+    "table_name": "plans",
+    "column_name": "min_amount",
+    "data_type": "numeric",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "table_name": "plans",
+    "column_name": "max_amount",
+    "data_type": "numeric",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "table_name": "plans",
+    "column_name": "base_rate",
+    "data_type": "numeric",
+    "is_nullable": "YES",
+    "column_default": "0.0000"
+  },
+  {
+    "table_name": "plans",
+    "column_name": "min_rate",
+    "data_type": "numeric",
+    "is_nullable": "YES",
+    "column_default": "0.0000"
+  },
+  {
+    "table_name": "plans",
+    "column_name": "max_rate",
+    "data_type": "numeric",
+    "is_nullable": "YES",
+    "column_default": "0.0000"
+  },
+  {
+    "table_name": "plans",
+    "column_name": "rate_increment",
+    "data_type": "numeric",
+    "is_nullable": "YES",
+    "column_default": "0.0000"
+  },
+  {
+    "table_name": "plans",
+    "column_name": "client_share",
+    "data_type": "integer",
+    "is_nullable": "YES",
+    "column_default": "50"
+  },
+  {
+    "table_name": "plans",
+    "column_name": "company_share",
+    "data_type": "integer",
+    "is_nullable": "YES",
+    "column_default": "50"
+  },
+  {
+    "table_name": "plans",
+    "column_name": "direct_commission",
+    "data_type": "integer",
+    "is_nullable": "YES",
+    "column_default": "10"
+  },
+  {
+    "table_name": "plans",
+    "column_name": "reinvestment_commission",
+    "data_type": "integer",
+    "is_nullable": "YES",
+    "column_default": "10"
+  },
+  {
+    "table_name": "plans",
+    "column_name": "residual_levels",
+    "data_type": "integer",
+    "is_nullable": "YES",
+    "column_default": "0"
+  },
+  {
+    "table_name": "plans",
+    "column_name": "color",
+    "data_type": "character varying",
+    "is_nullable": "YES",
+    "column_default": "'gold'::character varying"
+  },
+  {
+    "table_name": "plans",
+    "column_name": "icon",
+    "data_type": "character varying",
+    "is_nullable": "YES",
+    "column_default": "'Zap'::character varying"
+  },
+  {
+    "table_name": "plans",
+    "column_name": "is_most_popular",
+    "data_type": "boolean",
+    "is_nullable": "YES",
+    "column_default": "false"
+  },
+  {
+    "table_name": "plans",
+    "column_name": "is_featured",
+    "data_type": "boolean",
+    "is_nullable": "YES",
+    "column_default": "false"
+  },
+  {
+    "table_name": "plans",
+    "column_name": "created_at",
+    "data_type": "timestamp with time zone",
+    "is_nullable": "YES",
+    "column_default": "now()"
+  },
+  {
+    "table_name": "plans",
+    "column_name": "updated_at",
+    "data_type": "timestamp with time zone",
+    "is_nullable": "YES",
+    "column_default": "now()"
+  },
+  {
+    "table_name": "profiles",
+    "column_name": "id",
+    "data_type": "uuid",
+    "is_nullable": "NO",
+    "column_default": "gen_random_uuid()"
+  },
+  {
+    "table_name": "profiles",
+    "column_name": "user_id",
+    "data_type": "uuid",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "table_name": "profiles",
+    "column_name": "email",
+    "data_type": "text",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "table_name": "profiles",
+    "column_name": "full_name",
+    "data_type": "text",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "profiles",
+    "column_name": "phone",
+    "data_type": "text",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "profiles",
+    "column_name": "document_number",
+    "data_type": "text",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "profiles",
+    "column_name": "birth_date",
+    "data_type": "date",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "profiles",
+    "column_name": "address",
+    "data_type": "text",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "profiles",
+    "column_name": "city",
+    "data_type": "text",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "profiles",
+    "column_name": "state",
+    "data_type": "text",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "profiles",
+    "column_name": "country",
+    "data_type": "text",
+    "is_nullable": "YES",
+    "column_default": "'Brasil'::text"
+  },
+  {
+    "table_name": "profiles",
+    "column_name": "postal_code",
+    "data_type": "text",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "profiles",
+    "column_name": "referral_code",
+    "data_type": "text",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "profiles",
+    "column_name": "referred_by",
+    "data_type": "uuid",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "profiles",
+    "column_name": "kyc_status",
+    "data_type": "text",
+    "is_nullable": "YES",
+    "column_default": "'pending'::text"
+  },
+  {
+    "table_name": "profiles",
+    "column_name": "kyc_documents",
+    "data_type": "ARRAY",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "profiles",
+    "column_name": "is_active",
+    "data_type": "boolean",
+    "is_nullable": "YES",
+    "column_default": "true"
+  },
+  {
+    "table_name": "profiles",
+    "column_name": "is_verified",
+    "data_type": "boolean",
+    "is_nullable": "YES",
+    "column_default": "false"
+  },
+  {
+    "table_name": "profiles",
+    "column_name": "verification_level",
+    "data_type": "text",
+    "is_nullable": "YES",
+    "column_default": "'basic'::text"
+  },
+  {
+    "table_name": "profiles",
+    "column_name": "risk_score",
+    "data_type": "integer",
+    "is_nullable": "YES",
+    "column_default": "0"
+  },
+  {
+    "table_name": "profiles",
+    "column_name": "last_login",
+    "data_type": "timestamp with time zone",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "profiles",
+    "column_name": "created_at",
+    "data_type": "timestamp with time zone",
+    "is_nullable": "YES",
+    "column_default": "now()"
+  },
+  {
+    "table_name": "profiles",
+    "column_name": "updated_at",
+    "data_type": "timestamp with time zone",
+    "is_nullable": "YES",
+    "column_default": "now()"
+  },
+  {
+    "table_name": "profiles",
+    "column_name": "bank_name",
+    "data_type": "text",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "profiles",
+    "column_name": "bank_agency",
+    "data_type": "text",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "profiles",
+    "column_name": "bank_account",
+    "data_type": "text",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "profiles",
+    "column_name": "pix_key",
+    "data_type": "text",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "profiles",
+    "column_name": "crypto_wallet",
+    "data_type": "text",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "profiles",
+    "column_name": "role",
+    "data_type": "text",
+    "is_nullable": "YES",
+    "column_default": "'user'::text"
+  },
+  {
+    "table_name": "profiles",
+    "column_name": "status",
+    "data_type": "text",
+    "is_nullable": "YES",
+    "column_default": "'active'::text"
+  },
+  {
+    "table_name": "profiles",
+    "column_name": "available_balance",
+    "data_type": "numeric",
+    "is_nullable": "YES",
+    "column_default": "0"
+  },
+  {
+    "table_name": "profiles",
+    "column_name": "total_invested",
+    "data_type": "numeric",
+    "is_nullable": "YES",
+    "column_default": "0"
+  },
+  {
+    "table_name": "profiles",
+    "column_name": "total_withdrawn",
+    "data_type": "numeric",
+    "is_nullable": "YES",
+    "column_default": "0"
+  },
+  {
+    "table_name": "profiles",
+    "column_name": "total_earned",
+    "data_type": "numeric",
+    "is_nullable": "YES",
+    "column_default": "0"
+  },
+  {
+    "table_name": "profiles",
+    "column_name": "referral_count",
+    "data_type": "integer",
+    "is_nullable": "YES",
+    "column_default": "0"
+  },
+  {
+    "table_name": "profiles",
+    "column_name": "direct_referrals",
+    "data_type": "integer",
+    "is_nullable": "YES",
+    "column_default": "0"
+  },
+  {
+    "table_name": "profiles",
+    "column_name": "referral_cod",
+    "data_type": "text",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "transactions",
+    "column_name": "id",
+    "data_type": "uuid",
+    "is_nullable": "NO",
+    "column_default": "gen_random_uuid()"
+  },
+  {
+    "table_name": "transactions",
+    "column_name": "user_id",
+    "data_type": "text",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "table_name": "transactions",
+    "column_name": "user_email",
+    "data_type": "text",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "transactions",
+    "column_name": "user_name",
+    "data_type": "text",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "transactions",
+    "column_name": "type",
+    "data_type": "text",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "table_name": "transactions",
+    "column_name": "amount",
+    "data_type": "numeric",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "table_name": "transactions",
+    "column_name": "fee",
+    "data_type": "numeric",
+    "is_nullable": "YES",
+    "column_default": "0"
+  },
+  {
+    "table_name": "transactions",
+    "column_name": "penalty",
+    "data_type": "numeric",
+    "is_nullable": "YES",
+    "column_default": "0"
+  },
+  {
+    "table_name": "transactions",
+    "column_name": "net_amount",
+    "data_type": "numeric",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "transactions",
+    "column_name": "status",
+    "data_type": "text",
+    "is_nullable": "YES",
+    "column_default": "'pending'::text"
+  },
+  {
+    "table_name": "transactions",
+    "column_name": "description",
+    "data_type": "text",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "transactions",
+    "column_name": "txid",
+    "data_type": "text",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "transactions",
+    "column_name": "crypto_wallet",
+    "data_type": "text",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "transactions",
+    "column_name": "transfer_to_user_id",
+    "data_type": "text",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "transactions",
+    "column_name": "transfer_to_email",
+    "data_type": "text",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "transactions",
+    "column_name": "investment_id",
+    "data_type": "text",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "transactions",
+    "column_name": "related_user_id",
+    "data_type": "text",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "transactions",
+    "column_name": "admin_notes",
+    "data_type": "text",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "transactions",
+    "column_name": "processed_by",
+    "data_type": "text",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "transactions",
+    "column_name": "processed_date",
+    "data_type": "timestamp with time zone",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "transactions",
+    "column_name": "created_at",
+    "data_type": "timestamp with time zone",
+    "is_nullable": "YES",
+    "column_default": "now()"
+  },
+  {
+    "table_name": "transactions",
+    "column_name": "updated_at",
+    "data_type": "timestamp with time zone",
+    "is_nullable": "YES",
+    "column_default": "now()"
+  },
+  {
+    "table_name": "transfers",
+    "column_name": "id",
+    "data_type": "uuid",
+    "is_nullable": "NO",
+    "column_default": "gen_random_uuid()"
+  },
+  {
+    "table_name": "transfers",
+    "column_name": "from_user_id",
+    "data_type": "uuid",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "transfers",
+    "column_name": "to_user_id",
+    "data_type": "uuid",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "transfers",
+    "column_name": "amount",
+    "data_type": "numeric",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "table_name": "transfers",
+    "column_name": "status",
+    "data_type": "text",
+    "is_nullable": "YES",
+    "column_default": "'completed'::text"
+  },
+  {
+    "table_name": "transfers",
+    "column_name": "description",
+    "data_type": "text",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "transfers",
+    "column_name": "created_at",
+    "data_type": "timestamp with time zone",
+    "is_nullable": "YES",
+    "column_default": "now()"
+  },
+  {
+    "table_name": "transfers",
+    "column_name": "updated_at",
+    "data_type": "timestamp with time zone",
+    "is_nullable": "YES",
+    "column_default": "now()"
+  },
+  {
+    "table_name": "user_network",
+    "column_name": "user_id",
+    "data_type": "uuid",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "table_name": "user_network",
+    "column_name": "ancestor_id",
+    "data_type": "uuid",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "table_name": "user_network",
+    "column_name": "level",
+    "data_type": "integer",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "table_name": "user_network",
+    "column_name": "created_at",
+    "data_type": "timestamp with time zone",
+    "is_nullable": "YES",
+    "column_default": "now()"
+  },
+  {
+    "table_name": "user_settings",
+    "column_name": "id",
+    "data_type": "uuid",
+    "is_nullable": "NO",
+    "column_default": "gen_random_uuid()"
+  },
+  {
+    "table_name": "user_settings",
+    "column_name": "user_id",
+    "data_type": "uuid",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "table_name": "user_settings",
+    "column_name": "language",
+    "data_type": "text",
+    "is_nullable": "YES",
+    "column_default": "'pt-BR'::text"
+  },
+  {
+    "table_name": "user_settings",
+    "column_name": "timezone",
+    "data_type": "text",
+    "is_nullable": "YES",
+    "column_default": "'America/Sao_Paulo'::text"
+  },
+  {
+    "table_name": "user_settings",
+    "column_name": "currency",
+    "data_type": "text",
+    "is_nullable": "YES",
+    "column_default": "'BRL'::text"
+  },
+  {
+    "table_name": "user_settings",
+    "column_name": "email_notifications",
+    "data_type": "boolean",
+    "is_nullable": "YES",
+    "column_default": "true"
+  },
+  {
+    "table_name": "user_settings",
+    "column_name": "sms_notifications",
+    "data_type": "boolean",
+    "is_nullable": "YES",
+    "column_default": "false"
+  },
+  {
+    "table_name": "user_settings",
+    "column_name": "push_notifications",
+    "data_type": "boolean",
+    "is_nullable": "YES",
+    "column_default": "true"
+  },
+  {
+    "table_name": "user_settings",
+    "column_name": "two_factor_enabled",
+    "data_type": "boolean",
+    "is_nullable": "YES",
+    "column_default": "false"
+  },
+  {
+    "table_name": "user_settings",
+    "column_name": "marketing_emails",
+    "data_type": "boolean",
+    "is_nullable": "YES",
+    "column_default": "true"
+  },
+  {
+    "table_name": "user_settings",
+    "column_name": "created_at",
+    "data_type": "timestamp with time zone",
+    "is_nullable": "YES",
+    "column_default": "now()"
+  },
+  {
+    "table_name": "user_settings",
+    "column_name": "updated_at",
+    "data_type": "timestamp with time zone",
+    "is_nullable": "YES",
+    "column_default": "now()"
+  },
+  {
+    "table_name": "user_wallets",
+    "column_name": "id",
+    "data_type": "uuid",
+    "is_nullable": "NO",
+    "column_default": "gen_random_uuid()"
+  },
+  {
+    "table_name": "user_wallets",
+    "column_name": "user_id",
+    "data_type": "uuid",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "table_name": "user_wallets",
+    "column_name": "currency",
+    "data_type": "text",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "table_name": "user_wallets",
+    "column_name": "address",
+    "data_type": "text",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "table_name": "user_wallets",
+    "column_name": "network",
+    "data_type": "text",
+    "is_nullable": "YES",
+    "column_default": "'mainnet'::text"
+  },
+  {
+    "table_name": "user_wallets",
+    "column_name": "is_default",
+    "data_type": "boolean",
+    "is_nullable": "YES",
+    "column_default": "false"
+  },
+  {
+    "table_name": "user_wallets",
+    "column_name": "is_active",
+    "data_type": "boolean",
+    "is_nullable": "YES",
+    "column_default": "true"
+  },
+  {
+    "table_name": "user_wallets",
+    "column_name": "label",
+    "data_type": "text",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "user_wallets",
+    "column_name": "balance",
+    "data_type": "numeric",
+    "is_nullable": "YES",
+    "column_default": "0"
+  },
+  {
+    "table_name": "user_wallets",
+    "column_name": "created_at",
+    "data_type": "timestamp with time zone",
+    "is_nullable": "YES",
+    "column_default": "now()"
+  },
+  {
+    "table_name": "user_wallets",
+    "column_name": "updated_at",
+    "data_type": "timestamp with time zone",
+    "is_nullable": "YES",
+    "column_default": "now()"
+  },
+  {
+    "table_name": "wallet_balances",
+    "column_name": "id",
+    "data_type": "uuid",
+    "is_nullable": "NO",
+    "column_default": "gen_random_uuid()"
+  },
+  {
+    "table_name": "wallet_balances",
+    "column_name": "user_id",
+    "data_type": "uuid",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "table_name": "wallet_balances",
+    "column_name": "wallet_balance",
+    "data_type": "numeric",
+    "is_nullable": "NO",
+    "column_default": "0"
+  },
+  {
+    "table_name": "wallet_balances",
+    "column_name": "yield_balance",
+    "data_type": "numeric",
+    "is_nullable": "NO",
+    "column_default": "0"
+  },
+  {
+    "table_name": "wallet_balances",
+    "column_name": "bonus_balance",
+    "data_type": "numeric",
+    "is_nullable": "NO",
+    "column_default": "0"
+  },
+  {
+    "table_name": "wallet_balances",
+    "column_name": "locked_balance",
+    "data_type": "numeric",
+    "is_nullable": "NO",
+    "column_default": "0"
+  },
+  {
+    "table_name": "wallet_balances",
+    "column_name": "created_at",
+    "data_type": "timestamp with time zone",
+    "is_nullable": "YES",
+    "column_default": "now()"
+  },
+  {
+    "table_name": "wallet_balances",
+    "column_name": "updated_at",
+    "data_type": "timestamp with time zone",
+    "is_nullable": "YES",
+    "column_default": "now()"
+  },
+  {
+    "table_name": "withdrawals",
+    "column_name": "id",
+    "data_type": "uuid",
+    "is_nullable": "NO",
+    "column_default": "gen_random_uuid()"
+  },
+  {
+    "table_name": "withdrawals",
+    "column_name": "user_id",
+    "data_type": "uuid",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "withdrawals",
+    "column_name": "amount",
+    "data_type": "numeric",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "table_name": "withdrawals",
+    "column_name": "method",
+    "data_type": "text",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "table_name": "withdrawals",
+    "column_name": "destination_address",
+    "data_type": "text",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "table_name": "withdrawals",
+    "column_name": "status",
+    "data_type": "text",
+    "is_nullable": "YES",
+    "column_default": "'pending'::text"
+  },
+  {
+    "table_name": "withdrawals",
+    "column_name": "transaction_hash",
+    "data_type": "text",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "withdrawals",
+    "column_name": "admin_notes",
+    "data_type": "text",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "withdrawals",
+    "column_name": "processing_fee",
+    "data_type": "numeric",
+    "is_nullable": "YES",
+    "column_default": "0"
+  },
+  {
+    "table_name": "withdrawals",
+    "column_name": "confirmed_at",
+    "data_type": "timestamp with time zone",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "withdrawals",
+    "column_name": "created_at",
+    "data_type": "timestamp with time zone",
+    "is_nullable": "YES",
+    "column_default": "now()"
+  },
+  {
+    "table_name": "withdrawals",
+    "column_name": "updated_at",
+    "data_type": "timestamp with time zone",
+    "is_nullable": "YES",
+    "column_default": "now()"
+  },
+  {
+    "table_name": "yields",
+    "column_name": "id",
+    "data_type": "uuid",
+    "is_nullable": "NO",
+    "column_default": "gen_random_uuid()"
+  },
+  {
+    "table_name": "yields",
+    "column_name": "investment_id",
+    "data_type": "uuid",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "yields",
+    "column_name": "user_id",
+    "data_type": "uuid",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "yields",
+    "column_name": "amount",
+    "data_type": "numeric",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "table_name": "yields",
+    "column_name": "rate",
+    "data_type": "numeric",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "table_name": "yields",
+    "column_name": "client_yield",
+    "data_type": "numeric",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "table_name": "yields",
+    "column_name": "company_yield",
+    "data_type": "numeric",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "table_name": "yields",
+    "column_name": "date",
+    "data_type": "timestamp with time zone",
+    "is_nullable": "YES",
+    "column_default": "now()"
+  },
+  {
+    "table_name": "yields",
+    "column_name": "created_at",
+    "data_type": "timestamp with time zone",
+    "is_nullable": "YES",
+    "column_default": "now()"
+  }
+]
+
+=========================select * from deposits======================
+[
+  {
+    "id": "e7923b1c-683e-4fc2-84d4-918c6adf5fb0",
+    "user_id": "78f674e2-16cc-4924-9480-e06a2b53cdcf",
+    "amount": "2000.00",
+    "method": "bank_transfer",
+    "status": "confirmed",
+    "transaction_hash": "tx_silver_e75d44fa-ba1e-4213-99b0-0c29748a6ecb",
+    "proof_url": null,
+    "description": "Depósito para plano Silver",
+    "admin_notes": null,
+    "confirmed_at": "2026-03-21 22:08:54.001689+00",
+    "created_at": "2026-03-21 22:08:54.001689+00",
+    "updated_at": "2026-03-25 22:08:54.001689+00",
+    "admin_account_id": null,
+    "bank_name": null,
+    "account_holder": null
+  },
+  {
+    "id": "57b8e5b8-6587-4ceb-aae8-1a9c08de8f55",
+    "user_id": "31a89355-2c2b-4966-9610-fb5c531c23ee",
+    "amount": "1500.00",
+    "method": "pix",
+    "status": "confirmed",
+    "transaction_hash": "tx_test_user_001",
+    "proof_url": null,
+    "description": "Depósito de teste para comissões",
+    "admin_notes": null,
+    "confirmed_at": "2026-03-30 12:57:54.446836+00",
+    "created_at": "2026-03-30 12:57:54.446836+00",
+    "updated_at": "2026-03-30 12:57:54.446836+00",
+    "admin_account_id": null,
+    "bank_name": null,
+    "account_holder": null
+  },
+  {
+    "id": "4854f39d-130d-4937-907f-16a15b65128c",
+    "user_id": "31a89355-2c2b-4966-9610-fb5c531c23ee",
+    "amount": "2500.00",
+    "method": "bank_transfer",
+    "status": "confirmed",
+    "transaction_hash": "tx_test_user_002",
+    "proof_url": null,
+    "description": "Depósito de teste para comissões",
+    "admin_notes": null,
+    "confirmed_at": "2026-03-30 12:57:54.446836+00",
+    "created_at": "2026-03-30 12:57:54.446836+00",
+    "updated_at": "2026-03-30 12:57:54.446836+00",
+    "admin_account_id": null,
+    "bank_name": null,
+    "account_holder": null
+  },
+  {
+    "id": "fc2a1c17-adc9-494a-925e-ee7048acd7ae",
+    "user_id": "120e0011-ed71-4df6-a10e-5170f98ec439",
+    "amount": "500.00",
+    "method": "pix",
+    "status": "confirmed",
+    "transaction_hash": "tx_network_001",
+    "proof_url": null,
+    "description": "Depósito membro rede - Nível 1",
+    "admin_notes": null,
+    "confirmed_at": "2026-03-30 12:57:54.446836+00",
+    "created_at": "2026-03-30 12:57:54.446836+00",
+    "updated_at": "2026-03-30 12:57:54.446836+00",
+    "admin_account_id": null,
+    "bank_name": null,
+    "account_holder": null
+  },
+  {
+    "id": "76297adf-50dc-4e4b-9c9f-c51353d4c0aa",
+    "user_id": "120e0011-ed71-4df6-a10e-5170f98ec439",
+    "amount": "800.00",
+    "method": "pix",
+    "status": "confirmed",
+    "transaction_hash": "tx_network_002",
+    "proof_url": null,
+    "description": "Depósito membro rede - Nível 1",
+    "admin_notes": null,
+    "confirmed_at": "2026-03-30 12:57:54.446836+00",
+    "created_at": "2026-03-30 12:57:54.446836+00",
+    "updated_at": "2026-03-30 12:57:54.446836+00",
+    "admin_account_id": null,
+    "bank_name": null,
+    "account_holder": null
+  },
+  {
+    "id": "f749074f-3e62-4fb5-9651-eb402f19c738",
+    "user_id": "96253f43-f8b5-496e-a613-9c77f77e392b",
+    "amount": "1200.00",
+    "method": "bank_transfer",
+    "status": "confirmed",
+    "transaction_hash": "tx_network_003",
+    "proof_url": null,
+    "description": "Depósito membro rede - Nível 1",
+    "admin_notes": null,
+    "confirmed_at": "2026-03-30 12:57:54.446836+00",
+    "created_at": "2026-03-30 12:57:54.446836+00",
+    "updated_at": "2026-03-30 12:57:54.446836+00",
+    "admin_account_id": null,
+    "bank_name": null,
+    "account_holder": null
+  },
+  {
+    "id": "71935beb-e263-4c3c-b334-c0b7871e49d0",
+    "user_id": "96253f43-f8b5-496e-a613-9c77f77e392b",
+    "amount": "600.00",
+    "method": "pix",
+    "status": "confirmed",
+    "transaction_hash": "tx_network_004",
+    "proof_url": null,
+    "description": "Depósito membro rede - Nível 1",
+    "admin_notes": null,
+    "confirmed_at": "2026-03-30 12:57:54.446836+00",
+    "created_at": "2026-03-30 12:57:54.446836+00",
+    "updated_at": "2026-03-30 12:57:54.446836+00",
+    "admin_account_id": null,
+    "bank_name": null,
+    "account_holder": null
+  },
+  {
+    "id": "12d89d9b-ccee-4797-a59f-2a417752ca57",
+    "user_id": "78f674e2-16cc-4924-9480-e06a2b53cdcf",
+    "amount": "2000.00",
+    "method": "pix",
+    "status": "confirmed",
+    "transaction_hash": "tx_basic_3948e6b3-c875-4f77-8e31-c699a967a685",
+    "proof_url": null,
+    "description": "Depósito inicial para plano Basic",
+    "admin_notes": null,
+    "confirmed_at": "2026-03-17 22:08:54.001689+00",
+    "created_at": "2026-03-17 22:08:54.001689+00",
+    "updated_at": "2026-03-30 17:51:37.143672+00",
+    "admin_account_id": null,
+    "bank_name": null,
+    "account_holder": null
+  }
+]
+
+=========================select * from investments======================
+[
+  {
+    "id": "8384c068-2c77-466c-8341-557baed034b4",
+    "user_id": "78f674e2-16cc-4924-9480-e06a2b53cdcf",
+    "amount": "1000.00",
+    "plan_slug": "basic",
+    "client_share": 50,
+    "company_share": 50,
+    "status": "active",
+    "daily_yield": "10.00000000",
+    "total_yield": "30.00",
+    "last_yield_calculated": "2026-03-27 13:09:06.456",
+    "created_at": "2026-03-18 22:08:54.001689",
+    "updated_at": "2026-03-27 12:59:20.06355"
+  },
+  {
+    "id": "bb43effd-c7a4-4b50-9955-575ec7b43b95",
+    "user_id": "78f674e2-16cc-4924-9480-e06a2b53cdcf",
+    "amount": "2000.00",
+    "plan_slug": "silver",
+    "client_share": 50,
+    "company_share": 50,
+    "status": "active",
+    "daily_yield": "20.00000000",
+    "total_yield": "60.00",
+    "last_yield_calculated": "2026-03-27 13:09:08.247",
+    "created_at": "2026-03-22 22:08:54.001689",
+    "updated_at": "2026-03-27 12:59:20.06355"
+  },
+  {
+    "id": "1f52248d-da9b-4c3b-85b4-4c2580d1730f",
+    "user_id": "88d01414-3384-4e25-8fba-64d90bb17dd7",
+    "amount": "1500.00",
+    "plan_slug": "basic",
+    "client_share": 50,
+    "company_share": 50,
+    "status": "active",
+    "daily_yield": "15.00000000",
+    "total_yield": "45.00",
+    "last_yield_calculated": "2026-03-27 13:09:10.069",
+    "created_at": "2026-03-27 12:59:20.06355",
+    "updated_at": "2026-03-27 12:59:20.06355"
+  },
+  {
+    "id": "7eaa6f41-f644-4de2-b1fe-cf28204b7e08",
+    "user_id": "120e0011-ed71-4df6-a10e-5170f98ec439",
+    "amount": "800.00",
+    "plan_slug": "start",
+    "client_share": 50,
+    "company_share": 50,
+    "status": "active",
+    "daily_yield": "8.00000000",
+    "total_yield": "24.00",
+    "last_yield_calculated": "2026-03-27 13:09:11.887",
+    "created_at": "2026-03-27 12:59:20.06355",
+    "updated_at": "2026-03-27 12:59:20.06355"
+  },
+  {
+    "id": "62fd651a-a3e3-4e87-81d6-962b1209ae6a",
+    "user_id": "d5445d82-d3f9-4f59-bb02-e79c1c0a2809",
+    "amount": "2500.00",
+    "plan_slug": "silver",
+    "client_share": 50,
+    "company_share": 50,
+    "status": "active",
+    "daily_yield": "25.00000000",
+    "total_yield": "75.00",
+    "last_yield_calculated": "2026-03-27 13:09:13.865",
+    "created_at": "2026-03-27 12:59:20.06355",
+    "updated_at": "2026-03-27 12:59:20.06355"
+  },
+  {
+    "id": "6c7b1258-0934-4b7e-939b-49180a767cd8",
+    "user_id": "31a89355-2c2b-4966-9610-fb5c531c23ee",
+    "amount": "99.00",
+    "plan_slug": "start",
+    "client_share": 50,
+    "company_share": 50,
+    "status": "active",
+    "daily_yield": "0.01000000",
+    "total_yield": "0.00",
+    "last_yield_calculated": null,
+    "created_at": "2026-03-30 14:47:32.201861",
+    "updated_at": "2026-03-30 14:47:32.201861"
+  },
+  {
+    "id": "96818b5e-058a-42d9-833b-fb9159391ed0",
+    "user_id": "31a89355-2c2b-4966-9610-fb5c531c23ee",
+    "amount": "299.00",
+    "plan_slug": "basic",
+    "client_share": 60,
+    "company_share": 40,
+    "status": "active",
+    "daily_yield": "0.01200000",
+    "total_yield": "0.00",
+    "last_yield_calculated": null,
+    "created_at": "2026-03-30 14:50:55.647837",
+    "updated_at": "2026-03-30 14:50:55.647837"
+  },
+  {
+    "id": "4411c263-5fa4-436d-92f5-e02d1e8df675",
+    "user_id": "31a89355-2c2b-4966-9610-fb5c531c23ee",
+    "amount": "999.00",
+    "plan_slug": "silver",
+    "client_share": 65,
+    "company_share": 35,
+    "status": "active",
+    "daily_yield": "0.01400000",
+    "total_yield": "0.00",
+    "last_yield_calculated": null,
+    "created_at": "2026-03-30 14:51:04.596965",
+    "updated_at": "2026-03-30 14:51:04.596965"
+  },
+  {
+    "id": "27c5acd6-51b3-4f8f-ad44-8f1596876423",
+    "user_id": "31a89355-2c2b-4966-9610-fb5c531c23ee",
+    "amount": "1001.00",
+    "plan_slug": "gold",
+    "client_share": 70,
+    "company_share": 30,
+    "status": "active",
+    "daily_yield": "0.01700000",
+    "total_yield": "0.00",
+    "last_yield_calculated": null,
+    "created_at": "2026-03-30 14:51:27.332265",
+    "updated_at": "2026-03-30 14:51:27.332265"
+  },
+  {
+    "id": "5ea254a0-cb1d-4eec-a017-b5e6f6d4c81c",
+    "user_id": "78f674e2-16cc-4924-9480-e06a2b53cdcf",
+    "amount": "500.00",
+    "plan_slug": "start",
+    "client_share": 50,
+    "company_share": 50,
+    "status": "active",
+    "daily_yield": "50.00000000",
+    "total_yield": "65.00",
+    "last_yield_calculated": "2026-03-30 15:10:19.871",
+    "created_at": "2026-02-23 22:08:54.001689",
+    "updated_at": "2026-03-27 12:59:20.06355"
+  },
+  {
+    "id": "2d1a21a1-ff64-44e1-9651-0d48c0893a00",
+    "user_id": "78f674e2-16cc-4924-9480-e06a2b53cdcf",
+    "amount": "99.00",
+    "plan_slug": "start",
+    "client_share": 50,
+    "company_share": 50,
+    "status": "active",
+    "daily_yield": "0.01000000",
+    "total_yield": "0.00",
+    "last_yield_calculated": null,
+    "created_at": "2026-03-30 18:03:33.264305",
+    "updated_at": "2026-03-30 18:03:33.264305"
+  },
+  {
+    "id": "208ff009-301e-4a4d-8457-0adc3d430684",
+    "user_id": "96253f43-f8b5-496e-a613-9c77f77e392b",
+    "amount": "99.00",
+    "plan_slug": "start",
+    "client_share": 50,
+    "company_share": 50,
+    "status": "active",
+    "daily_yield": "0.01000000",
+    "total_yield": "0.00",
+    "last_yield_calculated": null,
+    "created_at": "2026-03-30 18:14:42.911805",
+    "updated_at": "2026-03-30 18:14:42.911805"
+  },
+  {
+    "id": "3524332b-211a-46bd-8f06-c7d130642dec",
+    "user_id": "96253f43-f8b5-496e-a613-9c77f77e392b",
+    "amount": "299.00",
+    "plan_slug": "basic",
+    "client_share": 60,
+    "company_share": 40,
+    "status": "active",
+    "daily_yield": "0.01200000",
+    "total_yield": "0.00",
+    "last_yield_calculated": null,
+    "created_at": "2026-03-30 18:14:50.557657",
+    "updated_at": "2026-03-30 18:14:50.557657"
+  }
+]
+
+=========================select * from profiles ======================
+[
+  {
+    "id": "7ac72871-ea73-4a8d-b218-5b7bdcd39d07",
+    "user_id": "78f674e2-16cc-4924-9480-e06a2b53cdcf",
+    "email": "visionweb@gmail.com",
+    "full_name": "Cristian Nunes Macena",
+    "phone": "87998092910",
+    "document_number": "12345678989",
+    "birth_date": null,
+    "address": "Rua Professora Cacilda Breckenfeld, 413",
+    "city": "Recife",
+    "state": "PE",
+    "country": "Brasil",
+    "postal_code": "50910-410",
+    "referral_code": "R8ZPEFAX",
+    "referred_by": null,
+    "kyc_status": "pending",
+    "kyc_documents": null,
+    "is_active": true,
+    "is_verified": false,
+    "verification_level": "basic",
+    "risk_score": 0,
+    "last_login": null,
+    "created_at": "2026-03-25 17:15:52.803661+00",
+    "updated_at": "2026-03-27 17:11:05.63603+00",
+    "bank_name": "Santander",
+    "bank_agency": "0001",
+    "bank_account": "0000-2",
+    "pix_key": "25025474825",
+    "crypto_wallet": "bcqkdkdkdkdkdkdkd",
+    "role": "super_admin",
+    "status": "active",
+    "available_balance": "0.00",
+    "total_invested": "0.00",
+    "total_withdrawn": "0.00",
+    "total_earned": "0.12",
+    "referral_count": 0,
+    "direct_referrals": 0,
+    "referral_cod": null
+  },
+  {
+    "id": "cf5d5569-2c55-4925-a24f-2accb079633d",
+    "user_id": "120e0011-ed71-4df6-a10e-5170f98ec439",
+    "email": "teste_fix@imperium.com",
+    "full_name": "Teste Fix User ID",
+    "phone": null,
+    "document_number": null,
+    "birth_date": null,
+    "address": null,
+    "city": null,
+    "state": null,
+    "country": "Brasil",
+    "postal_code": null,
+    "referral_code": "FIX123",
+    "referred_by": "31a89355-2c2b-4966-9610-fb5c531c23ee",
+    "kyc_status": "pending",
+    "kyc_documents": null,
+    "is_active": true,
+    "is_verified": false,
+    "verification_level": "basic",
+    "risk_score": 0,
+    "last_login": null,
+    "created_at": "2026-03-29 15:27:39.902528+00",
+    "updated_at": "2026-03-30 12:44:03.290349+00",
+    "bank_name": null,
+    "bank_agency": null,
+    "bank_account": null,
+    "pix_key": null,
+    "crypto_wallet": null,
+    "role": "user",
+    "status": "active",
+    "available_balance": "0.00",
+    "total_invested": "0.00",
+    "total_withdrawn": "0.00",
+    "total_earned": "0.00",
+    "referral_count": 0,
+    "direct_referrals": 0,
+    "referral_cod": "OUXUHL5C\r\n"
+  },
+  {
+    "id": "467e26e5-93fb-4ebd-82c1-2eba09111b06",
+    "user_id": "96253f43-f8b5-496e-a613-9c77f77e392b",
+    "email": "teste1@teste.com",
+    "full_name": "teste1@teste.com",
+    "phone": "",
+    "document_number": "",
+    "birth_date": null,
+    "address": null,
+    "city": null,
+    "state": null,
+    "country": "Brasil",
+    "postal_code": null,
+    "referral_code": null,
+    "referred_by": "31a89355-2c2b-4966-9610-fb5c531c23ee",
+    "kyc_status": "pending",
+    "kyc_documents": null,
+    "is_active": true,
+    "is_verified": false,
+    "verification_level": "basic",
+    "risk_score": 0,
+    "last_login": null,
+    "created_at": "2026-03-29 14:00:20.646741+00",
+    "updated_at": "2026-03-30 12:44:23.537788+00",
+    "bank_name": null,
+    "bank_agency": null,
+    "bank_account": null,
+    "pix_key": null,
+    "crypto_wallet": null,
+    "role": "user",
+    "status": "active",
+    "available_balance": "0.00",
+    "total_invested": "0.00",
+    "total_withdrawn": "0.00",
+    "total_earned": "0.00",
+    "referral_count": 0,
+    "direct_referrals": 0,
+    "referral_cod": "OUXUHL5C\r\n"
+  },
+  {
+    "id": "8950b4be-9368-46dd-8be1-612e87365b81",
+    "user_id": "dc006cea-90fc-4d2c-ad0d-c64a0cbe3521",
+    "email": "claudiorojp@gmail.com",
+    "full_name": "CLAUDIO R Q DE",
+    "phone": "",
+    "document_number": "",
+    "birth_date": null,
+    "address": null,
+    "city": null,
+    "state": null,
+    "country": "Brasil",
+    "postal_code": null,
+    "referral_code": null,
+    "referred_by": null,
+    "kyc_status": "pending",
+    "kyc_documents": null,
+    "is_active": true,
+    "is_verified": false,
+    "verification_level": "basic",
+    "risk_score": 0,
+    "last_login": null,
+    "created_at": "2026-03-27 15:20:02.004566+00",
+    "updated_at": "2026-03-30 23:28:54.003918+00",
+    "bank_name": null,
+    "bank_agency": null,
+    "bank_account": null,
+    "pix_key": null,
+    "crypto_wallet": null,
+    "role": "admin",
+    "status": "active",
+    "available_balance": "0.00",
+    "total_invested": "0.00",
+    "total_withdrawn": "0.00",
+    "total_earned": "0.00",
+    "referral_count": 0,
+    "direct_referrals": 0,
+    "referral_cod": null
+  },
+  {
+    "id": "e2f2bbb5-6bde-415b-89e8-bdf6fa704979",
+    "user_id": "88d01414-3384-4e25-8fba-64d90bb17dd7",
+    "email": "coachfinanceirobrasil@gmail.com",
+    "full_name": "Leandro Siqueira Trajano",
+    "phone": "",
+    "document_number": "",
+    "birth_date": null,
+    "address": null,
+    "city": null,
+    "state": null,
+    "country": "Brasil",
+    "postal_code": null,
+    "referral_code": null,
+    "referred_by": "78f674e2-16cc-4924-9480-e06a2b53cdcf",
+    "kyc_status": "pending",
+    "kyc_documents": null,
+    "is_active": true,
+    "is_verified": false,
+    "verification_level": "basic",
+    "risk_score": 0,
+    "last_login": null,
+    "created_at": "2026-03-26 07:18:15.74558+00",
+    "updated_at": "2026-03-30 23:30:19.63681+00",
+    "bank_name": null,
+    "bank_agency": null,
+    "bank_account": null,
+    "pix_key": null,
+    "crypto_wallet": null,
+    "role": "admin",
+    "status": "active",
+    "available_balance": "0.00",
+    "total_invested": "0.00",
+    "total_withdrawn": "0.00",
+    "total_earned": "0.00",
+    "referral_count": 0,
+    "direct_referrals": 0,
+    "referral_cod": null
+  },
+  {
+    "id": "9a3acb75-8e15-4391-bd77-20405aae9970",
+    "user_id": "d5445d82-d3f9-4f59-bb02-e79c1c0a2809",
+    "email": "carlos.pereira@imperium.test",
+    "full_name": "carlos.pereira@imperium.test",
+    "phone": "",
+    "document_number": "",
+    "birth_date": null,
+    "address": null,
+    "city": null,
+    "state": null,
+    "country": "Brasil",
+    "postal_code": null,
+    "referral_code": null,
+    "referred_by": "88d01414-3384-4e25-8fba-64d90bb17dd7",
+    "kyc_status": "pending",
+    "kyc_documents": null,
+    "is_active": true,
+    "is_verified": false,
+    "verification_level": "basic",
+    "risk_score": 0,
+    "last_login": null,
+    "created_at": "2026-03-26 14:10:01.927972+00",
+    "updated_at": "2026-03-30 23:30:43.977973+00",
+    "bank_name": null,
+    "bank_agency": null,
+    "bank_account": null,
+    "pix_key": null,
+    "crypto_wallet": null,
+    "role": "user",
+    "status": "active",
+    "available_balance": "0.00",
+    "total_invested": "0.00",
+    "total_withdrawn": "0.00",
+    "total_earned": "0.00",
+    "referral_count": 0,
+    "direct_referrals": 0,
+    "referral_cod": null
+  },
+  {
+    "id": "0732350d-3da0-488f-bdb0-b09c641dd640",
+    "user_id": "31a89355-2c2b-4966-9610-fb5c531c23ee",
+    "email": "cristian@reacaonet.com.br",
+    "full_name": "Nunes Macena",
+    "phone": "81991333663",
+    "document_number": "",
+    "birth_date": null,
+    "address": "",
+    "city": "",
+    "state": "",
+    "country": "Brasil",
+    "postal_code": "",
+    "referral_code": "OUXUHL5C",
+    "referred_by": "dc006cea-90fc-4d2c-ad0d-c64a0cbe3521",
+    "kyc_status": "pending",
+    "kyc_documents": null,
+    "is_active": true,
+    "is_verified": false,
+    "verification_level": "basic",
+    "risk_score": 0,
+    "last_login": null,
+    "created_at": "2026-03-27 18:26:33.968635+00",
+    "updated_at": "2026-03-31 20:25:25.970257+00",
+    "bank_name": "",
+    "bank_agency": "",
+    "bank_account": "",
+    "pix_key": "",
+    "crypto_wallet": "",
+    "role": "user",
+    "status": "active",
+    "available_balance": "0.00",
+    "total_invested": "0.00",
+    "total_withdrawn": "0.00",
+    "total_earned": "0.00",
+    "referral_count": 0,
+    "direct_referrals": 0,
+    "referral_cod": null
+  },
+  {
+    "id": "a0f3274a-2f78-41c1-878d-c42a42a1eaf5",
+    "user_id": "0b0a5828-1843-400c-baac-3e09d1018e8f",
+    "email": "teste@teste.com",
+    "full_name": "teste@teste.com",
+    "phone": null,
+    "document_number": null,
+    "birth_date": null,
+    "address": null,
+    "city": null,
+    "state": null,
+    "country": "Brasil",
+    "postal_code": null,
+    "referral_code": "BZYSYU8N",
+    "referred_by": "78f674e2-16cc-4924-9480-e06a2b53cdcf",
+    "kyc_status": "pending",
+    "kyc_documents": null,
+    "is_active": true,
+    "is_verified": false,
+    "verification_level": "basic",
+    "risk_score": 0,
+    "last_login": null,
+    "created_at": "2026-03-29 13:59:58.088214+00",
+    "updated_at": "2026-03-29 14:04:31.980942+00",
+    "bank_name": null,
+    "bank_agency": null,
+    "bank_account": null,
+    "pix_key": null,
+    "crypto_wallet": null,
+    "role": "user",
+    "status": "active",
+    "available_balance": "0.00",
+    "total_invested": "0.00",
+    "total_withdrawn": "0.00",
+    "total_earned": "0.00",
+    "referral_count": 0,
+    "direct_referrals": 0,
+    "referral_cod": null
+  }
+]

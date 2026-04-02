@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/lib/AuthContext';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
+import { financialAPI } from '@/services/api';
 import { toast } from 'sonner';
 import {
   Card,
@@ -32,14 +33,30 @@ import {
 import {
   ArrowUpCircle, 
   ArrowDownCircle,
+  ArrowUpRight,
+  ArrowDownLeft,
   Send, 
   Wallet as WalletIcon,
   Building2,
   Copy,
   Check,
   QrCode,
-  DollarSign
+  DollarSign,
+  Clock
 } from 'lucide-react';
+
+// Funções utilitárias
+const formatDateTime = (dateString) => {
+  if (!dateString) return '';
+  const date = new Date(dateString);
+  return date.toLocaleDateString('pt-BR', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit'
+  });
+};
 
 // Função para formatar moeda
 const formatCurrency = (value) => {
@@ -185,34 +202,19 @@ const calculateCRC16 = (data) => {
 const fetchAdminBankingAccounts = async () => {
   console.log('🔍 Buscando contas admin...');
   
-  // Usar service role key para bypass RLS e buscar contas admin
+  // Simplificar: buscar apenas contas ativas
   const { data, error } = await supabase
     .from('admin_banking_accounts')
     .select('*')
     .eq('is_active', true)
-    .eq('is_default', true)
     .limit(1);
 
   console.log('📊 Resultado query admin accounts:', { data, error });
   
   if (error) {
     console.error('❌ Erro ao buscar contas admin:', error);
-    // Tentar buscar todas as contas ativas se não encontrar padrão
-    const { data: allData, error: allError } = await supabase
-      .from('admin_banking_accounts')
-      .select('*')
-      .eq('is_active', true)
-      .limit(1);
-    
-    console.log('🔄 Tentativa 2 - todas as contas ativas:', { allData, allError });
-    
-    if (allError) {
-      console.error('❌ Erro na segunda tentativa:', allError);
-      throw allError;
-    }
-    
-    console.log('✅ Contas admin encontradas (tentativa 2):', allData);
-    return allData || [];
+    // Retornar array vazio em vez de throw para não quebrar a UI
+    return [];
   }
   
   console.log('✅ Contas admin encontradas:', data);
@@ -245,38 +247,44 @@ const fetchUserInvestments = async (userId) => {
   return data || [];
 };
 
-// Create deposit
-const createDeposit = async (depositData) => {
+// Find user by email
+const findUserByEmail = async (email) => {
   const { data, error } = await supabase
-    .from('deposits')
-    .insert({
-      ...depositData,
-      status: 'pending',
-      transaction_hash: `DEP_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-      created_at: new Date().toISOString()
-    })
-    .select()
+    .from('profiles')
+    .select('user_id, email, full_name')
+    .eq('email', email)
     .single();
-
-  if (error) throw error;
+  
+  if (error) throw new Error('Usuário não encontrado');
   return data;
 };
 
-// Create withdrawal
-const createWithdrawal = async (withdrawalData) => {
+// Fetch user transfers
+const fetchUserTransfers = async (userId) => {
   const { data, error } = await supabase
-    .from('withdrawals')
-    .insert({
-      ...withdrawalData,
-      status: 'pending',
-      transaction_hash: `WD_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-      created_at: new Date().toISOString()
-    })
-    .select()
-    .single();
+    .from('transfers')
+    .select('*')
+    .or(`from_user_id.eq.${userId},to_user_id.eq.${userId}`)
+    .order('created_at', { ascending: false })
+    .limit(20);
 
   if (error) throw error;
-  return data;
+  return data || [];
+};
+
+// Create transfer via API backend
+const createTransfer = async (transferData) => {
+  return await financialAPI.transfer(transferData);
+};
+
+// Create deposit via API backend
+const createDeposit = async (depositData) => {
+  return await financialAPI.deposit(depositData);
+};
+
+// Create withdrawal via API backend
+const createWithdrawal = async (withdrawalData) => {
+  return await financialAPI.withdrawal(withdrawalData);
 };
 
 export default function Wallet() {
@@ -303,18 +311,31 @@ export default function Wallet() {
   const [showQR, setShowQR] = useState(false);
   const [copiedField, setCopiedField] = useState(null);
 
+  // USDT Deposit
+  const [showUSDTDeposit, setShowUSDTDeposit] = useState(false);
+  const [usdtQRCode, setUsdtQRCode] = useState(null);
+  const [usdtWallet, setUsdtWallet] = useState('');
+  const [pendingDepositId, setPendingDepositId] = useState(null);
+
   // Deposit
   const [depositAmount, setDepositAmount] = useState('');
   const [depositDescription, setDepositDescription] = useState('');
 
   // Withdraw
   const [withdrawAmount, setWithdrawAmount] = useState('');
+  const [withdrawMethod, setWithdrawMethod] = useState('usdt'); // 'usdt' | 'pix'
   const [withdrawWallet, setWithdrawWallet] = useState(user?.crypto_wallet || '');
   const [withdrawType, setWithdrawType] = useState('yield');
 
   // Transfer
   const [transferAmount, setTransferAmount] = useState('');
   const [transferEmail, setTransferEmail] = useState('');
+  
+  // Transfer verification
+  const [showVerificationDialog, setShowVerificationDialog] = useState(false);
+  const [verificationCode, setVerificationCode] = useState('');
+  const [pendingTransferId, setPendingTransferId] = useState(null);
+  const [isInitiatingTransfer, setIsInitiatingTransfer] = useState(false);
 
   const { data: transactions = [] } = useQuery({
     queryKey: ['transactions', user?.id],
@@ -328,12 +349,75 @@ export default function Wallet() {
     enabled: !!user?.id,
   });
 
+  // Buscar depósitos confirmados para calcular saldo real
+  const { data: confirmedDeposits = [] } = useQuery({
+    queryKey: ['confirmed-deposits', user?.id],
+    queryFn: async () => {
+      console.log('🔍 Buscando depósitos para user_id:', user?.id);
+      const { data, error } = await supabase
+        .from('deposits')
+        .select('amount, id, created_at, status, description')
+        .eq('user_id', user?.id)
+        .eq('status', 'confirmed');
+      if (error) {
+        console.error('❌ Erro ao buscar depósitos:', {
+          code: error.code,
+          message: error.message,
+          details: error.details,
+          hint: error.hint
+        });
+        throw error;
+      }
+      console.log('✅ Depósitos encontrados:', data?.length || 0, data);
+      return data || [];
+    },
+    enabled: !!user?.id,
+  });
+
+  // Buscar saques do usuário
+  const { data: withdrawals = [] } = useQuery({
+    queryKey: ['withdrawals', user?.id],
+    queryFn: async () => {
+      console.log('🔍 Buscando saques para user_id:', user?.id);
+      const { data, error } = await supabase
+        .from('withdrawals')
+        .select('*')
+        .eq('user_id', user?.id)
+        .order('created_at', { ascending: false });
+      if (error) {
+        console.error('❌ Erro ao buscar saques:', {
+          code: error.code,
+          message: error.message,
+          details: error.details,
+          hint: error.hint
+        });
+        throw error;
+      }
+      console.log('✅ Saques encontrados:', data?.length || 0, data);
+      return data || [];
+    },
+    enabled: !!user?.id,
+  });
+
   const { data: adminAccounts = [], isLoading: accountsLoading } = useQuery({
-    queryKey: ['admin-banking-accounts-default'],
+    queryKey: ['admin-banking-accounts'],
     queryFn: fetchAdminBankingAccounts,
-    retry: 3,
-    retryDelay: 1000,
+    retry: 2,
+    retryDelay: 2000,
+    staleTime: 300000, // 5 minutos
+    cacheTime: 600000, // 10 minutos
     enabled: !!user // Só executar se tiver usuário
+  });
+
+  // Query para buscar transferências do usuário
+  const { data: transfers = [], isLoading: isLoadingTransfers } = useQuery({
+    queryKey: ['transfers', user?.id],
+    queryFn: async () => {
+      if (!user?.id) return [];
+      const data = await fetchUserTransfers(user.id);
+      return data;
+    },
+    enabled: !!user?.id,
   });
 
   const createDepositMutation = useMutation({
@@ -355,6 +439,26 @@ export default function Wallet() {
     }
   });
 
+  // Mutation para depósito USDT
+  const createUSDTDepositMutation = useMutation({
+    mutationFn: async (depositData) => {
+      console.log('🚀 Criando depósito USDT:', depositData);
+      return await financialAPI.createUSDTDeposit(depositData);
+    },
+    onSuccess: (data) => {
+      console.log('✅ Depósito USDT criado:', data);
+      setUsdtQRCode(data.deposit.qr_code_url);
+      setUsdtWallet(data.instructions.wallet);
+      setPendingDepositId(data.deposit.id);
+      setShowUSDTDeposit(true);
+      toast.success('QR Code gerado! Envie o USDT para a carteira e aguarde aprovação.');
+    },
+    onError: (error) => {
+      console.error('❌ Erro ao criar depósito USDT:', error);
+      toast.error(`Erro: ${error.message}`);
+    }
+  });
+
   // Add debug logs to track state changes
   useEffect(() => {
     console.log('🔄 Estado atualizado:');
@@ -370,31 +474,103 @@ export default function Wallet() {
     console.log('📊 Admin accounts carregadas:', adminAccounts);
   }, [adminAccounts]);
 
+  // Create withdrawal mutation
   const createWithdrawalMutation = useMutation({
-    mutationFn: createWithdrawal,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['transactions', user?.id] });
+    mutationFn: async (withdrawalData) => {
+      console.log('🚀 createWithdrawalMutation chamada:', withdrawalData);
+      console.log('  - user?.id:', user?.id);
+      
+      try {
+        const response = await financialAPI.withdrawal(withdrawalData);
+        
+        console.log('📊 Resposta da API:', response);
+        
+        if (response.error) {
+          console.error('❌ Erro da API:', response.error);
+          throw new Error(response.error);
+        }
+        
+        console.log('✅ Saque criado com sucesso:', response.withdrawal);
+        return response.withdrawal;
+      } catch (err) {
+        console.error('❌ Erro na mutation:', err);
+        throw err;
+      }
+    },
+    onSuccess: (data) => {
+      console.log('✅ onSuccess chamado:', data);
+      toast.success('Saque solicitado com sucesso! Aguarde aprovação.');
       setWithdrawAmount('');
-      setShowTerms(false);
+      setWithdrawWallet('');
       setAcceptedTerms(false);
-      toast.success('Saque solicitado com sucesso!');
+      // Refetch withdrawals list
+      queryClient.invalidateQueries({ queryKey: ['withdrawals', user?.id] });
     },
     onError: (error) => {
+      console.error('❌ onError chamado:', error);
       toast.error(`Erro ao solicitar saque: ${error.message}`);
     }
   });
 
-  const handleCopy = (text, fieldName) => {
-    navigator.clipboard.writeText(text);
-    setCopiedField(fieldName);
-    setTimeout(() => setCopiedField(null), 2000);
-  };
+  // Mutation para iniciar transferência (envia email com código)
+  const initiateTransferMutation = useMutation({
+    mutationFn: async (transferData) => {
+      console.log('🚀 Iniciando transferência:', transferData);
+      const response = await financialAPI.initiateTransfer({
+        amount: transferData.amount,
+        recipient_email: transferData.email,
+        description: transferData.description
+      });
+      return response;
+    },
+    onSuccess: (data) => {
+      console.log('✅ Código enviado:', data);
+      setPendingTransferId(data.transfer_id);
+      setShowVerificationDialog(true);
+      toast.success('Código de verificação enviado para seu email!');
+    },
+    onError: (error) => {
+      console.error('❌ Erro ao iniciar transferência:', error);
+      toast.error(`Erro: ${error.message}`);
+    }
+  });
+
+  // Mutation para confirmar transferência com código
+  const confirmTransferMutation = useMutation({
+    mutationFn: async ({ transferId, code }) => {
+      console.log('� Confirmando transferência:', { transferId, code });
+      const response = await financialAPI.confirmTransfer({
+        transfer_id: transferId,
+        verification_code: code
+      });
+      return response;
+    },
+    onSuccess: (data) => {
+      console.log('✅ Transferência confirmada:', data);
+      toast.success('Transferência realizada com sucesso!');
+      setShowVerificationDialog(false);
+      setVerificationCode('');
+      setPendingTransferId(null);
+      setTransferAmount('');
+      setTransferEmail('');
+      // Atualizar saldo na tela
+      refetchBalance();
+      // Invalidar queries para forçar refresh de dados
+      queryClient.invalidateQueries({ queryKey: ['balance'] });
+      queryClient.invalidateQueries({ queryKey: ['transactions'] });
+      queryClient.invalidateQueries({ queryKey: ['transfers', user?.id] });
+      queryClient.invalidateQueries({ queryKey: ['confirmed-deposits', user?.id] });
+    },
+    onError: (error) => {
+      console.error('❌ Erro ao confirmar:', error);
+      toast.error(`Código inválido ou expirado: ${error.message}`);
+    }
+  });
 
   const handleDeposit = () => {
-    console.log('🚀 handleDeposit called');
+    console.log('🚀 handleDeposit USDT called');
     console.log('✅ depositAmount:', depositAmount);
     console.log('✅ acceptedTerms:', acceptedTerms);
-    console.log('✅ adminAccounts.length:', adminAccounts.length);
     console.log('✅ user:', user);
     
     if (!depositAmount) {
@@ -409,61 +585,110 @@ export default function Wallet() {
       return;
     }
 
-    if (!adminAccounts.length) {
-      console.log('❌ Erro: Nenhuma conta bancária disponível');
-      toast.error('Nenhuma conta bancária disponível');
-      return;
-    }
-
     console.log('✅ Todas validações passaram');
-    console.log('✅ Mostrando QR Code...');
-    setShowQR(true);
+    console.log('✅ Iniciando depósito USDT...');
     
-    const defaultAccount = adminAccounts[0];
-    console.log('✅ Conta padrão:', defaultAccount);
-    
-    console.log('✅ Iniciando mutação de depósito...');
-    createDepositMutation.mutate({
-      user_id: user?.id,
-      amount: parseFloat(depositAmount),
-      method: 'pix',
-      description: depositDescription || 'Depósito via PIX',
-      admin_account_id: defaultAccount.id,
-      bank_name: defaultAccount.bank_name,
-      account_holder: defaultAccount.account_holder
+    // Criar depósito USDT
+    createUSDTDepositMutation.mutate({
+      amount: parseFloat(depositAmount)
     });
   };
 
   const handleWithdrawal = () => {
+    console.log('🚀 handleWithdrawal chamado!');
+    console.log('  - withdrawAmount:', withdrawAmount);
+    console.log('  - withdrawWallet:', withdrawWallet);
+    console.log('  - acceptedTerms:', acceptedTerms);
+    
     if (!withdrawAmount) {
+      console.log('❌ Erro: Valor não informado');
       toast.error('Informe o valor do saque');
       return;
     }
 
     if (!withdrawWallet) {
+      console.log('❌ Erro: Carteira não informada');
       toast.error('Informe a carteira de destino');
       return;
     }
 
     if (!acceptedTerms) {
+      console.log('❌ Erro: Termos não aceitos');
       toast.error('Aceite os termos de saque');
       return;
     }
 
+    console.log('✅ Todas validações passaram, enviando para backend...');
+    
+    // Enviar saque para o backend
     createWithdrawalMutation.mutate({
-      user_id: user?.id,
       amount: parseFloat(withdrawAmount),
-      wallet_address: withdrawWallet,
-      type: withdrawType,
-      description: `Saque - ${withdrawType === 'yield' ? 'Rendimentos' : 'Capital'}`
+      method: withdrawMethod,
+      destination_address: withdrawWallet
     });
   };
 
+  const handleTransfer = async () => {
+    console.log('🚀 handleTransfer chamado!');
+    console.log('  - transferAmount:', transferAmount);
+    console.log('  - transferEmail:', transferEmail);
+
+    if (!transferAmount || parseFloat(transferAmount) <= 0) {
+      console.log('❌ Erro: Valor não informado');
+      toast.error('Informe o valor da transferência');
+      return;
+    }
+
+    if (!transferEmail) {
+      console.log('❌ Erro: Email não informado');
+      toast.error('Informe o email do destinatário');
+      return;
+    }
+
+    if (transferEmail === user?.email) {
+      console.log('❌ Erro: Não pode transferir para si mesmo');
+      toast.error('Não é possível transferir para você mesmo');
+      return;
+    }
+
+    console.log('✅ Todas validações passaram, iniciando transferência...');
+    setIsInitiatingTransfer(true);
+    
+    initiateTransferMutation.mutate({
+      email: transferEmail,
+      amount: parseFloat(transferAmount),
+      description: `Transferência para ${transferEmail}`
+    }, {
+      onSettled: () => setIsInitiatingTransfer(false)
+    });
+  };
+  
+  const handleConfirmTransfer = () => {
+    if (!verificationCode || verificationCode.length !== 6) {
+      toast.error('Digite o código de 6 dígitos');
+      return;
+    }
+    
+    confirmTransferMutation.mutate({
+      transferId: pendingTransferId,
+      code: verificationCode
+    });
+  };
+
+  // Buscar saldo da API
+  const { data: balanceData, refetch: refetchBalance } = useQuery({
+    queryKey: ['balance', user?.id],
+    queryFn: async () => {
+      return await financialAPI.getBalance();
+    },
+    enabled: !!user?.id,
+  });
+
   const activeInvestment = investments.find(inv => inv.status === 'active');
-  const totalInvested = investments.reduce((sum, inv) => sum + (inv.amount || 0), 0);
-  const totalEarnings = user?.total_earned || 0;
-  const depositBalance = user?.available_balance || 0;
-  const availableBalance = depositBalance + totalEarnings;
+  const totalInvested = investments.reduce((sum, inv) => sum + (parseFloat(inv.amount) || 0), 0);
+  const totalEarnings = investments.reduce((sum, inv) => sum + (parseFloat(inv.total_earned) || 0), 0);
+  const totalDeposits = confirmedDeposits.reduce((sum, d) => sum + (parseFloat(d.amount) || 0), 0);
+  const availableBalance = balanceData?.available_balance || 0;
   const totalValue = availableBalance;
 
   return (
@@ -570,22 +795,13 @@ export default function Wallet() {
                 <div className="flex gap-2">
                   <Button 
                     onClick={() => {
-                      console.log('🔘 Botão Confirmar Depósito clicado!');
+                      console.log('🔘 Botão Confirmar Depósito USDT clicado!');
                       handleDeposit();
                     }}
-                    disabled={createDepositMutation.isPending || !depositAmount || !acceptedTerms}
+                    disabled={createUSDTDepositMutation.isPending || !depositAmount || !acceptedTerms}
                     className="flex-1"
                   >
-                    {createDepositMutation.isPending ? 'Processando...' : 'Confirmar Depósito'}
-                  </Button>
-                  <Button
-                    variant="outline"
-                    onClick={() => setShowQR(!showQR)}
-                    disabled={!depositAmount}
-                    className="flex-1"
-                  >
-                    <QrCode className="w-4 h-4 mr-2" />
-                    {showQR ? 'Ocultar QR Code' : 'Gerar QR Code'}
+                    {createUSDTDepositMutation.isPending ? 'Gerando QR Code...' : 'Gerar QR Code USDT'}
                   </Button>
                 </div>
               </div>
@@ -654,8 +870,140 @@ export default function Wallet() {
                   </div>
                 </div>
               )}
+
+              {/* USDT QR Code Display */}
+              {showUSDTDeposit && usdtQRCode && (
+                <div className="mt-6 p-6 bg-white rounded-lg border border-yellow-200 bg-yellow-50">
+                  <h4 className="text-center font-semibold mb-4 text-yellow-800">
+                    <DollarSign className="w-5 h-5 inline mr-2" />
+                    Depósito USDT - Aguardando Aprovação
+                  </h4>
+                  <div className="flex justify-center mb-4">
+                    <div className="bg-white p-4 rounded-lg shadow-sm">
+                      <img 
+                        src={usdtQRCode}
+                        alt="QR Code USDT"
+                        className="w-48 h-48"
+                      />
+                      <p className="text-xs text-center text-gray-500 mt-2">
+                        Escaneie para copiar carteira
+                      </p>
+                    </div>
+                  </div>
+                  <div className="text-center space-y-3">
+                    <div className="bg-white p-3 rounded-lg shadow-sm">
+                      <p className="text-xs text-muted-foreground mb-1">Carteira USDT (TRC20):</p>
+                      <div className="flex items-center gap-2">
+                        <p className="text-xs font-mono text-gray-800 break-all flex-1">
+                          {usdtWallet}
+                        </p>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => {
+                            navigator.clipboard.writeText(usdtWallet);
+                            toast.success('Carteira USDT copiada!');
+                          }}
+                        >
+                          <Copy className="w-3 h-3" />
+                        </Button>
+                      </div>
+                    </div>
+                    <p className="text-sm font-semibold text-yellow-800">
+                      <strong>Valor:</strong> {formatCurrency(parseFloat(depositAmount))}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      1. Envie o USDT para a carteira acima
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      2. Aguarde a confirmação do admin
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      3. O saldo será creditado automaticamente
+                    </p>
+                    {pendingDepositId && (
+                      <p className="text-xs text-gray-500">
+                        ID do Depósito: {pendingDepositId}
+                      </p>
+                    )}
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        setShowUSDTDeposit(false);
+                        setUsdtQRCode(null);
+                        setDepositAmount('');
+                        setAcceptedTerms(false);
+                      }}
+                      className="mt-2"
+                    >
+                      Fechar
+                    </Button>
+                  </div>
+                </div>
+              )}
             </CardContent>
           </Card>
+
+          {/* Listagem de Depósitos */}
+          {confirmedDeposits.length > 0 ? (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <ArrowDownCircle className="w-5 h-5" />
+                  Histórico de Depósitos
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3">
+                  {confirmedDeposits.map((deposit, index) => (
+                    <div 
+                      key={deposit.id || `deposit-${index}`} 
+                      className="flex items-center justify-between p-3 bg-secondary/50 rounded-lg"
+                    >
+                      <div>
+                        <p className="font-medium text-foreground">
+                          {formatCurrency(parseFloat(deposit.amount))}
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          {new Date(deposit.created_at).toLocaleDateString('pt-BR')}
+                        </p>
+                      </div>
+                      <div className="text-right">
+                        <span className={`text-xs px-2 py-1 rounded ${
+                          deposit.status === 'approved' 
+                            ? 'bg-green-100 text-green-700' 
+                            : deposit.status === 'rejected'
+                            ? 'bg-red-100 text-red-700'
+                            : 'bg-amber-100 text-amber-700'
+                        }`}>
+                          {deposit.status === 'approved' 
+                            ? 'Aprovado' 
+                            : deposit.status === 'rejected'
+                            ? 'Rejeitado'
+                            : 'Pendente'}
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          ) : (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <ArrowDownCircle className="w-5 h-5" />
+                  Histórico de Depósitos
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-muted-foreground text-center py-4">
+                  Nenhum depósito encontrado. Faça seu primeiro depósito acima.
+                </p>
+              </CardContent>
+            </Card>
+          )}
         </TabsContent>
 
         {/* Withdraw Tab */}
@@ -686,11 +1034,42 @@ export default function Wallet() {
                     Saldo disponível: {formatCurrency(availableBalance)}
                   </p>
                 </div>
+
+                {/* Aviso sobre saques aos sábados */}
+                <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
+                  <div className="flex items-start gap-2">
+                    <Clock className="w-5 h-5 text-amber-600 mt-0.5" />
+                    <div>
+                      <p className="text-sm font-medium text-amber-800">Observação Importante</p>
+                      <p className="text-xs text-amber-700 mt-1">
+                        Os saques são processados e repassados <strong>exclusivamente aos sábados</strong>. 
+                        Solicitações feitas durante a semana serão agendadas para o próximo sábado.
+                      </p>
+                    </div>
+                  </div>
+                </div>
                 <div>
-                  <label htmlFor="withdraw-wallet" className="text-sm font-medium">Carteira de Destino</label>
+                  <label htmlFor="withdraw-method" className="text-sm font-medium">Método de Saque</label>
+                  <select
+                    id="withdraw-method"
+                    value={withdrawMethod}
+                    onChange={(e) => {
+                      setWithdrawMethod(e.target.value);
+                      setWithdrawWallet(''); // Limpa o campo ao trocar método
+                    }}
+                    className="w-full p-2 border rounded-md bg-background text-foreground border-border focus:outline-none focus:ring-2 focus:ring-gold/50"
+                  >
+                    <option value="usdt" className="bg-background text-foreground">USDT (TRC20)</option>
+                    <option value="pix" className="bg-background text-foreground">PIX</option>
+                  </select>
+                </div>
+                <div>
+                  <label htmlFor="withdraw-wallet" className="text-sm font-medium">
+                    {withdrawMethod === 'usdt' ? 'Carteira USDT (TRC20)' : 'Chave PIX'}
+                  </label>
                   <Input
                     id="withdraw-wallet"
-                    placeholder="Endereço da carteira"
+                    placeholder={withdrawMethod === 'usdt' ? 'Endereço da carteira USDT' : 'Chave PIX (CPF, CNPJ, Email, Celular ou Chave Aleatória)'}
                     value={withdrawWallet}
                     onChange={(e) => setWithdrawWallet(e.target.value)}
                   />
@@ -701,10 +1080,10 @@ export default function Wallet() {
                     id="withdraw-type"
                     value={withdrawType}
                     onChange={(e) => setWithdrawType(e.target.value)}
-                    className="w-full p-2 border rounded-md"
+                    className="w-full p-2 border rounded-md bg-background text-foreground border-border focus:outline-none focus:ring-2 focus:ring-gold/50"
                   >
-                    <option value="yield">Rendimentos</option>
-                    <option value="capital">Capital</option>
+                    <option value="yield" className="bg-background text-foreground">Rendimentos</option>
+                    <option value="capital" className="bg-background text-foreground">Capital</option>
                   </select>
                 </div>
                 <div className="flex items-center space-x-2">
@@ -714,9 +1093,17 @@ export default function Wallet() {
                     onCheckedChange={setAcceptedTerms}
                   />
                   <label htmlFor="accept-terms" className="text-sm">
-                    Aceito os termos de saque e a taxa de processamento
+                    Li e aceito os termos de saque
                   </label>
                 </div>
+
+                {/* Mensagem informativa quando termos não aceitos */}
+                {!acceptedTerms && (
+                  <p className="text-xs text-amber-600 bg-amber-50 p-2 rounded">
+                    Clique em "Ver Termos de Saque" e aceite-os para habilitar o botão de solicitação
+                  </p>
+                )}
+
                 <Button 
                   onClick={() => setShowTerms(true)}
                   variant="outline"
@@ -772,12 +1159,85 @@ export default function Wallet() {
                   />
                 </div>
                 <Button 
+                  onClick={handleTransfer}
                   className="w-full"
-                  disabled={!transferAmount || !transferEmail}
+                  disabled={!transferAmount || !transferEmail || isInitiatingTransfer}
                 >
-                  Enviar Transferência
+                  {isInitiatingTransfer ? (
+                    <>
+                      <div className="animate-spin mr-2 h-4 w-4 border-2 border-white border-t-transparent rounded-full" />
+                      Enviando código...
+                    </>
+                  ) : (
+                    'Enviar Transferência'
+                  )}
                 </Button>
               </div>
+            </CardContent>
+          </Card>
+
+          {/* Listagem de Transferências */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Send className="w-5 h-5" />
+                Histórico de Transferências
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {isLoadingTransfers ? (
+                <p className="text-center text-muted-foreground py-4">Carregando...</p>
+              ) : transfers.length === 0 ? (
+                <p className="text-center text-muted-foreground py-4">
+                  Nenhuma transferência realizada ainda.
+                </p>
+              ) : (
+                <div className="space-y-4 max-h-[400px] overflow-y-auto">
+                  {transfers.map((transfer) => {
+                    const isOutgoing = transfer.from_user_id === user?.id;
+                    return (
+                      <div
+                        key={transfer.id}
+                        className={`flex items-center justify-between p-3 rounded-lg border ${
+                          isOutgoing 
+                            ? 'bg-red-50 border-red-200' 
+                            : 'bg-green-50 border-green-200'
+                        }`}
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className={`p-2 rounded-full ${
+                            isOutgoing ? 'bg-red-100' : 'bg-green-100'
+                          }`}>
+                            {isOutgoing ? (
+                              <ArrowUpRight className="w-4 h-4 text-red-600" />
+                            ) : (
+                              <ArrowDownLeft className="w-4 h-4 text-green-600" />
+                            )}
+                          </div>
+                          <div>
+                            <p className="font-medium text-sm">
+                              {isOutgoing ? 'Enviado para' : 'Recebido de'} {transfer.to_email || transfer.from_email}
+                            </p>
+                            <p className="text-xs text-muted-foreground">
+                              {formatDateTime(transfer.created_at)}
+                            </p>
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <p className={`font-bold ${
+                            isOutgoing ? 'text-red-600' : 'text-green-600'
+                          }`}>
+                            {isOutgoing ? '-' : '+'} R$ {parseFloat(transfer.amount).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                          </p>
+                          <Badge variant={transfer.status === 'completed' ? 'success' : 'default'}>
+                            {transfer.status === 'completed' ? 'Concluída' : transfer.status}
+                          </Badge>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
@@ -876,6 +1336,122 @@ export default function Wallet() {
               setShowTerms(false);
             }}>
               Aceitar Termos
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Listagem de Saques */}
+      {withdrawals.length > 0 ? (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <ArrowUpCircle className="w-5 h-5" />
+              Histórico de Saques
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              {withdrawals.map((withdrawal, index) => (
+                <div 
+                  key={withdrawal.id || `withdrawal-${index}`} 
+                  className="flex items-center justify-between p-3 bg-secondary/50 rounded-lg"
+                >
+                  <div>
+                    <p className="font-medium text-foreground">
+                      {formatCurrency(parseFloat(withdrawal.amount))}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      {withdrawal.type === 'yield' ? 'Rendimentos' : 'Capital'} • {new Date(withdrawal.created_at).toLocaleDateString('pt-BR')}
+                    </p>
+                    <p className="text-xs text-muted-foreground truncate max-w-[200px]">
+                      Carteira: {withdrawal.wallet_address}
+                    </p>
+                  </div>
+                  <div className="text-right">
+                    <span className={`text-xs px-2 py-1 rounded ${
+                      withdrawal.status === 'approved' 
+                        ? 'bg-green-100 text-green-700' 
+                        : withdrawal.status === 'rejected'
+                        ? 'bg-red-100 text-red-700'
+                        : 'bg-amber-100 text-amber-700'
+                    }`}>
+                      {withdrawal.status === 'approved' 
+                        ? 'Aprovado' 
+                        : withdrawal.status === 'rejected'
+                        ? 'Rejeitado'
+                        : 'Pendente'}
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      ) : (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <ArrowUpCircle className="w-5 h-5" />
+              Histórico de Saques
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-muted-foreground text-center py-4">
+              Nenhum saque encontrado. Faça sua primeira solicitação acima.
+            </p>
+          </CardContent>
+        </Card>
+      )}
+      {/* Diálogo de Verificação de Código */}
+      <Dialog open={showVerificationDialog} onOpenChange={setShowVerificationDialog}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-center">
+              Verificação de Transferência
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <p className="text-center text-sm text-muted-foreground">
+              Digite o código de 6 dígitos enviado para seu email
+            </p>
+            <div className="flex justify-center">
+              <Input
+                type="text"
+                inputMode="numeric"
+                pattern="[0-9]*"
+                maxLength={6}
+                value={verificationCode}
+                onChange={(e) => setVerificationCode(e.target.value.replace(/\D/g, ''))}
+                placeholder="000000"
+                className="text-center text-2xl tracking-widest w-40"
+              />
+            </div>
+            <p className="text-center text-xs text-muted-foreground">
+              O código expira em 10 minutos
+            </p>
+          </div>
+          <DialogFooter className="flex flex-col sm:flex-row gap-2">
+            <Button
+              variant="outline"
+              onClick={() => setShowVerificationDialog(false)}
+              className="w-full sm:w-auto"
+            >
+              Cancelar
+            </Button>
+            <Button
+              onClick={handleConfirmTransfer}
+              disabled={verificationCode.length !== 6 || confirmTransferMutation.isPending}
+              className="w-full sm:w-auto bg-gold hover:bg-gold/90"
+            >
+              {confirmTransferMutation.isPending ? (
+                <>
+                  <div className="animate-spin mr-2 h-4 w-4 border-2 border-white border-t-transparent rounded-full" />
+                  Confirmando...
+                </>
+              ) : (
+                'Confirmar Transferência'
+              )}
             </Button>
           </DialogFooter>
         </DialogContent>

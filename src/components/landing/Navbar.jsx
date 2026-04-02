@@ -25,16 +25,10 @@ const Navbar = () => {
             <div className="flex-shrink-0">
               <div className="flex items-center">
                 <img 
-                  src="/icone.png" 
+                  src="/logo_p.png" 
                   alt="Imperium Club" 
-                  className="w-10 h-10 mr-3"
+                  className="h-24 w-auto mr-3"
                 />
-                <div>
-                  <h1 className="text-2xl font-bold bg-gradient-to-r from-slate-800 to-slate-900 bg-clip-text text-transparent">
-                    IMPERIUM
-                  </h1>
-                  <p className="text-xs text-slate-600 -mt-1">CLUB</p>
-                </div>
               </div>
             </div>
           </div>
