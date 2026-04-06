@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabaseAdmin } from '@/lib/supabase';
+import { adminAPI } from '@/services/api';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -11,38 +11,18 @@ import { toast } from 'sonner';
 import { formatCurrency } from '@/lib/planConfig';
 import { Search, Filter, Eye, CheckCircle, XCircle, Clock, DollarSign, FileText } from 'lucide-react';
 
-// Fetch deposits (usando supabaseAdmin para bypass RLS)
+// Fetch deposits via API
 const fetchDeposits = async () => {
-  const { data, error } = await supabaseAdmin
-    .from('deposits')
-    .select(`
-      *,
-      profiles!inner(
-        full_name,
-        email
-      )
-    `)
-    .order('created_at', { ascending: false });
-
-  if (error) throw error;
-  return data;
+  const data = await adminAPI.getDeposits();
+  return data.deposits;
 };
 
-// Update deposit status (usando supabaseAdmin)
+// Update deposit status via API
 const updateDepositStatus = async ({ depositId, status, adminNotes }) => {
-  const { data, error } = await supabaseAdmin
-    .from('deposits')
-    .update({ 
-      status,
-      admin_notes: adminNotes,
-      confirmed_at: status === 'confirmed' ? new Date().toISOString() : null
-    })
-    .eq('id', depositId)
-    .select()
-    .single();
-
-  if (error) throw error;
-  return data;
+  return await adminAPI.updateDeposit(depositId, {
+    status,
+    admin_notes: adminNotes
+  });
 };
 
 export default function AdminDeposits() {

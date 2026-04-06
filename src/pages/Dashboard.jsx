@@ -65,12 +65,8 @@ export default function Dashboard() {
   const { data: investments = [] } = useQuery({
     queryKey: ['investments', user?.id],
     queryFn: async () => {
-      const { data } = await supabase
-        .from('investments')
-        .select('*')
-        .eq('user_id', user?.id)
-        .eq('status', 'active');
-      return data || [];
+      const data = await financialAPI.getInvestments({ status: 'active' });
+      return data.investments || [];
     },
     enabled: !!user?.id,
   });
@@ -78,11 +74,8 @@ export default function Dashboard() {
   const { data: networkMembers = [] } = useQuery({
     queryKey: ['network', user?.id],
     queryFn: async () => {
-      const { data } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('referred_by', user?.id);
-      return data || [];
+      const data = await financialAPI.getNetwork();
+      return data.network || [];
     },
     enabled: !!user?.id,
   });
@@ -98,20 +91,20 @@ export default function Dashboard() {
 
   const networkMemberIds = networkMembers.map((m) => m.referred_id).filter(Boolean);
 
-  const { data: networkInvestments = [] } = useQuery({
+  // Usar os investments indiretos que já vem da API
+  const { data: networkData = {} } = useQuery({
     queryKey: ['network-investments', networkMemberIds.join(',')],
     queryFn: async () => {
-      const { data } = await supabase
-        .from('investments')
-        .select('*')
-        .eq('status', 'active');
-      return data || [];
+      const data = await financialAPI.getNetwork();
+      return data;
     },
     enabled: networkMemberIds.length > 0,
   });
+  
+  const networkInvestments = networkData.indirectInvestments || {};
 
-  const investmentByUser = {};
-  networkInvestments.forEach((inv) => { investmentByUser[inv.user_id] = inv; });
+  // Criar mapa de investimento por usuário (networkInvestments já é um objeto {userId: amount})
+  const investmentByUser = networkInvestments;
 
   // Calcular totais reais a partir dos investimentos
   const totalInvested = investments.reduce((sum, i) => sum + (parseFloat(i.amount) || 0), 0);

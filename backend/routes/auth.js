@@ -9,7 +9,8 @@ const registerSchema = Joi.object({
   email: Joi.string().email().required(),
   password: Joi.string().min(6).required(),
   full_name: Joi.string().min(2).max(100).required(),
-  sponsor_email: Joi.string().email().optional()
+  sponsor_email: Joi.string().email().optional(),
+  referral_code: Joi.string().optional()
 });
 
 const loginSchema = Joi.object({
@@ -27,7 +28,7 @@ router.post('/register', async (req, res) => {
       return res.status(400).json({ error: error.details[0].message });
     }
 
-    const { email, password, full_name, sponsor_email } = req.body;
+    const { email, password, full_name, sponsor_email, referral_code } = req.body;
 
     // Verificar se usuário já existe
     const { data: existingUser } = await req.supabase
@@ -40,44 +41,115 @@ router.post('/register', async (req, res) => {
       return res.status(400).json({ error: 'Email já cadastrado' });
     }
 
-    // Criar usuário no Supabase Auth
-    const { data: authData, error: authError } = await req.supabase.auth.signUp({
+    // Criar usuário no Supabase Auth usando ANON key (igual ao frontend)
+    const { data: authData, error: authError } = await req.supabaseAuth.auth.signUp({
       email,
       password,
       options: {
-        data: {
-          full_name
-        }
+        data: { full_name }
       }
     });
 
     if (authError) {
-      console.error('Erro no cadastro:', authError);
-      return res.status(500).json({ error: 'Erro ao criar conta' });
+      console.error('❌ Erro no cadastro:', authError);
+      return res.status(500).json({ 
+        error: 'Erro ao criar conta',
+        details: authError.message 
+      });
     }
 
-    if (!authData.user) {
+    if (!authData || !authData.user) {
       return res.status(400).json({ error: 'Erro ao criar usuário' });
     }
 
-    // Criar perfil
-    const { error: profileError } = await req.supabase
-      .from('profiles')
-      .insert({
-        user_id: authData.user.id,
-        email,
-        full_name,
-        sponsor_email
-      });
+    const newUser = authData.user;
 
-    if (profileError) {
-      console.error('Erro ao criar perfil:', profileError);
-      // Tentar deletar usuário do auth se perfil falhar
-      await req.supabase.auth.admin.deleteUser(authData.user.id);
-      return res.status(500).json({ error: 'Erro ao criar perfil' });
+    // Aguardar um momento para o trigger (se existir)
+    await new Promise(resolve => setTimeout(resolve, 300));
+
+    // Verificar se perfil foi criado pelo trigger
+    let { data: newProfile, error: profileError } = await req.supabase
+      .from('profiles')
+      .select('id, user_id, referral_code')
+      .eq('user_id', newUser.id)
+      .single();
+
+    // Se não existe perfil, criar manualmente
+    if (profileError || !newProfile) {
+      console.log('⚠️ Perfil não encontrado, criando manualmente...');
+      
+      // Gerar referral_code único
+      const generatedReferralCode = `IMP${newUser.id.substring(0, 8).toUpperCase()}`;
+      
+      const { data: createdProfile, error: createError } = await req.supabase
+        .from('profiles')
+        .insert({
+          user_id: newUser.id,
+          email: email,
+          full_name: full_name,
+          referral_code: generatedReferralCode,
+          referral_cod: referral_code || null,  // Código do indicador do formulário
+          referred_by: null,  // Será preenchido abaixo se tiver indicador
+          status: 'active',
+          role: 'user',
+          available_balance: 0,
+          total_earned: 0,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        })
+        .select()
+        .single();
+
+      if (createError) {
+        console.error('❌ Erro ao criar perfil manualmente:', createError);
+      } else {
+        newProfile = createdProfile;
+        console.log('✅ Perfil criado manualmente:', newProfile);
+      }
     }
 
-    // Se tem sponsor, adicionar à rede
+    // Se tem perfil, atualizar com dados do indicador
+    if (newProfile) {
+      // Gerar referral_code se não tiver
+      const userReferralCode = newProfile.referral_code || 
+        `IMP${newUser.id.substring(0, 8).toUpperCase()}`;
+
+      // Atualizar perfil com referral_cod e código próprio
+      const updates = {
+        referral_code: userReferralCode,
+        updated_at: new Date().toISOString()
+      };
+
+      // Se tem código de indicação no formulário, preencher referral_cod
+      if (referral_code) {
+        updates.referral_cod = referral_code;
+        
+        // Buscar o user_id do indicador pelo código
+        const { data: referrer } = await req.supabase
+          .from('profiles')
+          .select('user_id')
+          .eq('referral_code', referral_code)
+          .single();
+        
+        if (referrer) {
+          updates.referred_by = referrer.user_id;
+          console.log('✅ Indicador encontrado:', referrer.user_id);
+        }
+      }
+
+      const { error: updateError } = await req.supabase
+        .from('profiles')
+        .update(updates)
+        .eq('id', newProfile.id);
+
+      if (updateError) {
+        console.error('❌ Erro ao atualizar perfil:', updateError);
+      } else {
+        console.log('✅ Perfil atualizado:', updates);
+      }
+    }
+
+    // Adicionar à rede se tiver sponsor
     if (sponsor_email) {
       const { data: sponsor } = await req.supabase
         .from('profiles')
@@ -88,36 +160,21 @@ router.post('/register', async (req, res) => {
       if (sponsor) {
         const { error: networkError } = await req.supabase
           .rpc('add_to_network', {
-            p_user_id: authData.user.id,
+            p_user_id: newUser.id,
             p_sponsor_id: sponsor.user_id
           });
 
         if (networkError) {
           console.error('Erro ao adicionar à rede:', networkError);
-          // Não falhar o cadastro por causa disso
         }
       }
-    }
-
-    // Inicializar saldos
-    const { error: balanceError } = await req.supabase
-      .rpc('update_wallet_balance', {
-        p_user_id: authData.user.id,
-        p_wallet_delta: 0,
-        p_yield_delta: 0,
-        p_bonus_delta: 0,
-        p_locked_delta: 0
-      });
-
-    if (balanceError) {
-      console.error('Erro ao inicializar saldos:', balanceError);
     }
 
     res.status(201).json({
       message: 'Usuário criado com sucesso',
       user: {
-        id: authData.user.id,
-        email: authData.user.email,
+        id: newUser.id,
+        email: newUser.email,
         full_name
       }
     });
@@ -140,8 +197,8 @@ router.post('/login', async (req, res) => {
 
     const { email, password } = req.body;
 
-    // Fazer login no Supabase Auth
-    const { data: authData, error: authError } = await req.supabase.auth.signInWithPassword({
+    // Fazer login no Supabase Auth usando ANON key
+    const { data: authData, error: authError } = await req.supabaseAuth.auth.signInWithPassword({
       email,
       password
     });
@@ -180,7 +237,7 @@ router.post('/login', async (req, res) => {
 // @access  Private
 router.post('/logout', async (req, res) => {
   try {
-    const { error } = await req.supabase.auth.signOut();
+    const { error } = await req.supabaseAuth.auth.signOut();
 
     if (error) {
       console.error('Erro no logout:', error);

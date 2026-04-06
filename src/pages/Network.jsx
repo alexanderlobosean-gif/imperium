@@ -1,7 +1,6 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/lib/AuthContext';
-// import { base44 } from '@/api/base44Client'; // Removido - agora usa Supabase
-import { supabase } from '@/lib/supabase'; // Adicionado
+import { financialAPI } from '@/services/api';
 import { useQuery } from '@tanstack/react-query';
 import { Users, User, TrendingUp, Copy, CheckCheck } from 'lucide-react';
 import { formatCurrency, getUnlockedLevels, RESIDUAL_PERCENTAGES } from '@/lib/planConfig';
@@ -12,75 +11,60 @@ import { toast } from 'sonner';
 
 export default function Network() {
   const { user } = useAuth();
-  const [copied, setCopied] = React.useState(false);
+  const [copied, setCopied] = useState(false);
+  const [generatingCode, setGeneratingCode] = useState(false);
+  const [referralData, setReferralData] = useState(null);
 
-  const { data: networkMembers = [] } = useQuery({
+  const { data: networkData = {}, isLoading: networkLoading } = useQuery({
     queryKey: ['network', user?.id],
     queryFn: async () => {
-      if (!user?.id) return [];
-      const { data, error } = await supabase
-        .from('network_relations')
-        .select('*')
-        .or(`referrer_id.eq.${user.id},referred_id.eq.${user.id}`)
-        .order('created_at', { ascending: false });
-      
-      if (error) throw error;
-      return data || [];
+      if (!user?.id) return { network: [], indirectInvestments: {} };
+      const data = await financialAPI.getNetwork();
+      return data;
     },
     enabled: !!user?.id,
   });
+  
+  const networkMembers = networkData.network || [];
+  const indirectInvestments = networkData.indirectInvestments || {};
 
   const { data: investments = [] } = useQuery({
     queryKey: ['investments', user?.id],
     queryFn: async () => {
       if (!user?.id) return [];
-      const { data, error } = await supabase
-        .from('investments')
-        .select('*')
-        .eq('user_id', user?.id)
-        .eq('status', 'active')
-        .order('created_at', { ascending: false });
-      
-      if (error) throw error;
-      return data || [];
+      const data = await financialAPI.getInvestments({ status: 'active' });
+      return data.investments || [];
     },
     enabled: !!user?.id,
   });
 
+  useEffect(() => {
+    const fetchReferral = async () => {
+      if (user?.id) {
+        try {
+          setGeneratingCode(true);
+          const data = await financialAPI.getReferral();
+          setReferralData(data);
+          setGeneratingCode(false);
+        } catch (e) {
+          console.error('Erro ao buscar referral:', e);
+          setGeneratingCode(false);
+        }
+      }
+    };
+    
+    fetchReferral();
+  }, [user?.id]);
+
   const directMembers = networkMembers.filter((m) => m.level === 1);
   const indirectMembers = networkMembers.filter((m) => m.level > 1);
 
-  const indirectIds = indirectMembers.map((m) => m.referred_id).filter(Boolean);
-
-  const { data: indirectInvestments = [] } = useQuery({
-    queryKey: ['indirect-investments', indirectIds.join(',')],
-    queryFn: async () => {
-      if (indirectIds.length === 0) return {};
-      const results = await Promise.all(
-        indirectIds.map((id) => supabase
-          .from('investments')
-          .select('*')
-          .eq('user_id', id)
-          .eq('status', 'active')
-        )
-      );
-      const map = {};
-      indirectIds.forEach((id, i) => { 
-        if (results[i]?.data && results[i].data[0]) {
-          map[id] = results[i].data[0].amount; 
-        }
-      });
-      return map;
-    },
-    enabled: indirectIds.length > 0,
-  });
   const totalGenerated = networkMembers.reduce((sum, m) => sum + (m.total_generated || 0), 0);
   const activeInvestment = investments[0];
   const unlockedLevels = activeInvestment?.unlocked_levels || 0;
 
-  const referralLink = user?.referral_code
-    ? `${window.location.origin}?ref=${user.referral_code}`
-    : '';
+  const referralLink = referralData?.referral_link || 
+    (user?.referral_code ? `${window.location.origin}/register?ref=${user.referral_code}` : '');
 
   const handleCopy = () => {
     navigator.clipboard.writeText(referralLink);
@@ -115,10 +99,10 @@ export default function Network() {
 
       {/* Stats */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-        <StatsCard title="Indicados Diretos" value={directMembers.length} icon={User} color="blue" isCurrency={false} />
-        <StatsCard title="Indicados Indiretos" value={indirectMembers.length} icon={Users} color="purple" isCurrency={false} />
-        <StatsCard title="Total Gerado" value={totalGenerated} icon={TrendingUp} color="green" isCurrency={false} />
-        <StatsCard title="Níveis Liberados" value={`${unlockedLevels} / 20`} icon={Users} color="gold" isCurrency={false} />
+        <StatsCard title="Indicados Diretos" value={directMembers.length} icon={User} color="blue" isCurrency={false} subtitle="" />
+        <StatsCard title="Indicados Indiretos" value={indirectMembers.length} icon={Users} color="purple" isCurrency={false} subtitle="" />
+        <StatsCard title="Total Gerado" value={totalGenerated} icon={TrendingUp} color="green" isCurrency={false} subtitle="" />
+        <StatsCard title="Níveis Liberados" value={`${unlockedLevels} / 20`} icon={Users} color="gold" isCurrency={false} subtitle="" />
       </div>
 
       {/* Direct members */}
@@ -166,7 +150,7 @@ export default function Network() {
               <TrendingUp className="w-4 h-4 text-green-400" /> Comissões por Nível
             </h3>
             <div className="space-y-2">
-              {Object.keys(byLevel).sort((a, b) => a - b).map((lvl) => (
+              {Object.keys(byLevel).sort((a, b) => parseInt(a) - parseInt(b)).map((lvl) => (
                 <div key={lvl} className="flex items-center justify-between p-3 rounded-lg bg-secondary/50 border border-border">
                   <div className="flex items-center gap-3">
                     <Badge variant="outline" className="text-purple-400 border-purple-500/30">N{lvl}</Badge>

@@ -1076,4 +1076,551 @@ router.get('/transactions', async (req, res) => {
   }
 });
 
+// @route   GET /api/financial/deposits
+// @desc    Buscar depósitos do usuário
+// @access  Private
+router.get('/deposits', async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const { status, page = 1, limit = 20 } = req.query;
+
+    const offset = (page - 1) * limit;
+
+    let query = req.supabase
+      .from('deposits')
+      .select('*')
+      .eq('user_id', userId)
+      .order('created_at', { ascending: false })
+      .range(offset, offset + limit - 1);
+
+    if (status) {
+      query = query.eq('status', status);
+    }
+
+    const { data: deposits, error } = await query;
+
+    if (error) {
+      console.error('Erro ao buscar depósitos:', error);
+      return res.status(500).json({ error: 'Erro ao buscar depósitos' });
+    }
+
+    res.json({
+      deposits: deposits || [],
+      page: parseInt(page),
+      limit: parseInt(limit)
+    });
+
+  } catch (error) {
+    console.error('Erro no endpoint deposits:', error);
+    res.status(500).json({ error: 'Erro interno do servidor' });
+  }
+});
+
+// @route   GET /api/financial/withdrawals
+// @desc    Buscar saques do usuário
+// @access  Private
+router.get('/withdrawals', async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const { status, page = 1, limit = 20 } = req.query;
+
+    const offset = (page - 1) * limit;
+
+    let query = req.supabase
+      .from('withdrawals')
+      .select('*')
+      .eq('user_id', userId)
+      .order('created_at', { ascending: false })
+      .range(offset, offset + limit - 1);
+
+    if (status) {
+      query = query.eq('status', status);
+    }
+
+    const { data: withdrawals, error } = await query;
+
+    if (error) {
+      console.error('Erro ao buscar saques:', error);
+      return res.status(500).json({ error: 'Erro ao buscar saques' });
+    }
+
+    res.json({
+      withdrawals: withdrawals || [],
+      page: parseInt(page),
+      limit: parseInt(limit)
+    });
+
+  } catch (error) {
+    console.error('Erro no endpoint withdrawals:', error);
+    res.status(500).json({ error: 'Erro interno do servidor' });
+  }
+});
+
+// @route   GET /api/financial/transfers
+// @desc    Buscar transferências do usuário
+// @access  Private
+router.get('/transfers', async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const { page = 1, limit = 20 } = req.query;
+
+    const offset = (page - 1) * limit;
+
+    const { data: transfers, error } = await req.supabase
+      .from('transfers')
+      .select(`
+        *,
+        sender:profiles!from_user_id(full_name, email),
+        recipient:profiles!to_user_id(full_name, email)
+      `)
+      .or(`from_user_id.eq.${userId},to_user_id.eq.${userId}`)
+      .order('created_at', { ascending: false })
+      .range(offset, offset + limit - 1);
+
+    if (error) {
+      console.error('Erro ao buscar transferências:', error);
+      return res.status(500).json({ error: 'Erro ao buscar transferências' });
+    }
+
+    res.json({
+      transfers: transfers || [],
+      page: parseInt(page),
+      limit: parseInt(limit)
+    });
+
+  } catch (error) {
+    console.error('Erro no endpoint transfers:', error);
+    res.status(500).json({ error: 'Erro interno do servidor' });
+  }
+});
+
+// @route   GET /api/financial/investments
+// @desc    Buscar investimentos do usuário
+// @access  Private
+router.get('/investments', async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const { status = 'active' } = req.query;
+
+    let query = req.supabase
+      .from('investments')
+      .select(`
+        *,
+        plan:plans(*)
+      `)
+      .eq('user_id', userId)
+      .order('created_at', { ascending: false });
+
+    if (status) {
+      query = query.eq('status', status);
+    }
+
+    const { data: investments, error } = await query;
+
+    if (error) {
+      console.error('Erro ao buscar investimentos:', error);
+      return res.status(500).json({ error: 'Erro ao buscar investimentos' });
+    }
+
+    res.json({
+      investments: investments || []
+    });
+
+  } catch (error) {
+    console.error('Erro no endpoint investments:', error);
+    res.status(500).json({ error: 'Erro interno do servidor' });
+  }
+});
+
+// @route   GET /api/financial/admin-accounts
+// @desc    Buscar contas bancárias do admin (para depósitos)
+// @access  Private
+router.get('/admin-accounts', async (req, res) => {
+  try {
+    const { data: accounts, error } = await req.supabase
+      .from('admin_banking_accounts')
+      .select('*')
+      .eq('is_active', true)
+      .order('is_default', { ascending: false });
+
+    if (error) {
+      console.error('Erro ao buscar contas admin:', error);
+      return res.status(500).json({ error: 'Erro ao buscar contas' });
+    }
+
+    res.json({
+      accounts: accounts || []
+    });
+
+  } catch (error) {
+    console.error('Erro no endpoint admin-accounts:', error);
+    res.status(500).json({ error: 'Erro interno do servidor' });
+  }
+});
+
+// @route   GET /api/financial/network
+// @desc    Buscar dados da rede/network do usuário (indicados diretos e indiretos)
+// @access  Private
+router.get('/network', async (req, res) => {
+  try {
+    const userId = req.user.id;
+
+    // Buscar relações de rede (diretos e indiretos)
+    const { data: networkRelations, error: networkError } = await req.supabase
+      .from('network_relations')
+      .select('*')
+      .eq('referred_id', userId)
+      .order('created_at', { ascending: false });
+
+    if (networkError) {
+      console.error('Erro ao buscar rede:', networkError);
+      return res.status(500).json({ error: 'Erro ao buscar rede' });
+    }
+
+    // Buscar investments dos membros indiretos
+    const indirectIds = (networkRelations || [])
+      .filter(m => m.level > 1)
+      .map(m => m.referred_id);
+
+    let indirectInvestments = {};
+    if (indirectIds.length > 0) {
+      const { data: investments, error: invError } = await req.supabase
+        .from('investments')
+        .select('*')
+        .in('user_id', indirectIds)
+        .eq('status', 'active');
+
+      if (!invError && investments) {
+        investments.forEach(inv => {
+          indirectInvestments[inv.user_id] = inv.amount;
+        });
+      }
+    }
+
+    res.json({
+      network: networkRelations || [],
+      indirectInvestments
+    });
+
+  } catch (error) {
+    console.error('Erro no endpoint network:', error);
+    res.status(500).json({ error: 'Erro interno do servidor' });
+  }
+});
+
+// @route   GET /api/financial/plans
+// @desc    Buscar planos disponíveis
+// @access  Private
+router.get('/plans', async (req, res) => {
+  try {
+    const userId = req.user.id;
+    
+    // Verificar se usuário é admin
+    const { data: profile } = await req.supabase
+      .from('profiles')
+      .select('role')
+      .eq('user_id', userId)
+      .single();
+
+    let query = req.supabase
+      .from('plans')
+      .select('*')
+      .eq('is_active', true)
+      .order('sort_order', { ascending: true });
+
+    // Se não for admin, esconder planos de liderança
+    if (profile?.role !== 'admin' && profile?.role !== 'super_admin') {
+      query = query.eq('is_leadership', false);
+    }
+
+    const { data: plans, error } = await query;
+
+    if (error) {
+      console.error('Erro ao buscar planos:', error);
+      return res.status(500).json({ error: 'Erro ao buscar planos' });
+    }
+
+    res.json({ plans: plans || [] });
+
+  } catch (error) {
+    console.error('Erro no endpoint plans:', error);
+    res.status(500).json({ error: 'Erro interno do servidor' });
+  }
+});
+
+// @route   POST /api/financial/investments
+// @desc    Criar novo investimento
+// @access  Private
+router.post('/investments', async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const { plan_slug, amount, client_share = 50, company_share = 50, daily_yield = 0.01 } = req.body;
+
+    if (!plan_slug || !amount) {
+      return res.status(400).json({ error: 'Plano e valor são obrigatórios' });
+    }
+
+    // Verificar saldo
+    const { data: balance } = await req.supabase.rpc('get_available_balance', { p_user_id: userId });
+    if (balance < amount) {
+      return res.status(400).json({ error: 'Saldo insuficiente' });
+    }
+
+    // Criar investimento
+    const { data: investment, error } = await req.supabase
+      .from('investments')
+      .insert({
+        user_id: userId,
+        plan_slug,
+        amount,
+        client_share,
+        company_share,
+        status: 'active',
+        daily_yield,
+        created_at: new Date().toISOString()
+      })
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Erro ao criar investimento:', error);
+      return res.status(500).json({ error: 'Erro ao criar investimento' });
+    }
+
+    // Gerar comissões para a rede
+    await generateNetworkCommissions(req.supabase, investment);
+
+    res.json({ investment });
+
+  } catch (error) {
+    console.error('Erro no endpoint investments POST:', error);
+    res.status(500).json({ error: 'Erro interno do servidor' });
+  }
+});
+
+// @route   GET /api/financial/profile
+// @desc    Buscar perfil do usuário
+// @access  Private
+router.get('/profile', async (req, res) => {
+  try {
+    const userId = req.user.id;
+    console.log('🔍 Buscando perfil para userId:', userId);
+
+    const { data: profile, error } = await req.supabase
+      .from('profiles')
+      .select('*')
+      .eq('user_id', userId)
+      .single();
+
+    if (error && error.code !== 'PGRST116') { // PGRST116 = no rows returned
+      console.error('Erro ao buscar perfil:', error);
+      return res.status(500).json({ error: 'Erro ao buscar perfil' });
+    }
+
+    // Se não encontrou perfil, retornar objeto vazio (perfil novo)
+    if (!profile) {
+      console.log('⚠️ Perfil não encontrado para userId:', userId);
+      return res.json({ 
+        profile: {
+          user_id: userId,
+          full_name: req.user.user_metadata?.full_name || '',
+          email: req.user.email,
+          phone: '',
+          document_number: '',
+          birth_date: '',
+          address: '',
+          city: '',
+          state: '',
+          country: 'Brasil',
+          postal_code: '',
+          bank_name: '',
+          bank_agency: '',
+          bank_account: '',
+          pix_key: '',
+          crypto_wallet: ''
+        }
+      });
+    }
+
+    console.log('✅ Perfil encontrado:', profile.id);
+    res.json({ profile });
+
+  } catch (error) {
+    console.error('Erro no endpoint profile:', error);
+    res.status(500).json({ error: 'Erro interno do servidor' });
+  }
+});
+
+// @route   PUT /api/financial/profile
+// @desc    Atualizar perfil do usuário
+// @access  Private
+router.put('/profile', async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const updates = req.body;
+    console.log('💾 Atualizando perfil para userId:', userId, 'Dados:', updates);
+
+    // Campos permitidos para atualização
+    const allowedFields = [
+      'full_name', 'phone', 'document_number', 'birth_date', 
+      'address', 'city', 'state', 'country', 'postal_code',
+      'bank_name', 'bank_agency', 'bank_account', 'pix_key', 'crypto_wallet'
+    ];
+
+    const filteredUpdates = {};
+    allowedFields.forEach(field => {
+      if (updates[field] !== undefined) {
+        filteredUpdates[field] = updates[field];
+      }
+    });
+
+    filteredUpdates.updated_at = new Date().toISOString();
+
+    // Verificar se perfil existe
+    const { data: existingProfile } = await req.supabase
+      .from('profiles')
+      .select('id')
+      .eq('user_id', userId)
+      .single();
+
+    let result;
+    if (existingProfile) {
+      // Atualizar perfil existente
+      result = await req.supabase
+        .from('profiles')
+        .update(filteredUpdates)
+        .eq('user_id', userId)
+        .select()
+        .single();
+    } else {
+      // Criar novo perfil
+      result = await req.supabase
+        .from('profiles')
+        .insert({
+          user_id: userId,
+          ...filteredUpdates,
+          created_at: new Date().toISOString()
+        })
+        .select()
+        .single();
+    }
+
+    if (result.error) {
+      console.error('Erro ao salvar perfil:', result.error);
+      return res.status(500).json({ error: 'Erro ao salvar perfil' });
+    }
+
+    console.log('✅ Perfil salvo com sucesso:', result.data?.id);
+    res.json({ profile: result.data });
+
+  } catch (error) {
+    console.error('Erro no endpoint profile PUT:', error);
+    res.status(500).json({ error: 'Erro interno do servidor' });
+  }
+});
+
+// @route   GET /api/financial/referral
+// @desc    Buscar código de indicação do usuário
+// @access  Private
+router.get('/referral', async (req, res) => {
+  try {
+    const userId = req.user.id;
+    console.log('🔍 Buscando referral para userId:', userId);
+
+    const { data: profile, error } = await req.supabase
+      .from('profiles')
+      .select('referral_code, full_name')
+      .eq('user_id', userId)
+      .single();
+
+    if (error && error.code !== 'PGRST116') {
+      console.error('Erro ao buscar referral:', error);
+      return res.status(500).json({ error: 'Erro ao buscar código de indicação' });
+    }
+
+    let referralCode = profile?.referral_code;
+    let fullName = profile?.full_name || req.user.user_metadata?.full_name || req.user.email?.split('@')[0];
+
+    // Se não tiver código, gerar um
+    if (!referralCode) {
+      referralCode = (fullName?.replace(/\s+/g, '').toUpperCase().slice(0, 4) || 'USER') +
+        Math.random().toString(36).substring(2, 7).toUpperCase();
+
+      // Criar ou atualizar perfil com o código
+      if (profile) {
+        await req.supabase
+          .from('profiles')
+          .update({ referral_code: referralCode })
+          .eq('user_id', userId);
+      } else {
+        await req.supabase
+          .from('profiles')
+          .insert({
+            user_id: userId,
+            referral_code: referralCode,
+            full_name: fullName,
+            created_at: new Date().toISOString()
+          });
+      }
+    }
+
+    const origin = req.headers.origin || process.env.FRONTEND_URL || 'http://localhost:5173';
+    const referralLink = `${origin}/register?ref=${referralCode}`;
+
+    console.log('✅ Referral gerado:', referralCode);
+    res.json({ 
+      referral_code: referralCode,
+      referral_link: referralLink
+    });
+
+  } catch (error) {
+    console.error('Erro no endpoint referral:', error);
+    res.status(500).json({ error: 'Erro interno do servidor' });
+  }
+});
+
+// Função auxiliar para gerar comissões de rede
+async function generateNetworkCommissions(supabase, investment) {
+  try {
+    const investmentAmount = parseFloat(investment.amount);
+    let currentUserId = investment.user_id;
+    let level = 1;
+    const maxLevels = 5;
+    const commissionRates = { 1: 0.10, 2: 0.05, 3: 0.03, 4: 0.02, 5: 0.01 };
+
+    while (level <= maxLevels) {
+      const { data: userProfile } = await supabase
+        .from('profiles')
+        .select('referred_by')
+        .eq('user_id', currentUserId)
+        .single();
+
+      if (!userProfile?.referred_by) break;
+
+      const referrerId = userProfile.referred_by;
+      const commissionRate = commissionRates[level] || 0;
+      const commissionAmount = investmentAmount * commissionRate;
+
+      if (commissionAmount > 0) {
+        await supabase.from('commissions').insert({
+          user_id: referrerId,
+          source_user_id: investment.user_id,
+          investment_id: investment.id,
+          amount: commissionAmount,
+          percentage: commissionRate * 100,
+          commission_type: level === 1 ? 'direct' : 'residual',
+          level: level,
+          status: 'pending',
+          created_at: new Date().toISOString()
+        });
+      }
+
+      currentUserId = referrerId;
+      level++;
+    }
+  } catch (err) {
+    console.error('Erro ao gerar comissões:', err);
+  }
+}
+
 module.exports = router;

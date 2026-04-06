@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/lib/supabase';
+import { adminAPI } from '@/services/api';
 import { useAuth } from '@/lib/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -33,15 +33,10 @@ const iconColorMap = {
   gold: 'text-gold',
 };
 
-// Fetch plans
+// Fetch plans via API
 const fetchPlans = async () => {
-  const { data, error } = await supabase
-    .from('plans')
-    .select('*')
-    .order('sort_order', { ascending: true });
-
-  if (error) throw error;
-  return data;
+  const data = await adminAPI.getPlans();
+  return data.plans;
 };
 
 export default function AdminPlans() {
@@ -63,26 +58,13 @@ export default function AdminPlans() {
   const planMutation = useMutation({
     mutationFn: async (planData) => {
       if (editingPlan) {
-        const { data, error } = await supabase
-          .from('plans')
-          .update(planData)
-          .eq('id', editingPlan.id)
-          .select()
-          .single();
-        if (error) throw error;
-        return data;
+        return await adminAPI.updatePlan(editingPlan.id, planData);
       } else {
-        const { data, error } = await supabase
-          .from('plans')
-          .insert(planData)
-          .select()
-          .single();
-        if (error) throw error;
-        return data;
+        return await adminAPI.createPlan(planData);
       }
     },
     onSuccess: () => {
-      queryClient.invalidateQueries(['admin-plans']);
+      queryClient.invalidateQueries({ queryKey: ['admin-plans'] });
       toast.success(editingPlan ? 'Plano atualizado com sucesso!' : 'Plano criado com sucesso!');
       setIsDialogOpen(false);
       setEditingPlan(null);
@@ -95,14 +77,10 @@ export default function AdminPlans() {
   // Delete plan mutation
   const deleteMutation = useMutation({
     mutationFn: async (planId) => {
-      const { error } = await supabase
-        .from('plans')
-        .delete()
-        .eq('id', planId);
-      if (error) throw error;
+      return await adminAPI.deletePlan(planId);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries(['admin-plans']);
+      queryClient.invalidateQueries({ queryKey: ['admin-plans'] });
       toast.success('Plano excluído com sucesso!');
     },
     onError: (error) => {
@@ -113,17 +91,10 @@ export default function AdminPlans() {
   // Toggle plan status mutation
   const toggleStatusMutation = useMutation({
     mutationFn: async ({ planId, isActive }) => {
-      const { data, error } = await supabase
-        .from('plans')
-        .update({ is_active: isActive })
-        .eq('id', planId)
-        .select()
-        .single();
-      if (error) throw error;
-      return data;
+      return await adminAPI.updatePlan(planId, { is_active: isActive });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries(['admin-plans']);
+      queryClient.invalidateQueries({ queryKey: ['admin-plans'] });
       toast.success('Status do plano atualizado!');
     },
     onError: (error) => {

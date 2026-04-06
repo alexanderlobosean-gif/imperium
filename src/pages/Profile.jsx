@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/lib/AuthContext';
-import { supabase } from '@/lib/supabase';
-import { useQuery } from '@tanstack/react-query';
+import { financialAPI } from '@/services/api';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -26,54 +26,10 @@ const Field = React.memo(({ label, field, placeholder, icon: Icon, value, onChan
 
 export default function Profile() {
   const { user } = useAuth();
+  const queryClient = useQueryClient();
   const [saving, setSaving] = useState(false);
-  const [profile, setProfile] = useState(null);
-  const [isLoading, setIsLoading] = useState(true);
-
-  useEffect(() => {
-    if (user) {
-      fetchProfile();
-    }
-  }, [user]);
-
-  const fetchProfile = async () => {
-    try {
-      const userIdStr = String(user?.id);
-      console.log('Fetching profile for user:', userIdStr);
-      
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('user_id', userIdStr)
-        .single();
-
-      if (error) throw error;
-
-      console.log('Profile fetched:', data);
-      setProfile(data);
-      setForm({
-        full_name: data.full_name || '',
-        phone: data.phone || '',
-        document_number: data.document_number || '',
-        birth_date: data.birth_date || '',
-        address: data.address || '',
-        city: data.city || '',
-        state: data.state || '',
-        country: data.country || 'Brasil',
-        postal_code: data.postal_code || '',
-        bank_name: data.bank_name || '',
-        bank_agency: data.bank_agency || '',
-        bank_account: data.bank_account || '',
-        pix_key: data.pix_key || '',
-        crypto_wallet: data.crypto_wallet || ''
-      });
-    } catch (error) {
-      console.error('Error fetching profile:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
+  const [isEditing, setIsEditing] = useState(false);
+  const [showSuccess, setShowSuccess] = useState(false);
   const [form, setForm] = useState({
     full_name: '',
     phone: '',
@@ -91,44 +47,77 @@ export default function Profile() {
     crypto_wallet: ''
   });
 
+  // Buscar perfil via API
+  const { data: profileData, isLoading, error } = useQuery({
+    queryKey: ['profile', user?.id],
+    queryFn: async () => {
+      const data = await financialAPI.getProfile();
+      console.log('Profile API response:', data);
+      return data.profile;
+    },
+    enabled: !!user?.id,
+  });
+
+  useEffect(() => {
+    if (profileData) {
+      setForm({
+        full_name: profileData.full_name || '',
+        phone: profileData.phone || '',
+        document_number: profileData.document_number || '',
+        birth_date: profileData.birth_date || '',
+        address: profileData.address || '',
+        city: profileData.city || '',
+        state: profileData.state || '',
+        country: profileData.country || 'Brasil',
+        postal_code: profileData.postal_code || '',
+        bank_name: profileData.bank_name || '',
+        bank_agency: profileData.bank_agency || '',
+        bank_account: profileData.bank_account || '',
+        pix_key: profileData.pix_key || '',
+        crypto_wallet: profileData.crypto_wallet || ''
+      });
+    } else if (user) {
+      // Fallback para dados do contexto de autenticação
+      setForm(prev => ({
+        ...prev,
+        full_name: user.full_name || prev.full_name,
+      }));
+    }
+  }, [profileData, user]);
+
   const handleChange = useCallback((field, value) => {
     setForm((prev) => ({ ...prev, [field]: value }));
   }, []);
 
+  const updateProfileMutation = useMutation({
+    mutationFn: async (formData) => {
+      // Remove empty strings for date fields to avoid PostgreSQL errors
+      const cleanedData = { ...formData };
+      if (cleanedData.birth_date === '') {
+        cleanedData.birth_date = null;
+      }
+      console.log('Saving profile with data:', cleanedData);
+      return await financialAPI.updateProfile(cleanedData);
+    },
+    onSuccess: (data) => {
+      console.log('Profile saved successfully:', data);
+      queryClient.invalidateQueries({ queryKey: ['profile', user?.id] });
+      toast.success('Perfil atualizado com sucesso!');
+      setIsEditing(false);
+      setShowSuccess(true);
+      // Hide success message after 3 seconds
+      setTimeout(() => setShowSuccess(false), 3000);
+    },
+    onError: (error) => {
+      console.error('Error saving profile:', error);
+      toast.error('Erro ao atualizar perfil: ' + (error.message || 'Tente novamente.'));
+    }
+  });
+
   const handleSave = async () => {
     setSaving(true);
     try {
-      const { error } = await supabase
-        .from('profiles')
-        .update({
-          full_name: form.full_name,
-          phone: form.phone,
-          document_number: form.document_number,
-          birth_date: form.birth_date || null, // Envia null se estiver vazio
-          address: form.address,
-          city: form.city,
-          state: form.state,
-          country: form.country,
-          postal_code: form.postal_code,
-          bank_name: form.bank_name,
-          bank_agency: form.bank_agency,
-          bank_account: form.bank_account,
-          pix_key: form.pix_key,
-          crypto_wallet: form.crypto_wallet,
-          updated_at: new Date().toISOString()
-        })
-        .filter('user_id', 'eq', user.id);
-
-      if (error) {
-        console.error('Error saving profile:', error);
-        toast.error('Erro ao atualizar perfil: ' + error.message);
-      } else {
-        toast.success('Perfil atualizado com sucesso!');
-        fetchProfile(); // Refresh data
-      }
-    } catch (error) {
-      console.error('Error saving profile:', error);
-      toast.error('Erro ao atualizar perfil. Tente novamente.');
+      await updateProfileMutation.mutateAsync(form);
     } finally {
       setSaving(false);
     }
@@ -136,10 +125,14 @@ export default function Profile() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
-        <div className="w-8 h-8 border-4 border-slate-200 border-t-slate-800 rounded-full animate-spin"></div>
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gold"></div>
       </div>
     );
+  }
+
+  if (error) {
+    console.error('Error loading profile:', error);
   }
 
   return (
@@ -172,6 +165,7 @@ export default function Profile() {
               onChange={(e) => handleChange('phone', e.target.value)}
               placeholder="(00) 00000-0000"
               className="mt-1 bg-secondary border-border"
+              disabled={!isEditing}
             />
           </div>
           <div>
@@ -183,6 +177,7 @@ export default function Profile() {
               onChange={(e) => handleChange('document_number', e.target.value)}
               placeholder="000.000.000-00"
               className="mt-1 bg-secondary border-border"
+              disabled={!isEditing}
             />
           </div>
         </div>
@@ -203,6 +198,7 @@ export default function Profile() {
               onChange={(e) => handleChange('address', e.target.value)}
               placeholder="Rua, número, complemento"
               className="mt-1 bg-secondary border-border"
+              disabled={!isEditing}
             />
           </div>
           <div>
@@ -212,6 +208,7 @@ export default function Profile() {
               onChange={(e) => handleChange('city', e.target.value)}
               placeholder="Cidade"
               className="mt-1 bg-secondary border-border"
+              disabled={!isEditing}
             />
           </div>
           <div>
@@ -221,6 +218,7 @@ export default function Profile() {
               onChange={(e) => handleChange('state', e.target.value)}
               placeholder="UF"
               className="mt-1 bg-secondary border-border"
+              disabled={!isEditing}
             />
           </div>
           <div>
@@ -230,6 +228,7 @@ export default function Profile() {
               onChange={(e) => handleChange('postal_code', e.target.value)}
               placeholder="00000-000"
               className="mt-1 bg-secondary border-border"
+              disabled={!isEditing}
             />
           </div>
         </div>
@@ -250,6 +249,7 @@ export default function Profile() {
               onChange={(e) => handleChange('bank_name', e.target.value)}
               placeholder="Nome do banco"
               className="mt-1 bg-secondary border-border"
+              disabled={!isEditing}
             />
           </div>
           <div>
@@ -259,6 +259,7 @@ export default function Profile() {
               onChange={(e) => handleChange('bank_agency', e.target.value)}
               placeholder="0000"
               className="mt-1 bg-secondary border-border"
+              disabled={!isEditing}
             />
           </div>
           <div>
@@ -268,6 +269,7 @@ export default function Profile() {
               onChange={(e) => handleChange('bank_account', e.target.value)}
               placeholder="00000-0"
               className="mt-1 bg-secondary border-border"
+              disabled={!isEditing}
             />
           </div>
           <div>
@@ -277,6 +279,7 @@ export default function Profile() {
               onChange={(e) => handleChange('pix_key', e.target.value)}
               placeholder="Chave PIX"
               className="mt-1 bg-secondary border-border"
+              disabled={!isEditing}
             />
           </div>
         </div>
@@ -288,25 +291,44 @@ export default function Profile() {
           <Wallet className="w-4 h-4 text-purple-400" /> Carteira Cripto
         </h3>
         <div>
-            <Label className="text-sm text-muted-foreground flex items-center gap-1.5">
-              <Wallet className="w-3.5 h-3.5" /> Endereço da Carteira
-            </Label>
-            <Input
-              value={form.crypto_wallet}
-              onChange={(e) => handleChange('crypto_wallet', e.target.value)}
-              placeholder="bc1q..."
-              className="mt-1 bg-secondary border-border"
-            />
-          </div>
+          <Label className="text-sm text-muted-foreground flex items-center gap-1.5">
+            <Wallet className="w-3.5 h-3.5" /> Endereço da Carteira
+          </Label>
+          <Input
+            value={form.crypto_wallet}
+            onChange={(e) => handleChange('crypto_wallet', e.target.value)}
+            placeholder="bc1q..."
+            className="mt-1 bg-secondary border-border"
+            disabled={!isEditing}
+          />
+        </div>
       </div>
 
-      <Button
-        onClick={handleSave}
-        disabled={saving}
-        className="w-full bg-gold hover:bg-gold-hover text-primary-foreground font-semibold"
-      >
-        {saving ? 'Salvando...' : 'Salvar Perfil'}
-      </Button>
+      {/* Success Message */}
+      {showSuccess && (
+        <div className="rounded-xl border border-green-500/30 bg-green-500/10 p-4 text-center">
+          <p className="text-green-600 font-medium">✓ Dados atualizados com sucesso!</p>
+        </div>
+      )}
+
+      <div className="flex gap-3">
+        {isEditing ? (
+          <Button
+            onClick={handleSave}
+            disabled={saving}
+            className="flex-1 bg-gold hover:bg-gold-hover text-primary-foreground font-semibold"
+          >
+            {saving ? 'Salvando...' : 'Salvar Perfil'}
+          </Button>
+        ) : (
+          <Button
+            onClick={() => setIsEditing(true)}
+            className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-semibold"
+          >
+            Editar Perfil
+          </Button>
+        )}
+      </div>
     </div>
   );
 }

@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { Eye, EyeOff, Shield, Lock, Mail, User } from 'lucide-react'
-import { authService } from '@/api/supabaseServices'
+import { supabase } from '@/lib/supabase'
 
 const Login = () => {
   const [formData, setFormData] = useState({
@@ -32,7 +32,11 @@ const Login = () => {
     setError('')
 
     try {
-      const { data, error } = await authService.signIn(formData.email, formData.password)
+      // Login direto no Supabase
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: formData.email,
+        password: formData.password
+      })
       
       if (error) {
         setError(error.message)
@@ -59,7 +63,11 @@ const Login = () => {
     setError('')
 
     try {
-      await authService.resetPassword(forgotPasswordEmail)
+      // Recuperação de senha direto no Supabase
+      const { error } = await supabase.auth.resetPasswordForEmail(forgotPasswordEmail)
+      
+      if (error) throw error
+      
       setForgotPasswordMessage('Email de recuperação enviado! Verifique sua caixa de entrada.')
       setForgotPasswordEmail('')
     } catch (err) {

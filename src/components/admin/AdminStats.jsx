@@ -1,76 +1,20 @@
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { supabaseAdmin } from '@/lib/supabase';
+import { adminAPI } from '@/services/api';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Users, TrendingUp, DollarSign, Wallet, Activity, ArrowUpRight, ArrowDownRight } from 'lucide-react';
 import { formatCurrency } from '@/lib/planConfig';
 
-// Fetch dashboard statistics (usando supabaseAdmin para bypass RLS)
-const fetchDashboardStats = async () => {
-  const [
-    usersResult,
-    depositsResult,
-    withdrawalsResult,
-    investmentsResult,
-    yieldsResult,
-    profilesResult
-  ] = await Promise.all([
-    // Total users
-    supabaseAdmin.from('profiles').select('id').eq('status', 'active'),
-    // Total deposits
-    supabaseAdmin.from('deposits').select('amount').eq('status', 'confirmed'),
-    // Total withdrawals
-    supabaseAdmin.from('withdrawals').select('amount').eq('status', 'confirmed'),
-    // Active investments
-    supabaseAdmin.from('investments').select('amount, status').eq('status', 'active'),
-    // Today's yields
-    supabaseAdmin.from('yields').select('amount').gte('date', new Date().toISOString().split('T')[0]),
-    // Wallet data - total available balance
-    supabaseAdmin.from('profiles').select('available_balance, total_earned, total_invested, total_withdrawn')
-  ]);
-
-  const totalWalletBalance = profilesResult.data?.reduce((sum, p) => sum + parseFloat(p.available_balance || 0), 0) || 0;
-  const totalEarned = profilesResult.data?.reduce((sum, p) => sum + parseFloat(p.total_earned || 0), 0) || 0;
-  const totalInvested = profilesResult.data?.reduce((sum, p) => sum + parseFloat(p.total_invested || 0), 0) || 0;
-  const totalWithdrawn = profilesResult.data?.reduce((sum, p) => sum + parseFloat(p.total_withdrawn || 0), 0) || 0;
-
-  const stats = {
-    totalUsers: usersResult.data?.length || 0,
-    totalDeposits: depositsResult.data?.reduce((sum, d) => sum + parseFloat(d.amount), 0) || 0,
-    totalWithdrawals: withdrawalsResult.data?.reduce((sum, w) => sum + parseFloat(w.amount), 0) || 0,
-    activeInvestments: investmentsResult.data?.reduce((sum, i) => sum + parseFloat(i.amount), 0) || 0,
-    todayYields: yieldsResult.data?.reduce((sum, y) => sum + parseFloat(y.amount), 0) || 0,
-    activeInvestmentsCount: investmentsResult.data?.length || 0,
-    // New wallet stats
-    totalWalletBalance: totalWalletBalance,
-    totalEarned: totalEarned,
-    totalInvested: totalInvested,
-    totalWithdrawn: totalWithdrawn,
-  };
-
-  // Calculate net balance
-  stats.netBalance = stats.totalDeposits - stats.totalWithdrawals;
-
-  // Get recent activity
-  const [recentDeposits, recentWithdrawals, recentUsers] = await Promise.all([
-    supabaseAdmin.from('deposits').select('*').eq('status', 'confirmed').order('created_at', { ascending: false }).limit(5),
-    supabaseAdmin.from('withdrawals').select('*').eq('status', 'confirmed').order('created_at', { ascending: false }).limit(5),
-    supabaseAdmin.from('profiles').select('*').order('created_at', { ascending: false }).limit(5)
-  ]);
-
-  stats.recentActivity = [
-    ...recentDeposits.data?.map(d => ({ ...d, type: 'deposit' })) || [],
-    ...recentWithdrawals.data?.map(w => ({ ...w, type: 'withdrawal' })) || [],
-    ...recentUsers.data?.map(u => ({ ...u, type: 'user' })) || []
-  ].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()).slice(0, 10);
-
-  return stats;
+// Fetch admin stats via API
+const fetchAdminStats = async () => {
+  const data = await adminAPI.getStats();
+  return data;
 };
 
 export default function AdminStats() {
   const { data: stats, isLoading } = useQuery({
     queryKey: ['admin-dashboard-stats'],
-    queryFn: fetchDashboardStats,
+    queryFn: fetchAdminStats,
   });
 
   if (isLoading) {
