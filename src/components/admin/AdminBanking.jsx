@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabaseAdmin } from '@/lib/supabase';
+import { adminAPI } from '@/services/api';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -18,58 +18,25 @@ import {
   X
 } from 'lucide-react';
 
-// Fetch admin banking accounts (usando supabaseAdmin para bypass RLS)
+// Fetch admin banking accounts via API
 const fetchAdminBankingAccounts = async () => {
-  const { data, error } = await supabaseAdmin
-    .from('admin_banking_accounts')
-    .select('*')
-    .eq('is_active', true)
-    .order('created_at', { ascending: false });
-
-  if (error) throw error;
-  return data || [];
+  const data = await adminAPI.getBankingAccounts();
+  return data.accounts || [];
 };
 
-// Create admin banking account
+// Create admin banking account via API
 const createAdminBankingAccount = async (accountData) => {
-  const { data, error } = await supabase
-    .from('admin_banking_accounts')
-    .insert({
-      ...accountData,
-      is_active: true,
-      created_at: new Date().toISOString()
-    })
-    .select()
-    .single();
-
-  if (error) throw error;
-  return data;
+  return await adminAPI.createBankingAccount(accountData);
 };
 
-// Update admin banking account
+// Update admin banking account via API
 const updateAdminBankingAccount = async (id, accountData) => {
-  const { data, error } = await supabase
-    .from('admin_banking_accounts')
-    .update({
-      ...accountData,
-      updated_at: new Date().toISOString()
-    })
-    .eq('id', id)
-    .select()
-    .single();
-
-  if (error) throw error;
-  return data;
+  return await adminAPI.updateBankingAccount(id, accountData);
 };
 
-// Delete admin banking account
+// Delete admin banking account via API
 const deleteAdminBankingAccount = async (id) => {
-  const { error } = await supabase
-    .from('admin_banking_accounts')
-    .update({ is_active: false, updated_at: new Date().toISOString() })
-    .eq('id', id);
-
-  if (error) throw error;
+  return await adminAPI.deleteBankingAccount(id);
 };
 
 export default function AdminBanking() {

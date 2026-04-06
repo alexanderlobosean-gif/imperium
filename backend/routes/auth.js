@@ -64,11 +64,93 @@ router.post('/register', async (req, res) => {
 
     const newUser = authData.user;
 
-    // Aguardar trigger criar perfil e adicionar à rede se tiver sponsor
-    if (sponsor_email) {
-      // Aguardar um momento para o trigger criar o perfil
-      await new Promise(resolve => setTimeout(resolve, 500));
+    // Aguardar um momento para o trigger (se existir)
+    await new Promise(resolve => setTimeout(resolve, 300));
+
+    // Verificar se perfil foi criado pelo trigger
+    let { data: newProfile, error: profileError } = await req.supabase
+      .from('profiles')
+      .select('id, user_id, referral_code')
+      .eq('user_id', newUser.id)
+      .single();
+
+    // Se não existe perfil, criar manualmente
+    if (profileError || !newProfile) {
+      console.log('⚠️ Perfil não encontrado, criando manualmente...');
       
+      // Gerar referral_code único
+      const generatedReferralCode = `IMP${newUser.id.substring(0, 8).toUpperCase()}`;
+      
+      const { data: createdProfile, error: createError } = await req.supabase
+        .from('profiles')
+        .insert({
+          user_id: newUser.id,
+          email: email,
+          full_name: full_name,
+          referral_code: generatedReferralCode,
+          referral_cod: referral_code || null,  // Código do indicador do formulário
+          referred_by: null,  // Será preenchido abaixo se tiver indicador
+          status: 'active',
+          role: 'user',
+          available_balance: 0,
+          total_earned: 0,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        })
+        .select()
+        .single();
+
+      if (createError) {
+        console.error('❌ Erro ao criar perfil manualmente:', createError);
+      } else {
+        newProfile = createdProfile;
+        console.log('✅ Perfil criado manualmente:', newProfile);
+      }
+    }
+
+    // Se tem perfil, atualizar com dados do indicador
+    if (newProfile) {
+      // Gerar referral_code se não tiver
+      const userReferralCode = newProfile.referral_code || 
+        `IMP${newUser.id.substring(0, 8).toUpperCase()}`;
+
+      // Atualizar perfil com referral_cod e código próprio
+      const updates = {
+        referral_code: userReferralCode,
+        updated_at: new Date().toISOString()
+      };
+
+      // Se tem código de indicação no formulário, preencher referral_cod
+      if (referral_code) {
+        updates.referral_cod = referral_code;
+        
+        // Buscar o user_id do indicador pelo código
+        const { data: referrer } = await req.supabase
+          .from('profiles')
+          .select('user_id')
+          .eq('referral_code', referral_code)
+          .single();
+        
+        if (referrer) {
+          updates.referred_by = referrer.user_id;
+          console.log('✅ Indicador encontrado:', referrer.user_id);
+        }
+      }
+
+      const { error: updateError } = await req.supabase
+        .from('profiles')
+        .update(updates)
+        .eq('id', newProfile.id);
+
+      if (updateError) {
+        console.error('❌ Erro ao atualizar perfil:', updateError);
+      } else {
+        console.log('✅ Perfil atualizado:', updates);
+      }
+    }
+
+    // Adicionar à rede se tiver sponsor
+    if (sponsor_email) {
       const { data: sponsor } = await req.supabase
         .from('profiles')
         .select('user_id')

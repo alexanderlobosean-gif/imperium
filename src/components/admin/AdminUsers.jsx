@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabaseAdmin } from '@/lib/supabase';
+import { adminAPI } from '@/services/api';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -27,130 +27,53 @@ import {
   UserPlus
 } from 'lucide-react';
 
-// Fetch users (usando supabaseAdmin para bypass RLS)
+// Fetch users via API
 const fetchUsers = async () => {
-  const { data, error } = await supabaseAdmin
-    .from('profiles')
-    .select('*')
-    .order('created_at', { ascending: false });
-
-  if (error) throw error;
-  return data;
+  const data = await adminAPI.getUsers();
+  return data.users;
 };
 
-// Fetch all user deposits (usando supabaseAdmin)
+// Fetch all user deposits via API
 const fetchAllDeposits = async () => {
-  const { data, error } = await supabaseAdmin
-    .from('deposits')
-    .select('*')
-    .order('created_at', { ascending: false });
-
-  if (error) throw error;
-  return data;
+  const data = await adminAPI.getDeposits();
+  return data.deposits;
 };
 
-// Fetch all user withdrawals (usando supabaseAdmin)
+// Fetch all user withdrawals via API
 const fetchAllWithdrawals = async () => {
-  const { data, error } = await supabaseAdmin
-    .from('withdrawals')
-    .select('*')
-    .order('created_at', { ascending: false });
-
-  if (error) throw error;
-  return data;
+  const data = await adminAPI.getWithdrawals();
+  return data.withdrawals;
 };
 
-// Fetch all user investments (usando supabaseAdmin)
+// Fetch all user investments via API
 const fetchAllInvestments = async () => {
-  const { data, error } = await supabaseAdmin
-    .from('investments')
-    .select('*')
-    .order('created_at', { ascending: false });
-
-  if (error) throw error;
-  return data;
+  const data = await adminAPI.getInvestments();
+  return data.investments;
 };
 
-// Update user status (usando supabaseAdmin)
+// Update user status via API
 const updateUserStatus = async ({ userId, status }) => {
-  const { data, error } = await supabaseAdmin
-    .from('profiles')
-    .update({ status })
-    .eq('id', userId)
-    .select()
-    .single();
-
-  if (error) throw error;
-  return data;
+  return await adminAPI.updateUser(userId, { status });
 };
 
-// Update user role (usando supabaseAdmin)
+// Update user role via API
 const updateUserRole = async ({ userId, role }) => {
-  const { data, error } = await supabaseAdmin
-    .from('profiles')
-    .update({ role })
-    .eq('id', userId)
-    .select()
-    .single();
-
-  if (error) throw error;
-  return data;
+  return await adminAPI.updateUser(userId, { role });
 };
 
-// Delete user (usando supabaseAdmin)
+// Delete user via API
 const deleteUser = async (userId) => {
-  const { error } = await supabaseAdmin
-    .from('profiles')
-    .delete()
-    .eq('id', userId);
-
-  if (error) throw error;
-  return userId;
+  return await adminAPI.deleteUser(userId);
 };
 
-// Create new user (usando supabaseAdmin)
+// Create new user via API
 const createUser = async (userData) => {
-  const { data, error } = await supabaseAdmin
-    .from('profiles')
-    .insert({
-      full_name: userData.full_name,
-      email: userData.email,
-      document_number: userData.document_number,
-      phone: userData.phone,
-      status: userData.status || 'active',
-      role: userData.role || 'user',
-      referral_code: userData.referral_code || null,
-      referred_by: userData.referred_by || null,
-      available_balance: 0,
-      total_earned: 0
-    })
-    .select()
-    .single();
-
-  if (error) throw error;
-  return data;
+  return await adminAPI.createUser(userData);
 };
 
-// Update user details (usando supabaseAdmin)
+// Update user details via API
 const updateUserDetails = async ({ userId, userData }) => {
-  const { data, error } = await supabaseAdmin
-    .from('profiles')
-    .update({
-      full_name: userData.full_name,
-      email: userData.email,
-      document_number: userData.document_number,
-      phone: userData.phone,
-      status: userData.status,
-      role: userData.role,
-      referral_code: userData.referral_code || null,
-      referred_by: userData.referred_by || null
-    })
-    .eq('id', userId)
-    .select()
-    .single();
-
-  if (error) throw error;
-  return data;
+  return await adminAPI.updateUser(userId, userData);
 };
 
 export default function AdminUsers() {
@@ -180,6 +103,7 @@ export default function AdminUsers() {
     status: 'active',
     role: 'user',
     referral_code: '',
+    referral_cod: '',
     referred_by: ''
   });
   const queryClient = useQueryClient();
@@ -314,6 +238,7 @@ export default function AdminUsers() {
       status: user.status || 'active',
       role: user.role || 'user',
       referral_code: user.referral_code || '',
+      referral_cod: user.referral_cod || '',
       referred_by: user.referred_by || ''
     });
     setShowEditDialog(true);
@@ -370,6 +295,15 @@ export default function AdminUsers() {
       <Badge variant={variants[role] || 'secondary'} className="className">
         {labels[role] || role}
       </Badge>
+    );
+  };
+
+  // Email verification status badge
+  const getEmailVerifiedBadge = (emailVerified) => {
+    return emailVerified ? (
+      <Badge variant="default" className="bg-green-100 text-green-800">Confirmado</Badge>
+    ) : (
+      <Badge variant="secondary" className="bg-yellow-100 text-yellow-800">Pendente</Badge>
     );
   };
 
@@ -546,6 +480,7 @@ export default function AdminUsers() {
                     <th className="text-left p-4">Usuário</th>
                     <th className="text-left p-4">Status</th>
                     <th className="text-left p-4">Role</th>
+                    <th className="text-left p-4">Email</th>
                     <th className="text-left p-4">Saldo</th>
                     <th className="text-left p-4">Cadastro</th>
                     <th className="text-left p-4">Ações</th>
@@ -565,6 +500,7 @@ export default function AdminUsers() {
                       </td>
                       <td className="p-4">{getStatusBadge(user.status)}</td>
                       <td className="p-4">{getRoleBadge(user.role)}</td>
+                      <td className="p-4">{getEmailVerifiedBadge(user.email_verified)}</td>
                       <td className="p-4">
                         <p className="font-mono">{formatCurrency(user.available_balance || 0)}</p>
                       </td>
@@ -808,7 +744,14 @@ export default function AdminUsers() {
                 <label className="block text-sm font-medium mb-2">Indicado por</label>
                 <Select
                   value={newUser.referred_by || "none"}
-                  onValueChange={(value) => setNewUser({...newUser, referred_by: value === "none" ? "" : value})}
+                  onValueChange={(value) => {
+                    const selectedReferrer = users.find(u => u.user_id === value);
+                    setNewUser({
+                      ...newUser,
+                      referred_by: value === "none" ? "" : value,
+                      referral_code: selectedReferrer?.referral_code || newUser.referral_code
+                    });
+                  }}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Selecione um usuário" />
@@ -920,15 +863,22 @@ export default function AdminUsers() {
                 <label className="block text-sm font-medium mb-2">Código de Indicação (próprio)</label>
                 <Input
                   value={editUserData.referral_code}
-                  onChange={(e) => setEditUserData({...editUserData, referral_code: e.target.value})}
-                  placeholder="Código do usuário"
+                  disabled
                 />
+                <p className="text-xs text-gray-500 mt-1">Código único do usuário</p>
               </div>
               <div>
                 <label className="block text-sm font-medium mb-2">Indicado por</label>
                 <Select
                   value={editUserData.referred_by || "none"}
-                  onValueChange={(value) => setEditUserData({...editUserData, referred_by: value === "none" ? "" : value})}
+                  onValueChange={(value) => {
+                    const selectedReferrer = users.find(u => u.user_id === value);
+                    setEditUserData({
+                      ...editUserData,
+                      referred_by: value === "none" ? "" : value,
+                      referral_cod: selectedReferrer?.referral_code || ""
+                    });
+                  }}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Selecione um usuário" />

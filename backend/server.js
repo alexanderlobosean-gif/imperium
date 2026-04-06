@@ -29,6 +29,7 @@ console.log('  SUPABASE_SERVICE_ROLE_KEY:', serviceRoleKey ? `✅ Existe (${serv
 const authRoutes = require('./routes/auth');
 const financialRoutes = require('./routes/financial');
 const networkRoutes = require('./routes/network');
+const adminRoutes = require('./routes/admin');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -138,6 +139,7 @@ app.use('/api/auth', authRoutes);
 // Rotas protegidas
 app.use('/api/financial', authenticateToken, financialRoutes);
 app.use('/api/network', authenticateToken, networkRoutes);
+app.use('/api/admin', authenticateToken, adminRoutes);
 
 // Health check
 app.get('/api/health', (req, res) => {

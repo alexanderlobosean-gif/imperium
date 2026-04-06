@@ -64,20 +64,16 @@ const Register = () => {
     setError('')
 
     try {
-      // Cadastrar direto no Supabase
-      const { data: authData, error: signUpError } = await supabase.auth.signUp({
+      // Cadastrar via backend API para criar profile com referral fields
+      const response = await authAPI.register({
         email: formData.email,
         password: formData.password,
-        options: {
-          data: {
-            full_name: formData.fullName
-          }
-        }
+        full_name: formData.fullName,
+        referral_code: formData.referralCode  // Código do indicador
       })
       
-      if (signUpError) {
-        console.error('Erro no cadastro Supabase:', signUpError)
-        setError(signUpError.message || 'Erro ao criar conta')
+      if (response.error) {
+        setError(response.error)
         setIsLoading(false)
         return
       }

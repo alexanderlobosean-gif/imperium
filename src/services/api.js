@@ -229,4 +229,70 @@ export const networkAPI = {
   }),
 };
 
-export default { authAPI, financialAPI, networkAPI };
+// API Admin
+export const adminAPI = {
+  // Users
+  getUsers: () => apiRequest('/admin/users'),
+  updateUser: (id, data) => apiRequest(`/admin/users/${id}`, {
+    method: 'PUT',
+    body: JSON.stringify(data),
+  }),
+  deleteUser: (id) => apiRequest(`/admin/users/${id}`, {
+    method: 'DELETE',
+  }),
+
+  // Deposits
+  getDeposits: () => apiRequest('/admin/deposits'),
+  updateDeposit: (id, data) => apiRequest(`/admin/deposits/${id}`, {
+    method: 'PUT',
+    body: JSON.stringify(data),
+  }),
+
+  // Withdrawals
+  getWithdrawals: () => apiRequest('/admin/withdrawals'),
+  updateWithdrawal: (id, data) => apiRequest(`/admin/withdrawals/${id}`, {
+    method: 'PUT',
+    body: JSON.stringify(data),
+  }),
+
+  // Investments/Yields
+  getInvestments: () => apiRequest('/admin/investments'),
+  getYields: () => apiRequest('/admin/yields'),
+  applyYield: (rate) => apiRequest('/admin/yields/apply', {
+    method: 'POST',
+    body: JSON.stringify({ rate }),
+  }),
+
+  // Plans
+  getPlans: () => apiRequest('/admin/plans'),
+  createPlan: (data) => apiRequest('/admin/plans', {
+    method: 'POST',
+    body: JSON.stringify(data),
+  }),
+  updatePlan: (id, data) => apiRequest(`/admin/plans/${id}`, {
+    method: 'PUT',
+    body: JSON.stringify(data),
+  }),
+  deletePlan: (id) => apiRequest(`/admin/plans/${id}`, {
+    method: 'DELETE',
+  }),
+
+  // Banking Accounts
+  getBankingAccounts: () => apiRequest('/admin/banking'),
+  createBankingAccount: (data) => apiRequest('/admin/banking', {
+    method: 'POST',
+    body: JSON.stringify(data),
+  }),
+  updateBankingAccount: (id, data) => apiRequest(`/admin/banking/${id}`, {
+    method: 'PUT',
+    body: JSON.stringify(data),
+  }),
+  deleteBankingAccount: (id) => apiRequest(`/admin/banking/${id}`, {
+    method: 'DELETE',
+  }),
+
+  // Dashboard Stats
+  getStats: () => apiRequest('/admin/stats'),
+};
+
+export default { authAPI, financialAPI, networkAPI, adminAPI };
