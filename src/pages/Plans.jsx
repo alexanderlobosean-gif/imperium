@@ -12,16 +12,10 @@ import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { toast } from 'sonner';
 
-// Fetch plans from database
+// Fetch plans from database via API
 const fetchPlans = async () => {
-  const { data, error } = await supabase
-    .from('plans')
-    .select('*')
-    .eq('is_active', true)
-    .order('sort_order', { ascending: true });
-
-  if (error) throw error;
-  return data;
+  const data = await financialAPI.getPlans();
+  return data.plans || [];
 };
 
 export default function Plans() {
@@ -63,21 +57,13 @@ export default function Plans() {
     console.error('Deposits query error:', depositsError);
   }
   
-  // Fetch user investments to calculate invested amount
+  // Fetch user investments via API
   const { data: investments = [], error: investmentsError } = useQuery({
     queryKey: ['investments', user?.id],
     queryFn: async () => {
-      console.log('Fetching investments for user:', user?.id);
-      const { data, error } = await supabase
-        .from('investments')
-        .select('*')
-        .eq('user_id', user?.id);
-      if (error) {
-        console.error('Error fetching investments:', error);
-        throw error;
-      }
-      console.log('Investments fetched:', data);
-      return data || [];
+      console.log('Fetching investments via API for user:', user?.id);
+      const data = await financialAPI.getInvestments();
+      return data.investments || [];
     },
     enabled: !!user?.id,
   });
@@ -165,43 +151,21 @@ export default function Plans() {
 
   const investMutation = useMutation({
     mutationFn: async (data) => {
-      console.log('Creating investment with data:', data);
+      console.log('Creating investment via API with data:', data);
       console.log('User ID:', user?.id);
       console.log('Plan data:', data?.plan);
       
-      // Prepare insert data matching actual table schema
-      const insertData = {
-        user_id: user?.id,
+      // Usar API para criar investimento
+      const result = await financialAPI.createInvestment({
         plan_slug: data?.plan?.slug || data?.plan?.id || 'basic',
         amount: data?.amount,
         client_share: data?.plan?.client_share || 50,
         company_share: data?.plan?.company_share || 50,
-        status: 'active',
         daily_yield: data?.plan?.base_rate || 0.01,
-      };
+      });
       
-      console.log('Insert data prepared:', insertData);
-      
-      // Create investment in Supabase
-      const { data: investment, error } = await supabase
-        .from('investments')
-        .insert(insertData)
-        .select()
-        .single();
-
-      if (error) {
-        console.error('Error creating investment:', error);
-        console.error('Error details:', error.message, error.code, error.details);
-        console.error('Full error object:', JSON.stringify(error, null, 2));
-        throw error;
-      }
-      
-      console.log('Investment created:', investment);
-      
-      // Generate commissions for the network
-      await generateNetworkCommissions(investment);
-      
-      return investment;
+      console.log('Investment created via API:', result);
+      return result.investment;
     },
     onSuccess: (investment) => {
       console.log('Investment mutation success:', investment);

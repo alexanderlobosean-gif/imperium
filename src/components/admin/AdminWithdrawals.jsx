@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabaseAdmin } from '@/lib/supabase';
-import { financialAPI } from '@/services/api';
+import { adminAPI } from '@/services/api';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -12,41 +11,18 @@ import { toast } from 'sonner';
 import { formatCurrency } from '@/lib/planConfig';
 import { Search, Filter, Eye, CheckCircle, XCircle, Clock, Wallet, ExternalLink } from 'lucide-react';
 
-// Fetch withdrawals (usando supabaseAdmin para bypass RLS)
+// Fetch withdrawals via API
 const fetchWithdrawals = async () => {
-  const { data, error } = await supabaseAdmin
-    .from('withdrawals')
-    .select(`
-      *,
-      profiles!inner(
-        full_name,
-        email
-      )
-    `)
-    .order('created_at', { ascending: false });
-
-  if (error) throw error;
-  return data;
+  const data = await adminAPI.getWithdrawals();
+  return data.withdrawals;
 };
 
-// Update withdrawal status via API backend
-const approveWithdrawalAPI = async ({ withdrawalId, action, adminNotes }) => {
-  console.log('� Chamando API de aprovação:', { withdrawalId, action, adminNotes });
-  
-  const response = await financialAPI.approveWithdrawal({
-    withdrawal_id: withdrawalId,
-    action: action, // 'approve' ou 'reject'
-    notes: adminNotes
+// Update withdrawal status via API
+const updateWithdrawalStatus = async ({ withdrawalId, status, adminNotes }) => {
+  return await adminAPI.updateWithdrawal(withdrawalId, {
+    status,
+    admin_notes: adminNotes
   });
-  
-  console.log('📊 Resposta API:', response);
-
-  if (response.error) {
-    console.error('❌ Erro da API:', response.error);
-    throw new Error(response.error);
-  }
-  
-  return response.withdrawal;
 };
 
 export default function AdminWithdrawals() {
@@ -64,7 +40,7 @@ export default function AdminWithdrawals() {
   });
 
   const updateStatusMutation = useMutation({
-    mutationFn: approveWithdrawalAPI,
+    mutationFn: updateWithdrawalStatus,
     onSuccess: (data) => {
       // Invalidar query do admin
       queryClient.invalidateQueries({ queryKey: ['admin-withdrawals'] });
@@ -104,7 +80,7 @@ export default function AdminWithdrawals() {
   const handleApprove = () => {
     updateStatusMutation.mutate({
       withdrawalId: selectedWithdrawal.id,
-      action: 'approve',
+      status: 'approved',
       adminNotes: adminNotes
     });
   };
@@ -112,7 +88,7 @@ export default function AdminWithdrawals() {
   const handleReject = () => {
     updateStatusMutation.mutate({
       withdrawalId: selectedWithdrawal.id,
-      action: 'reject',
+      status: 'rejected',
       adminNotes: adminNotes
     });
   };

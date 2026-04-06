@@ -1,7 +1,8 @@
 import React, { useState } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { Eye, EyeOff, Shield, Lock, Mail, User } from 'lucide-react'
-import { authService } from '@/api/supabaseServices'
+import { authAPI } from '@/services/api'
+import { supabase } from '@/lib/supabase'
 
 const Register = () => {
   const [searchParams] = useSearchParams()
@@ -19,7 +20,6 @@ const Register = () => {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState('')
-  const [success, setSuccess] = useState(false)
   const navigate = useNavigate()
 
   const handleChange = (e) => {
@@ -64,53 +64,41 @@ const Register = () => {
     setError('')
 
     try {
-      const { data, error } = await authService.signUp(
-        formData.email,
-        formData.password,
-        {
-          full_name: formData.fullName,
-          referral_code: formData.referralCode
-        }
-      )
+      // Cadastrar via backend API para criar profile com referral fields
+      const response = await authAPI.register({
+        email: formData.email,
+        password: formData.password,
+        full_name: formData.fullName,
+        referral_code: formData.referralCode  // Código do indicador
+      })
       
-      if (error) {
-        setError(error.message)
-      } else {
-        setSuccess(true)
-        setTimeout(() => {
-          navigate('/login')
-        }, 3000)
+      if (response.error) {
+        setError(response.error)
+        setIsLoading(false)
+        return
       }
+
+      // Login automático após cadastro
+      const { error: loginError } = await supabase.auth.signInWithPassword({
+        email: formData.email,
+        password: formData.password
+      })
+
+      if (loginError) {
+        console.error('Erro no login automático:', loginError)
+        navigate('/login')
+        return
+      }
+
+      // Redirecionar para dashboard
+      navigate('/dashboard')
+      
     } catch (err) {
-      setError('Erro ao criar conta. Tente novamente.')
+      console.error('Erro no cadastro:', err)
+      setError(err.message || 'Erro ao criar conta. Tente novamente.')
     } finally {
       setIsLoading(false)
     }
-  }
-
-  if (success) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center p-4">
-        <div className="w-full max-w-md">
-          <div className="bg-white rounded-2xl p-8 text-center">
-            <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <svg className="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-              </svg>
-            </div>
-            <h2 className="text-2xl font-bold text-slate-900 mb-2">
-              Conta Criada com Sucesso!
-            </h2>
-            <p className="text-slate-600 mb-4">
-              Enviamos um email de confirmação para {formData.email}
-            </p>
-            <p className="text-sm text-slate-500">
-              Redirecionando para a página de login...
-            </p>
-          </div>
-        </div>
-      </div>
-    )
   }
 
   return (
