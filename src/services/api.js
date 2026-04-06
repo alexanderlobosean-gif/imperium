@@ -138,6 +138,12 @@ export const financialAPI = {
   // Listar depósitos pendentes (Admin)
   getPendingDeposits: () => apiRequest('/financial/deposits/pending'),
   
+  // Listar depósitos do usuário
+  getDeposits: (params = {}) => {
+    const query = new URLSearchParams(params).toString();
+    return apiRequest(`/financial/deposits?${query}`);
+  },
+  
   // Solicitar saque
   withdrawal: (data) => apiRequest('/financial/withdrawal', {
     method: 'POST',
@@ -153,6 +159,33 @@ export const financialAPI = {
   // Listar saques pendentes (Admin)
   getPendingWithdrawals: () => apiRequest('/financial/withdrawals/pending'),
   
+  // Listar saques do usuário
+  getWithdrawals: (params = {}) => {
+    const query = new URLSearchParams(params).toString();
+    return apiRequest(`/financial/withdrawals?${query}`);
+  },
+  
+  // Listar transferências do usuário
+  getTransfers: (params = {}) => {
+    const query = new URLSearchParams(params).toString();
+    return apiRequest(`/financial/transfers?${query}`);
+  },
+  
+  // Listar investimentos do usuário
+  getInvestments: (params = {}) => {
+    const query = new URLSearchParams(params).toString();
+    return apiRequest(`/financial/investments?${query}`);
+  },
+  
+  // Criar novo investimento
+  createInvestment: (data) => apiRequest('/financial/investments', {
+    method: 'POST',
+    body: JSON.stringify(data),
+  }),
+  
+  // Buscar contas bancárias do admin
+  getAdminAccounts: () => apiRequest('/financial/admin-accounts'),
+  
   // Consultar saldo
   getBalance: () => apiRequest('/financial/balance'),
   
@@ -161,6 +194,24 @@ export const financialAPI = {
     const query = new URLSearchParams(params).toString();
     return apiRequest(`/financial/transactions?${query}`);
   },
+  
+  // Buscar dados da rede/network
+  getNetwork: () => apiRequest('/financial/network'),
+  
+  // Buscar planos disponíveis
+  getPlans: () => apiRequest('/financial/plans'),
+  
+  // Buscar perfil do usuário
+  getProfile: () => apiRequest('/financial/profile'),
+  
+  // Atualizar perfil do usuário
+  updateProfile: (data) => apiRequest('/financial/profile', {
+    method: 'PUT',
+    body: JSON.stringify(data),
+  }),
+  
+  // Buscar código de indicação
+  getReferral: () => apiRequest('/financial/referral'),
 };
 
 // API de Rede MLM

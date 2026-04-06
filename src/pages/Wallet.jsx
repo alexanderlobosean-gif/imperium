@@ -198,88 +198,64 @@ const calculateCRC16 = (data) => {
   return crc.toString(16).toUpperCase().padStart(4, '0');
 };
 
-// Fetch admin banking accounts
+// Fetch admin banking accounts via API
 const fetchAdminBankingAccounts = async () => {
-  console.log('🔍 Buscando contas admin...');
-  
-  // Simplificar: buscar apenas contas ativas
-  const { data, error } = await supabase
-    .from('admin_banking_accounts')
-    .select('*')
-    .eq('is_active', true)
-    .limit(1);
-
-  console.log('📊 Resultado query admin accounts:', { data, error });
-  
-  if (error) {
+  console.log('🔍 Buscando contas admin via API...');
+  try {
+    const response = await financialAPI.getAdminAccounts();
+    console.log('✅ Contas admin encontradas:', response.accounts);
+    return response.accounts || [];
+  } catch (error) {
     console.error('❌ Erro ao buscar contas admin:', error);
-    // Retornar array vazio em vez de throw para não quebrar a UI
     return [];
   }
-  
-  console.log('✅ Contas admin encontradas:', data);
-  return data || [];
 };
 
-// Fetch user transactions
-const fetchUserTransactions = async (userId) => {
-  const { data, error } = await supabase
-    .from('transactions')
-    .select('*')
-    .eq('user_id', userId)
-    .order('created_at', { ascending: false })
-    .limit(20);
-
-  if (error) throw error;
-  return data || [];
+// Fetch user transactions via API
+const fetchUserTransactions = async () => {
+  const response = await financialAPI.getTransactions({ limit: 20 });
+  return response.transactions || [];
 };
 
-// Fetch user investments
-const fetchUserInvestments = async (userId) => {
-  const { data, error } = await supabase
-    .from('investments')
-    .select('*')
-    .eq('user_id', userId)
-    .eq('status', 'active')
-    .order('created_at', { ascending: false });
-
-  if (error) throw error;
-  return data || [];
+// Fetch user investments via API
+const fetchUserInvestments = async () => {
+  const response = await financialAPI.getInvestments({ status: 'active' });
+  return response.investments || [];
 };
 
-// Find user by email
+// Fetch user deposits via API
+const fetchUserDeposits = async () => {
+  const response = await financialAPI.getDeposits({ status: 'confirmed' });
+  return response.deposits || [];
+};
+
+// Fetch user withdrawals via API
+const fetchUserWithdrawals = async () => {
+  const response = await financialAPI.getWithdrawals();
+  return response.withdrawals || [];
+};
+
+// Fetch user transfers via API
+const fetchUserTransfers = async () => {
+  const response = await financialAPI.getTransfers({ limit: 20 });
+  return response.transfers || [];
+};
+
+// Find user by email via API
 const findUserByEmail = async (email) => {
-  const { data, error } = await supabase
-    .from('profiles')
-    .select('user_id, email, full_name')
-    .eq('email', email)
-    .single();
-  
-  if (error) throw new Error('Usuário não encontrado');
-  return data;
-};
-
-// Fetch user transfers
-const fetchUserTransfers = async (userId) => {
-  const { data, error } = await supabase
-    .from('transfers')
-    .select('*')
-    .or(`from_user_id.eq.${userId},to_user_id.eq.${userId}`)
-    .order('created_at', { ascending: false })
-    .limit(20);
-
-  if (error) throw error;
-  return data || [];
+  // Usar API ao invés de Supabase direto
+  const response = await fetch('/api/auth/find-user', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email })
+  });
+  if (!response.ok) throw new Error('Usuário não encontrado');
+  return response.json();
 };
 
 // Create transfer via API backend
 const createTransfer = async (transferData) => {
   return await financialAPI.transfer(transferData);
-};
-
-// Create deposit via API backend
-const createDeposit = async (depositData) => {
-  return await financialAPI.deposit(depositData);
 };
 
 // Create withdrawal via API backend
@@ -339,63 +315,27 @@ export default function Wallet() {
 
   const { data: transactions = [] } = useQuery({
     queryKey: ['transactions', user?.id],
-    queryFn: () => fetchUserTransactions(user?.id),
+    queryFn: fetchUserTransactions,
     enabled: !!user?.id,
   });
 
   const { data: investments = [] } = useQuery({
     queryKey: ['investments', user?.id],
-    queryFn: () => fetchUserInvestments(user?.id),
+    queryFn: fetchUserInvestments,
     enabled: !!user?.id,
   });
 
-  // Buscar depósitos confirmados para calcular saldo real
+  // Buscar depósitos confirmados via API
   const { data: confirmedDeposits = [] } = useQuery({
     queryKey: ['confirmed-deposits', user?.id],
-    queryFn: async () => {
-      console.log('🔍 Buscando depósitos para user_id:', user?.id);
-      const { data, error } = await supabase
-        .from('deposits')
-        .select('amount, id, created_at, status, description')
-        .eq('user_id', user?.id)
-        .eq('status', 'confirmed');
-      if (error) {
-        console.error('❌ Erro ao buscar depósitos:', {
-          code: error.code,
-          message: error.message,
-          details: error.details,
-          hint: error.hint
-        });
-        throw error;
-      }
-      console.log('✅ Depósitos encontrados:', data?.length || 0, data);
-      return data || [];
-    },
+    queryFn: fetchUserDeposits,
     enabled: !!user?.id,
   });
 
-  // Buscar saques do usuário
+  // Buscar saques do usuário via API
   const { data: withdrawals = [] } = useQuery({
     queryKey: ['withdrawals', user?.id],
-    queryFn: async () => {
-      console.log('🔍 Buscando saques para user_id:', user?.id);
-      const { data, error } = await supabase
-        .from('withdrawals')
-        .select('*')
-        .eq('user_id', user?.id)
-        .order('created_at', { ascending: false });
-      if (error) {
-        console.error('❌ Erro ao buscar saques:', {
-          code: error.code,
-          message: error.message,
-          details: error.details,
-          hint: error.hint
-        });
-        throw error;
-      }
-      console.log('✅ Saques encontrados:', data?.length || 0, data);
-      return data || [];
-    },
+    queryFn: fetchUserWithdrawals,
     enabled: !!user?.id,
   });
 
@@ -405,23 +345,21 @@ export default function Wallet() {
     retry: 2,
     retryDelay: 2000,
     staleTime: 300000, // 5 minutos
-    cacheTime: 600000, // 10 minutos
     enabled: !!user // Só executar se tiver usuário
   });
 
-  // Query para buscar transferências do usuário
+  // Query para buscar transferências do usuário via API
   const { data: transfers = [], isLoading: isLoadingTransfers } = useQuery({
     queryKey: ['transfers', user?.id],
-    queryFn: async () => {
-      if (!user?.id) return [];
-      const data = await fetchUserTransfers(user.id);
-      return data;
-    },
+    queryFn: fetchUserTransfers,
     enabled: !!user?.id,
   });
 
   const createDepositMutation = useMutation({
-    mutationFn: createDeposit,
+    mutationFn: async (depositData) => {
+      console.log('🚀 Criando depósito:', depositData);
+      return await financialAPI.createUSDTDeposit(depositData);
+    },
     onSuccess: (data) => {
       console.log('✅ Depósito criado com sucesso:', data);
       queryClient.invalidateQueries({ queryKey: ['transactions', user?.id] });

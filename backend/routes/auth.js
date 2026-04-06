@@ -9,7 +9,8 @@ const registerSchema = Joi.object({
   email: Joi.string().email().required(),
   password: Joi.string().min(6).required(),
   full_name: Joi.string().min(2).max(100).required(),
-  sponsor_email: Joi.string().email().optional()
+  sponsor_email: Joi.string().email().optional(),
+  referral_code: Joi.string().optional()
 });
 
 const loginSchema = Joi.object({
@@ -27,7 +28,7 @@ router.post('/register', async (req, res) => {
       return res.status(400).json({ error: error.details[0].message });
     }
 
-    const { email, password, full_name, sponsor_email } = req.body;
+    const { email, password, full_name, sponsor_email, referral_code } = req.body;
 
     // Verificar se usuário já existe
     const { data: existingUser } = await req.supabase
@@ -40,45 +41,34 @@ router.post('/register', async (req, res) => {
       return res.status(400).json({ error: 'Email já cadastrado' });
     }
 
-    // Criar usuário no Supabase Auth
-    const { data: authData, error: authError } = await req.supabase.auth.signUp({
+    // Criar usuário no Supabase Auth usando ANON key (igual ao frontend)
+    const { data: authData, error: authError } = await req.supabaseAuth.auth.signUp({
       email,
       password,
       options: {
-        data: {
-          full_name
-        }
+        data: { full_name }
       }
     });
 
     if (authError) {
-      console.error('Erro no cadastro:', authError);
-      return res.status(500).json({ error: 'Erro ao criar conta' });
+      console.error('❌ Erro no cadastro:', authError);
+      return res.status(500).json({ 
+        error: 'Erro ao criar conta',
+        details: authError.message 
+      });
     }
 
-    if (!authData.user) {
+    if (!authData || !authData.user) {
       return res.status(400).json({ error: 'Erro ao criar usuário' });
     }
 
-    // Criar perfil
-    const { error: profileError } = await req.supabase
-      .from('profiles')
-      .insert({
-        user_id: authData.user.id,
-        email,
-        full_name,
-        sponsor_email
-      });
+    const newUser = authData.user;
 
-    if (profileError) {
-      console.error('Erro ao criar perfil:', profileError);
-      // Tentar deletar usuário do auth se perfil falhar
-      await req.supabase.auth.admin.deleteUser(authData.user.id);
-      return res.status(500).json({ error: 'Erro ao criar perfil' });
-    }
-
-    // Se tem sponsor, adicionar à rede
+    // Aguardar trigger criar perfil e adicionar à rede se tiver sponsor
     if (sponsor_email) {
+      // Aguardar um momento para o trigger criar o perfil
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
       const { data: sponsor } = await req.supabase
         .from('profiles')
         .select('user_id')
@@ -88,36 +78,21 @@ router.post('/register', async (req, res) => {
       if (sponsor) {
         const { error: networkError } = await req.supabase
           .rpc('add_to_network', {
-            p_user_id: authData.user.id,
+            p_user_id: newUser.id,
             p_sponsor_id: sponsor.user_id
           });
 
         if (networkError) {
           console.error('Erro ao adicionar à rede:', networkError);
-          // Não falhar o cadastro por causa disso
         }
       }
-    }
-
-    // Inicializar saldos
-    const { error: balanceError } = await req.supabase
-      .rpc('update_wallet_balance', {
-        p_user_id: authData.user.id,
-        p_wallet_delta: 0,
-        p_yield_delta: 0,
-        p_bonus_delta: 0,
-        p_locked_delta: 0
-      });
-
-    if (balanceError) {
-      console.error('Erro ao inicializar saldos:', balanceError);
     }
 
     res.status(201).json({
       message: 'Usuário criado com sucesso',
       user: {
-        id: authData.user.id,
-        email: authData.user.email,
+        id: newUser.id,
+        email: newUser.email,
         full_name
       }
     });
@@ -140,8 +115,8 @@ router.post('/login', async (req, res) => {
 
     const { email, password } = req.body;
 
-    // Fazer login no Supabase Auth
-    const { data: authData, error: authError } = await req.supabase.auth.signInWithPassword({
+    // Fazer login no Supabase Auth usando ANON key
+    const { data: authData, error: authError } = await req.supabaseAuth.auth.signInWithPassword({
       email,
       password
     });
@@ -180,7 +155,7 @@ router.post('/login', async (req, res) => {
 // @access  Private
 router.post('/logout', async (req, res) => {
   try {
-    const { error } = await req.supabase.auth.signOut();
+    const { error } = await req.supabaseAuth.auth.signOut();
 
     if (error) {
       console.error('Erro no logout:', error);

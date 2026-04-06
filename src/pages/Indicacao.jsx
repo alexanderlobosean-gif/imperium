@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/lib/AuthContext';
-import { supabase } from '@/lib/supabase'; 
+import { financialAPI } from '@/services/api';
 import { Copy, CheckCheck, Users, Share2, Link } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -8,62 +8,29 @@ export default function Indicacao() {
   const { user, setUser } = useAuth();
   const [copied, setCopied] = useState(false);
   const [generatingCode, setGeneratingCode] = useState(false);
-  const [referralCode, setReferralCode] = useState(user?.referral_code || null);
-
-  const generateReferralCode = async () => {
-    if (generatingCode) return;
-    setGeneratingCode(true);
-    try {
-      const code = (user?.full_name?.replace(/\s+/g, '').toUpperCase().slice(0, 4) || 'USER') +
-        Math.random().toString(36).substring(2, 7).toUpperCase();
-      
-      // Salvar código no Supabase
-      const { error } = await supabase
-        .from('profiles')
-        .update({ referral_code: code })
-        .eq('user_id', user.id);
-      
-      if (error) throw error;
-      
-      setReferralCode(code);
-      setUser({ ...user, referral_code: code });
-      toast.success('Código de indicação gerado com sucesso!');
-    } catch (e) {
-      toast.error('Erro ao gerar código de indicação: ' + e.message);
-    } finally {
-      setGeneratingCode(false);
-    }
-  };
+  const [referralData, setReferralData] = useState(null);
 
   useEffect(() => {
-    // Fetch referral code from Supabase if not in user context
-    const fetchReferralCode = async () => {
-      if (user && !user.referral_code && !referralCode) {
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('referral_code, full_name')
-          .eq('user_id', user.id)
-          .single();
-        
-        if (profile?.referral_code) {
-          setReferralCode(profile.referral_code);
-          // Update user context
-          setUser({ ...user, referral_code: profile.referral_code, full_name: profile.full_name });
-        } else {
-          // Generate code if doesn't exist
-          generateReferralCode();
+    const fetchReferral = async () => {
+      if (user?.id) {
+        try {
+          setGeneratingCode(true);
+          const data = await financialAPI.getReferral();
+          setReferralData(data);
+          setGeneratingCode(false);
+        } catch (e) {
+          console.error('Erro ao buscar referral:', e);
+          setGeneratingCode(false);
         }
-      } else if (user?.referral_code) {
-        setReferralCode(user.referral_code);
       }
     };
+    
+    fetchReferral();
+  }, [user?.id]);
 
-    fetchReferralCode();
-  }, [user]);
-
-  const referralLink = referralCode
-    ? `${window.location.origin}/register?ref=${referralCode}`
-    : '';
+  const referralLink = referralData?.referral_link || 
+    (user?.referral_code ? `${window.location.origin}/register?ref=${user.referral_code}` : '');
+  const referralCode = referralData?.referral_code || user?.referral_code || '';
 
   const handleCopy = () => {
     if (!referralLink) return;
