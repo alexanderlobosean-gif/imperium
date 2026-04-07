@@ -292,6 +292,7 @@ export default function Wallet() {
   const [usdtQRCode, setUsdtQRCode] = useState(null);
   const [usdtWallet, setUsdtWallet] = useState('');
   const [pendingDepositId, setPendingDepositId] = useState(null);
+  const [transactionHash, setTransactionHash] = useState('');
 
   // Deposit
   const [depositAmount, setDepositAmount] = useState('');
@@ -384,7 +385,19 @@ export default function Wallet() {
       return await financialAPI.createUSDTDeposit(depositData);
     },
     onSuccess: (data) => {
-      console.log('✅ Depósito USDT criado:', data);
+      console.log('✅ Depósito USDT criado - DADOS COMPLETOS:', data);
+      console.log('  - deposit:', data.deposit);
+      console.log('  - instructions:', data.instructions);
+      console.log('  - qr_code_url:', data.deposit?.qr_code_url);
+      console.log('  - wallet:', data.instructions?.wallet);
+      console.log('  - deposit_id:', data.deposit?.id);
+      
+      if (!data.deposit?.qr_code_url) {
+        console.error('❌ ERRO: qr_code_url não encontrado na resposta!');
+        toast.error('Erro: QR Code não retornado pelo servidor');
+        return;
+      }
+      
       setUsdtQRCode(data.deposit.qr_code_url);
       setUsdtWallet(data.instructions.wallet);
       setPendingDepositId(data.deposit.id);
@@ -411,6 +424,13 @@ export default function Wallet() {
   useEffect(() => {
     console.log('📊 Admin accounts carregadas:', adminAccounts);
   }, [adminAccounts]);
+
+  useEffect(() => {
+    console.log('🔄 showUSDTDeposit mudou:', showUSDTDeposit);
+    console.log('   - usdtQRCode:', usdtQRCode ? 'presente' : 'nulo');
+    console.log('   - usdtWallet:', usdtWallet);
+    console.log('   - pendingDepositId:', pendingDepositId);
+  }, [showUSDTDeposit, usdtQRCode, usdtWallet, pendingDepositId]);
 
   // Create withdrawal mutation
   const createWithdrawalMutation = useMutation({
@@ -502,6 +522,29 @@ export default function Wallet() {
     onError: (error) => {
       console.error('❌ Erro ao confirmar:', error);
       toast.error(`Código inválido ou expirado: ${error.message}`);
+    }
+  });
+
+  // Mutation para enviar Transaction Hash do depósito USDT
+  const submitTransactionHashMutation = useMutation({
+    mutationFn: async ({ depositId, transactionHash }) => {
+      console.log('🚀 Enviando Transaction Hash:', { depositId, transactionHash });
+      const response = await financialAPI.submitTransactionHash({
+        deposit_id: depositId,
+        transaction_hash: transactionHash
+      });
+      return response;
+    },
+    onSuccess: (data) => {
+      console.log('✅ Transaction Hash enviado:', data);
+      toast.success('Transaction Hash enviado com sucesso! Aguarde aprovação do admin.');
+      setTransactionHash('');
+      // Invalidar queries para forçar refresh
+      queryClient.invalidateQueries({ queryKey: ['confirmed-deposits', user?.id] });
+    },
+    onError: (error) => {
+      console.error('❌ Erro ao enviar Transaction Hash:', error);
+      toast.error(`Erro ao enviar: ${error.message}`);
     }
   });
 
@@ -830,7 +873,7 @@ export default function Wallet() {
                   </div>
                   <div className="text-center space-y-3">
                     <div className="bg-white p-3 rounded-lg shadow-sm">
-                      <p className="text-xs text-muted-foreground mb-1">Carteira USDT (TRC20):</p>
+                      <p className="text-xs text-muted-foreground mb-1">Carteira USDT (BEP20):</p>
                       <div className="flex items-center gap-2">
                         <p className="text-xs font-mono text-gray-800 break-all flex-1">
                           {usdtWallet}
@@ -864,6 +907,46 @@ export default function Wallet() {
                         ID do Depósito: {pendingDepositId}
                       </p>
                     )}
+                    {/* Transaction Hash Input */}
+                    <div className="bg-white p-3 rounded-lg shadow-sm mt-4 border border-gray-200">
+                      <label htmlFor="transaction-hash" className="text-xs text-gray-700 mb-1 block font-medium">
+                        Transaction Hash (TXID):
+                      </label>
+                      <Input
+                        id="transaction-hash"
+                        placeholder="Cole o hash da transação blockchain"
+                        value={transactionHash}
+                        onChange={(e) => setTransactionHash(e.target.value)}
+                        className="text-sm font-mono bg-white text-gray-900 border-gray-300 placeholder:text-gray-400"
+                      />
+                      <p className="text-xs text-gray-500 mt-1">
+                        Após enviar o USDT, cole o Transaction Hash aqui
+                      </p>
+                    </div>
+                    <Button
+                      onClick={() => {
+                        if (!transactionHash.trim()) {
+                          toast.error('Digite o Transaction Hash');
+                          return;
+                        }
+                        submitTransactionHashMutation.mutate({
+                          depositId: pendingDepositId,
+                          transactionHash: transactionHash.trim()
+                        });
+                      }}
+                      disabled={!pendingDepositId || !transactionHash.trim() || submitTransactionHashMutation.isPending}
+                      className="mt-2 w-full"
+                      variant="default"
+                    >
+                      {submitTransactionHashMutation.isPending ? (
+                        <>
+                          <div className="animate-spin mr-2 h-4 w-4 border-2 border-white border-t-transparent rounded-full" />
+                          Enviando...
+                        </>
+                      ) : (
+                        'Enviar Transaction Hash'
+                      )}
+                    </Button>
                     <Button
                       variant="outline"
                       size="sm"
@@ -872,6 +955,8 @@ export default function Wallet() {
                         setUsdtQRCode(null);
                         setDepositAmount('');
                         setAcceptedTerms(false);
+                        setTransactionHash('');
+                        setPendingDepositId(null);
                       }}
                       className="mt-2"
                     >
@@ -906,17 +991,22 @@ export default function Wallet() {
                         <p className="text-xs text-muted-foreground">
                           {new Date(deposit.created_at).toLocaleDateString('pt-BR')}
                         </p>
+                        {deposit.transaction_hash && (
+                          <p className="text-xs text-muted-foreground font-mono mt-1">
+                            TX: {deposit.transaction_hash.substring(0, 20)}...
+                          </p>
+                        )}
                       </div>
                       <div className="text-right">
                         <span className={`text-xs px-2 py-1 rounded ${
-                          deposit.status === 'approved' 
+                          deposit.status === 'confirmed' || deposit.status === 'approved'
                             ? 'bg-green-100 text-green-700' 
                             : deposit.status === 'rejected'
                             ? 'bg-red-100 text-red-700'
                             : 'bg-amber-100 text-amber-700'
                         }`}>
-                          {deposit.status === 'approved' 
-                            ? 'Aprovado' 
+                          {deposit.status === 'confirmed' || deposit.status === 'approved'
+                            ? 'Confirmado' 
                             : deposit.status === 'rejected'
                             ? 'Rejeitado'
                             : 'Pendente'}
@@ -997,13 +1087,13 @@ export default function Wallet() {
                     }}
                     className="w-full p-2 border rounded-md bg-background text-foreground border-border focus:outline-none focus:ring-2 focus:ring-gold/50"
                   >
-                    <option value="usdt" className="bg-background text-foreground">USDT (TRC20)</option>
+                    <option value="usdt" className="bg-background text-foreground">USDT (BEP20)</option>
                     <option value="pix" className="bg-background text-foreground">PIX</option>
                   </select>
                 </div>
                 <div>
                   <label htmlFor="withdraw-wallet" className="text-sm font-medium">
-                    {withdrawMethod === 'usdt' ? 'Carteira USDT (TRC20)' : 'Chave PIX'}
+                    {withdrawMethod === 'usdt' ? 'Carteira USDT (BEP20)' : 'Chave PIX'}
                   </label>
                   <Input
                     id="withdraw-wallet"

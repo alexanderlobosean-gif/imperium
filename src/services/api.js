@@ -129,6 +129,12 @@ export const financialAPI = {
     body: JSON.stringify(data),
   }),
 
+  // Enviar Transaction Hash do depósito USDT
+  submitTransactionHash: (data) => apiRequest('/financial/deposit/transaction-hash', {
+    method: 'POST',
+    body: JSON.stringify(data),
+  }),
+
   // Aprovar/Rejeitar depósito (Admin)
   approveDeposit: (data) => apiRequest('/financial/deposit/approve', {
     method: 'POST',
