@@ -90,18 +90,26 @@ export default function Dashboard() {
     enabled: !!user?.id,
   });
 
-  const { data: transactions = [] } = useQuery({
+  const { data: transactions = [], isLoading: isLoadingTransactions } = useQuery({
     queryKey: ['transactions', user?.id],
     queryFn: async () => {
       try {
-        const txs = await financialAPI.getTransactions({ limit: 20 });
+        const response = await financialAPI.getTransactions({ limit: 20 });
+        console.log('🔍 Dashboard - Transações retornadas:', response);
+        
+        // A API pode retornar {transactions: [...]} ou [...]
+        const txs = response?.transactions || response || [];
+        console.log('🔍 Dashboard - Processando transações:', txs?.length || 0, 'itens');
+        
         return Array.isArray(txs) ? txs.slice(0, 10) : [];
       } catch (error) {
-        console.error('Error fetching transactions:', error);
+        console.error('❌ Error fetching transactions:', error);
         return [];
       }
     },
     enabled: !!user?.id,
+    refetchOnMount: 'always',
+    staleTime: 0,
   });
 
   const { data: balanceData = {} } = useQuery({

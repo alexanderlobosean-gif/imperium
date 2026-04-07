@@ -909,14 +909,14 @@ export default function Wallet() {
                       </div>
                       <div className="text-right">
                         <span className={`text-xs px-2 py-1 rounded ${
-                          deposit.status === 'approved' 
+                          deposit.status === 'confirmed' || deposit.status === 'approved'
                             ? 'bg-green-100 text-green-700' 
                             : deposit.status === 'rejected'
                             ? 'bg-red-100 text-red-700'
                             : 'bg-amber-100 text-amber-700'
                         }`}>
-                          {deposit.status === 'approved' 
-                            ? 'Aprovado' 
+                          {deposit.status === 'confirmed' || deposit.status === 'approved'
+                            ? 'Confirmado' 
                             : deposit.status === 'rejected'
                             ? 'Rejeitado'
                             : 'Pendente'}
