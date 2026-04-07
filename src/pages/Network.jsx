@@ -64,7 +64,7 @@ export default function Network() {
   const unlockedLevels = activeInvestment?.unlocked_levels || 0;
 
   const referralLink = referralData?.referral_link || 
-    (user?.referral_code ? `${window.location.origin}/register?ref=${user.referral_code}` : '');
+    (user?.referral_code ? `${import.meta.env.VITE_APP_URL || window.location.origin}/register?ref=${user.referral_code}` : '');
 
   const handleCopy = () => {
     navigator.clipboard.writeText(referralLink);

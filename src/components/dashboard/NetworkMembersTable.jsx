@@ -66,7 +66,7 @@ export default function NetworkMembersTable() {
     investmentByUser[inv.user_id] = inv;
   });
 
-  const totalInvested = networkMembers.reduce((sum, m) => {
+  const totalInvested = (Array.isArray(networkMembers) ? networkMembers : []).reduce((sum, m) => {
     const inv = investmentByUser[m.referred_id];
     return sum + (inv?.amount || 0);
   }, 0);
@@ -93,7 +93,7 @@ export default function NetworkMembersTable() {
             </tr>
           </thead>
           <tbody>
-            {networkMembers.sort((a, b) => a.level - b.level).map((member) => {
+            {(Array.isArray(networkMembers) ? networkMembers : []).sort((a, b) => a.level - b.level).map((member) => {
               const inv = investmentByUser[member.referred_id];
               const invested = inv?.amount || 0;
               const dailyYield = invested * 0.01;
@@ -130,7 +130,7 @@ export default function NetworkMembersTable() {
               <td className="py-3 px-3 text-right font-bold text-gold">{formatCurrency(totalInvested)}</td>
               <td className="py-3 px-3 text-right font-bold text-green-400">+{formatCurrency(totalYield)}</td>
               <td className="py-3 px-3 text-right font-bold text-muted-foreground">
-                {formatCurrency(networkMembers.reduce((s, m) => {
+                {formatCurrency((Array.isArray(networkMembers) ? networkMembers : []).reduce((s, m) => {
                 const inv = investmentByUser[m.referred_id];
                 const pct = (RESIDUAL_PERCENTAGES[m.level] || 0) / 100;
                 return s + (inv?.total_earned || 0) * pct;

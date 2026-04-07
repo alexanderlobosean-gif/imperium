@@ -65,8 +65,13 @@ export default function Dashboard() {
   const { data: investments = [] } = useQuery({
     queryKey: ['investments', user?.id],
     queryFn: async () => {
-      const data = await financialAPI.getInvestments({ status: 'active' });
-      return data.investments || [];
+      try {
+        const data = await financialAPI.getInvestments({ status: 'active' });
+        return data.investments || [];
+      } catch (error) {
+        console.error('Error fetching investments:', error);
+        return [];
+      }
     },
     enabled: !!user?.id,
   });
@@ -74,8 +79,13 @@ export default function Dashboard() {
   const { data: networkMembers = [] } = useQuery({
     queryKey: ['network', user?.id],
     queryFn: async () => {
-      const data = await financialAPI.getNetwork();
-      return data.network || [];
+      try {
+        const data = await financialAPI.getNetwork();
+        return data.network || [];
+      } catch (error) {
+        console.error('Error fetching network:', error);
+        return [];
+      }
     },
     enabled: !!user?.id,
   });
@@ -83,15 +93,32 @@ export default function Dashboard() {
   const { data: transactions = [] } = useQuery({
     queryKey: ['transactions', user?.id],
     queryFn: async () => {
-      const txs = await financialAPI.getTransactions({ limit: 20 });
-      return txs.slice(0, 10);
+      try {
+        const txs = await financialAPI.getTransactions({ limit: 20 });
+        return Array.isArray(txs) ? txs.slice(0, 10) : [];
+      } catch (error) {
+        console.error('Error fetching transactions:', error);
+        return [];
+      }
     },
     enabled: !!user?.id,
   });
 
-  const networkMemberIds = networkMembers.map((m) => m.referred_id).filter(Boolean);
+  const { data: balanceData = {} } = useQuery({
+    queryKey: ['balance', user?.id],
+    queryFn: async () => {
+      try {
+        return await financialAPI.getBalance();
+      } catch (error) {
+        console.error('Error fetching balance:', error);
+        return {};
+      }
+    },
+    enabled: !!user?.id,
+  });
 
-  // Usar os investments indiretos que já vem da API
+  const networkMemberIds = (Array.isArray(networkMembers) ? networkMembers : []).map((m) => m.referred_id).filter(Boolean);
+
   const { data: networkData = {} } = useQuery({
     queryKey: ['network-investments', networkMemberIds.join(',')],
     queryFn: async () => {
@@ -110,19 +137,10 @@ export default function Dashboard() {
   const totalInvested = investments.reduce((sum, i) => sum + (parseFloat(i.amount) || 0), 0);
   const totalEarnings = investments.reduce((sum, i) => sum + (parseFloat(i.total_earned) || 0), 0);
 
-  // Saldo disponível via API
-  const { data: balanceData } = useQuery({
-    queryKey: ['balance', user?.id],
-    queryFn: async () => {
-      return await financialAPI.getBalance();
-    },
-    enabled: !!user?.id,
-  });
-
   const availableBalance = balanceData?.available_balance || 0;
 
   const activeInvestment = investments.find((i) => i.status === 'active');
-  const networkEarnings = networkMembers.reduce((sum, m) => {
+  const networkEarnings = (Array.isArray(networkMembers) ? networkMembers : []).reduce((sum, m) => {
     const inv = investmentByUser[m.referred_id];
     const pct = (RESIDUAL_PERCENTAGES[m.level] || 0) / 100;
     return sum + (inv?.total_earned || 0) * pct;
@@ -130,7 +148,7 @@ export default function Dashboard() {
   const totalValue = availableBalance;
 
   const referralLink = user?.referral_code
-    ? `${window.location.origin}/register?ref=${user.referral_code}`
+    ? `${import.meta.env.VITE_APP_URL || window.location.origin}/register?ref=${user.referral_code}`
     : '';
 
   const handleCopyLink = () => {

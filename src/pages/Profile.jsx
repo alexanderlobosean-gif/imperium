@@ -48,7 +48,7 @@ export default function Profile() {
   });
 
   // Buscar perfil via API
-  const { data: profileData, isLoading, error } = useQuery({
+  const { data: profileData, isLoading, error, isFetching } = useQuery({
     queryKey: ['profile', user?.id],
     queryFn: async () => {
       const data = await financialAPI.getProfile();
@@ -56,6 +56,9 @@ export default function Profile() {
       return data.profile;
     },
     enabled: !!user?.id,
+    refetchOnMount: 'always',
+    refetchOnWindowFocus: true,
+    staleTime: 0,
   });
 
   useEffect(() => {
