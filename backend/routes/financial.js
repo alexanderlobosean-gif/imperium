@@ -125,22 +125,6 @@ router.post('/deposit/usdt', async (req, res) => {
     const userId = req.user.id;
     const userEmail = req.user.email;
 
-    // Verificar se já existe depósito USDT pendente
-    const { data: existingDeposit } = await req.supabase
-      .from('deposits')
-      .select('id')
-      .eq('user_id', userId)
-      .eq('method', 'usdt')
-      .eq('status', 'pending')
-      .single();
-
-    if (existingDeposit) {
-      return res.status(400).json({ 
-        error: 'Já existe um depósito USDT pendente de aprovação',
-        deposit_id: existingDeposit.id
-      });
-    }
-
     // Criar depósito USDT pendente
     console.log('💰 Criando depósito USDT:', {
       user_id: userId,
@@ -197,7 +181,8 @@ router.post('/deposit/usdt', async (req, res) => {
       },
       instructions: {
         wallet: process.env.USDT_WALLET,
-        network: 'TRC20 (Tron)',
+        amount_usdt: amount.toFixed(2),
+        network: 'BEP20 (Binance Smart Chain)',
         amount: amount,
         note: `Depósito #${deposit.id}`
       }
@@ -314,6 +299,94 @@ router.post('/deposit/approve', async (req, res) => {
 
   } catch (error) {
     console.error('Erro no endpoint deposit/approve:', error);
+    res.status(500).json({ error: 'Erro interno do servidor' });
+  }
+});
+
+// @route   POST /api/financial/deposit/transaction-hash
+// @desc    Enviar Transaction Hash para depósito USDT
+// @access  Private
+router.post('/deposit/transaction-hash', async (req, res) => {
+  try {
+    console.log('🚀 === TRANSACTION HASH RECEBIDO ===');
+    console.log('📥 Request body:', req.body);
+    console.log('👤 Usuário:', req.user?.email, req.user?.id);
+
+    const { deposit_id, transaction_hash } = req.body;
+    const userId = req.user.id;
+
+    // Validações
+    if (!deposit_id || !transaction_hash) {
+      console.log('❌ Erro: Dados incompletos');
+      return res.status(400).json({ error: 'deposit_id e transaction_hash são obrigatórios' });
+    }
+
+    // Validar formato do transaction hash (deve ter pelo menos 10 caracteres)
+    if (transaction_hash.trim().length < 10) {
+      console.log('❌ Erro: Transaction hash muito curto');
+      return res.status(400).json({ error: 'Transaction hash inválido' });
+    }
+
+    // Buscar depósito
+    const { data: deposit, error: depositError } = await req.supabase
+      .from('deposits')
+      .select('*')
+      .eq('id', deposit_id)
+      .eq('user_id', userId)
+      .single();
+
+    if (depositError || !deposit) {
+      console.log('❌ Erro: Depósito não encontrado');
+      return res.status(404).json({ error: 'Depósito não encontrado' });
+    }
+
+    // Verificar se o depósito é do tipo USDT
+    if (deposit.method !== 'usdt') {
+      console.log('❌ Erro: Depósito não é USDT');
+      return res.status(400).json({ error: 'Transaction hash só pode ser enviado para depósitos USDT' });
+    }
+
+    // Verificar se o depósito ainda está pendente
+    if (deposit.status !== 'pending') {
+      console.log('❌ Erro: Depósito já processado. Status:', deposit.status);
+      return res.status(400).json({ error: `Depósito já foi ${deposit.status === 'confirmed' ? 'confirmado' : 'rejeitado'}` });
+    }
+
+    // Verificar se já existe um transaction_hash
+    if (deposit.transaction_hash) {
+      console.log('❌ Erro: Transaction hash já foi enviado');
+      return res.status(400).json({ error: 'Transaction hash já foi enviado para este depósito' });
+    }
+
+    // Atualizar depósito com o transaction hash
+    const { data: updatedDeposit, error: updateError } = await req.supabase
+      .from('deposits')
+      .update({
+        transaction_hash: transaction_hash.trim(),
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', deposit_id)
+      .select()
+      .single();
+
+    if (updateError) {
+      console.error('❌ Erro ao atualizar depósito:', updateError);
+      return res.status(500).json({ error: 'Erro ao salvar transaction hash' });
+    }
+
+    console.log('✅ Transaction hash salvo com sucesso:', updatedDeposit.id);
+
+    res.json({
+      message: 'Transaction hash enviado com sucesso',
+      deposit: {
+        id: updatedDeposit.id,
+        transaction_hash: updatedDeposit.transaction_hash,
+        status: updatedDeposit.status
+      }
+    });
+
+  } catch (error) {
+    console.error('Erro no endpoint deposit/transaction-hash:', error);
     res.status(500).json({ error: 'Erro interno do servidor' });
   }
 });
