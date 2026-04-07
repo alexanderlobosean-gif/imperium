@@ -337,7 +337,7 @@ router.get('/withdrawals', requireAdmin, async (req, res) => {
     // Combinar dados
     const withdrawalsWithUsers = withdrawals?.map(w => ({
       ...w,
-      profiles: profilesMap.get(w.user_id) || null
+      users: profilesMap.get(w.user_id) || null
     })) || [];
 
     res.json({ withdrawals: withdrawalsWithUsers });
