@@ -188,17 +188,36 @@ router.delete('/users/:id', requireAdmin, async (req, res) => {
 // @access  Admin
 router.get('/deposits', requireAdmin, async (req, res) => {
   try {
-    const { data, error } = await req.supabase
+    // Buscar depósitos
+    const { data: deposits, error: depositsError } = await req.supabase
       .from('deposits')
-      .select(`
-        *,
-        profiles:user_id(full_name, email)
-      `)
+      .select('*')
       .order('created_at', { ascending: false });
 
-    if (error) throw error;
+    if (depositsError) throw depositsError;
 
-    res.json({ deposits: data });
+    // Buscar perfis dos usuários separadamente
+    const userIds = deposits?.map(d => d.user_id).filter(Boolean) || [];
+    let profilesMap = new Map();
+    
+    if (userIds.length > 0) {
+      const { data: profiles, error: profilesError } = await req.supabase
+        .from('profiles')
+        .select('user_id, full_name, email')
+        .in('user_id', [...new Set(userIds)]);
+      
+      if (!profilesError && profiles) {
+        profilesMap = new Map(profiles.map(p => [p.user_id, p]));
+      }
+    }
+
+    // Combinar dados
+    const depositsWithUsers = deposits?.map(d => ({
+      ...d,
+      profiles: profilesMap.get(d.user_id) || null
+    })) || [];
+
+    res.json({ deposits: depositsWithUsers });
   } catch (error) {
     console.error('Erro ao listar depósitos:', error);
     res.status(500).json({ error: 'Erro ao listar depósitos' });
@@ -213,42 +232,75 @@ router.put('/deposits/:id', requireAdmin, async (req, res) => {
     const { id } = req.params;
     const { status, admin_notes } = req.body;
 
+    console.log('🔍 Atualizando depósito:', id, 'status:', status);
+
     const { data: deposit, error } = await req.supabase
       .from('deposits')
       .update({
         status,
         admin_notes,
         confirmed_at: status === 'confirmed' ? new Date().toISOString() : null,
-        approved_by: req.user.id,
-        approved_at: new Date().toISOString()
+        updated_at: new Date().toISOString()
       })
       .eq('id', id)
       .select()
       .single();
 
-    if (error) throw error;
+    if (error) {
+      console.error('❌ Erro ao atualizar depósito:', error);
+      console.error('Detalhes:', JSON.stringify(error, null, 2));
+      return res.status(500).json({ 
+        error: 'Erro ao atualizar depósito', 
+        details: error.message,
+        code: error.code 
+      });
+    }
+
+    console.log('✅ Depósito atualizado:', deposit?.id, 'novo status:', deposit?.status);
 
     // Se aprovado, creditar na carteira
     if (status === 'confirmed') {
-      const { data: balance } = await req.supabase
-        .from('wallet_balances')
-        .select('wallet_balance')
-        .eq('user_id', deposit.user_id)
-        .single();
+      console.log('💰 Creditando na carteira, user_id:', deposit.user_id, 'amount:', deposit.amount);
+      
+      try {
+        const { data: balance, error: balanceError } = await req.supabase
+          .from('wallet_balances')
+          .select('wallet_balance')
+          .eq('user_id', deposit.user_id)
+          .single();
 
-      await req.supabase
-        .from('wallet_balances')
-        .upsert({
-          user_id: deposit.user_id,
-          wallet_balance: (balance?.wallet_balance || 0) + deposit.amount,
-          updated_at: new Date().toISOString()
-        });
+        if (balanceError) {
+          console.error('⚠️ Erro ao buscar saldo (continuando):', balanceError.message);
+        }
+
+        const { error: upsertError } = await req.supabase
+          .from('wallet_balances')
+          .upsert({
+            user_id: deposit.user_id,
+            wallet_balance: (balance?.wallet_balance || 0) + deposit.amount,
+            updated_at: new Date().toISOString()
+          });
+
+        if (upsertError) {
+          console.error('❌ Erro ao creditar carteira:', upsertError);
+          // Não falhar a operação, apenas logar
+        } else {
+          console.log('✅ Carteira creditada');
+        }
+      } catch (walletErr) {
+        console.error('❌ Erro ao processar carteira:', walletErr);
+        // Não falhar a operação principal
+      }
     }
 
     res.json({ message: 'Depósito atualizado', deposit });
   } catch (error) {
-    console.error('Erro ao atualizar depósito:', error);
-    res.status(500).json({ error: 'Erro ao atualizar depósito' });
+    console.error('❌ Erro no endpoint deposits PUT:', error);
+    console.error('Stack:', error.stack);
+    res.status(500).json({ 
+      error: 'Erro ao atualizar depósito',
+      details: error.message 
+    });
   }
 });
 
@@ -259,17 +311,36 @@ router.put('/deposits/:id', requireAdmin, async (req, res) => {
 // @access  Admin
 router.get('/withdrawals', requireAdmin, async (req, res) => {
   try {
-    const { data, error } = await req.supabase
+    // Buscar saques
+    const { data: withdrawals, error: withdrawalsError } = await req.supabase
       .from('withdrawals')
-      .select(`
-        *,
-        profiles:user_id(full_name, email)
-      `)
+      .select('*')
       .order('created_at', { ascending: false });
 
-    if (error) throw error;
+    if (withdrawalsError) throw withdrawalsError;
 
-    res.json({ withdrawals: data });
+    // Buscar perfis dos usuários separadamente
+    const userIds = withdrawals?.map(w => w.user_id).filter(Boolean) || [];
+    let profilesMap = new Map();
+    
+    if (userIds.length > 0) {
+      const { data: profiles, error: profilesError } = await req.supabase
+        .from('profiles')
+        .select('user_id, full_name, email')
+        .in('user_id', [...new Set(userIds)]);
+      
+      if (!profilesError && profiles) {
+        profilesMap = new Map(profiles.map(p => [p.user_id, p]));
+      }
+    }
+
+    // Combinar dados
+    const withdrawalsWithUsers = withdrawals?.map(w => ({
+      ...w,
+      profiles: profilesMap.get(w.user_id) || null
+    })) || [];
+
+    res.json({ withdrawals: withdrawalsWithUsers });
   } catch (error) {
     console.error('Erro ao listar saques:', error);
     res.status(500).json({ error: 'Erro ao listar saques' });

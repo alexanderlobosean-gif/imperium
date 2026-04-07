@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useAuth } from '@/lib/AuthContext';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { ShieldCheck, Users, Wallet, TrendingUp, CheckCircle, Settings, CreditCard } from 'lucide-react';
+import { ShieldCheck, Users, Wallet, TrendingUp, CheckCircle, Settings, CreditCard, Network } from 'lucide-react';
 import AdminUsers from '@/components/admin/AdminUsers';
 import AdminDeposits from '@/components/admin/AdminDeposits';
 import AdminWithdrawals from '@/components/admin/AdminWithdrawals';
@@ -9,6 +9,7 @@ import AdminStats from '@/components/admin/AdminStats';
 import AdminYields from '@/components/admin/AdminYields';
 import AdminPlans from '@/components/admin/AdminPlans';
 import AdminBanking from '@/components/admin/AdminBanking';
+import AdminNetworkMigration from '@/components/admin/AdminNetworkMigration';
 
 export default function AdminPanel() {
   const { user } = useAuth();
@@ -44,7 +45,7 @@ export default function AdminPanel() {
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="bg-secondary border border-border grid grid-cols-7 w-full">
+        <TabsList className="bg-secondary border border-border grid grid-cols-8 w-full">
           <TabsTrigger value="stats" className="data-[state=active]:bg-gold/10 data-[state=active]:text-gold">
             <TrendingUp className="w-4 h-4 mr-2" /> Dashboard
           </TabsTrigger>
@@ -66,6 +67,9 @@ export default function AdminPanel() {
           <TabsTrigger value="plans" className="data-[state=active]:bg-purple-500/10 data-[state=active]:text-purple-400">
             <Settings className="w-4 h-4 mr-2" /> Planos
           </TabsTrigger>
+          <TabsTrigger value="network" className="data-[state=active]:bg-orange-500/10 data-[state=active]:text-orange-400">
+            <Network className="w-4 h-4 mr-2" /> Rede
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="stats"><AdminStats /></TabsContent>
@@ -75,6 +79,11 @@ export default function AdminPanel() {
         <TabsContent value="yields"><AdminYields /></TabsContent>
         <TabsContent value="banking"><AdminBanking /></TabsContent>
         <TabsContent value="plans"><AdminPlans /></TabsContent>
+        <TabsContent value="network">
+          <div className="grid gap-6">
+            <AdminNetworkMigration />
+          </div>
+        </TabsContent>
       </Tabs>
     </div>
   );

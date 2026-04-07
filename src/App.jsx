@@ -23,6 +23,7 @@ import Deposit from '@/pages/Deposit';
 import Support from '@/pages/Support';
 import HelpCenter from '@/pages/HelpCenter';
 import Contact from '@/pages/Contact';
+import ResetPassword from '@/pages/ResetPassword';
 
 const AuthenticatedApp = () => {
   // For landing page, we don't need auth checks
@@ -49,6 +50,7 @@ const AuthenticatedApp = () => {
       <Route path="/login" element={<LandingLayout><Login /></LandingLayout>} />
       <Route path="/register" element={<LandingLayout><Register /></LandingLayout>} />
       <Route path="/registrar" element={<LandingLayout><Register /></LandingLayout>} />
+      <Route path="/reset-password" element={<ResetPassword />} />
       <Route path="*" element={<PageNotFound />} />
     </Routes>
   );
