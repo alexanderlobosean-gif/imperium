@@ -41,14 +41,18 @@ export default function AdminDeposits() {
 
   const updateStatusMutation = useMutation({
     mutationFn: updateDepositStatus,
-    onSuccess: () => {
-      queryClient.invalidateQueries(['admin-deposits']);
+    onSuccess: (data) => {
+      console.log('✅ Depósito atualizado:', data);
+      // Forçar refetch imediato
+      queryClient.invalidateQueries({ queryKey: ['admin-deposits'], exact: true });
+      queryClient.refetchQueries({ queryKey: ['admin-deposits'], exact: true });
       toast.success('Status do depósito atualizado!');
       setShowDepositDialog(false);
       setSelectedDeposit(null);
       setAdminNotes('');
     },
     onError: (error) => {
+      console.error('❌ Erro ao atualizar:', error);
       toast.error('Erro ao atualizar status: ' + error.message);
     },
   });

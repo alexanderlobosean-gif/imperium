@@ -12,11 +12,24 @@ export default function DirectReferralBonuses() {
 
   const { data: bonuses = [], isLoading } = useQuery({
     queryKey: ['referral-bonuses', user?.id],
-    queryFn: () => base44.entities.Transaction.filter(
-      { user_id: user?.id, type: 'referral_bonus' },
-      '-created_date',
-      50
-    ),
+    queryFn: async () => {
+      console.log('🔍 Buscando comissões direct para user:', user?.id);
+      const { data, error } = await supabase
+        .from('commissions')
+        .select('*')
+        .eq('user_id', user?.id)
+        .eq('commission_type', 'direct')
+        .order('created_at', { ascending: false })
+        .limit(50);
+      
+      if (error) {
+        console.error('Error fetching referral bonuses:', error);
+        return [];
+      }
+      
+      console.log('✅ Comissões encontradas:', data?.length || 0, data);
+      return data || [];
+    },
     enabled: !!user?.id,
   });
 
@@ -48,7 +61,7 @@ export default function DirectReferralBonuses() {
               <div>
                 <p className="text-sm font-medium text-foreground">{b.description || 'Bônus de indicação'}</p>
                 <p className="text-xs text-muted-foreground">
-                  {b.created_date ? format(new Date(b.created_date), 'dd/MM/yyyy HH:mm') : ''}
+                  {b.created_at ? format(new Date(b.created_at), 'dd/MM/yyyy HH:mm') : ''}
                 </p>
               </div>
               <p className="text-sm font-bold text-gold">+{formatCurrency(b.amount)}</p>

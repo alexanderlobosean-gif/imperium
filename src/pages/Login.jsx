@@ -64,7 +64,10 @@ const Login = () => {
 
     try {
       // Recuperação de senha direto no Supabase
-      const { error } = await supabase.auth.resetPasswordForEmail(forgotPasswordEmail)
+      const redirectUrl = `${window.location.origin}/reset-password`
+      const { error } = await supabase.auth.resetPasswordForEmail(forgotPasswordEmail, {
+        redirectTo: redirectUrl
+      })
       
       if (error) throw error
       

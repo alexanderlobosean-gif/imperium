@@ -1037,42 +1037,170 @@ router.get('/balance', async (req, res) => {
 });
 
 // @route   GET /api/financial/transactions
-// @desc    Buscar transações do usuário
+// @desc    Buscar transações do usuário (combina ledger, deposits, withdrawals, transfers)
 // @access  Private
 router.get('/transactions', async (req, res) => {
   try {
     const userId = req.user.id;
     const { page = 1, limit = 20, type } = req.query;
 
-    const offset = (page - 1) * limit;
+    console.log('🔍 Buscando transações para userId:', userId);
 
-    let query = req.supabase
-      .from('financial_ledger')
-      .select('*')
-      .eq('user_id', userId)
-      .order('created_at', { ascending: false })
-      .range(offset, offset + limit - 1);
+    // Buscar de múltiplas tabelas em paralelo
+    const [
+      ledgerResult,
+      depositsResult,
+      withdrawalsResult,
+      transfersResult,
+      investmentsResult
+    ] = await Promise.all([
+      // Financial ledger
+      req.supabase
+        .from('financial_ledger')
+        .select('*')
+        .eq('user_id', userId)
+        .order('created_at', { ascending: false })
+        .limit(50),
+      
+      // Deposits
+      req.supabase
+        .from('deposits')
+        .select('*')
+        .eq('user_id', userId)
+        .order('created_at', { ascending: false })
+        .limit(20),
+      
+      // Withdrawals
+      req.supabase
+        .from('withdrawals')
+        .select('*')
+        .eq('user_id', userId)
+        .order('created_at', { ascending: false })
+        .limit(20),
+      
+      // Transfers (enviadas ou recebidas)
+      req.supabase
+        .from('transfers')
+        .select('*')
+        .or(`from_user_id.eq.${userId},to_user_id.eq.${userId}`)
+        .order('created_at', { ascending: false })
+        .limit(20),
+      
+      // Investments
+      req.supabase
+        .from('investments')
+        .select('*')
+        .eq('user_id', userId)
+        .order('created_at', { ascending: false })
+        .limit(20)
+    ]);
 
+    // Combinar e normalizar todas as transações
+    let allTransactions = [];
+
+    // Ledger entries
+    if (ledgerResult.data) {
+      allTransactions.push(...ledgerResult.data.map(item => ({
+        id: item.id,
+        type: item.type || 'transaction',
+        amount: Math.abs(parseFloat(item.amount || 0)),
+        status: item.status || 'completed',
+        description: item.description || '',
+        created_date: item.created_at,
+        reference_id: item.reference_id,
+        reference_type: item.reference_type,
+        source: 'ledger'
+      })));
+    }
+
+    // Deposits
+    if (depositsResult.data) {
+      allTransactions.push(...depositsResult.data.map(item => ({
+        id: item.id,
+        type: 'deposit',
+        amount: parseFloat(item.amount || 0),
+        status: item.status === 'confirmed' ? 'completed' : item.status,
+        description: `Depósito via ${item.method || 'N/A'}`,
+        created_date: item.created_at,
+        reference_id: item.id,
+        reference_type: 'deposit',
+        source: 'deposits'
+      })));
+    }
+
+    // Withdrawals
+    if (withdrawalsResult.data) {
+      allTransactions.push(...withdrawalsResult.data.map(item => ({
+        id: item.id,
+        type: 'withdrawal',
+        amount: parseFloat(item.amount || 0),
+        status: item.status === 'approved' ? 'completed' : item.status,
+        description: `Saque para ${item.bank_name || 'conta bancária'}`,
+        created_date: item.created_at,
+        reference_id: item.id,
+        reference_type: 'withdrawal',
+        source: 'withdrawals'
+      })));
+    }
+
+    // Transfers
+    if (transfersResult.data) {
+      allTransactions.push(...transfersResult.data.map(item => {
+        const isOutgoing = item.from_user_id === userId;
+        return {
+          id: item.id,
+          type: 'transfer',
+          amount: parseFloat(item.amount || 0),
+          status: 'completed',
+          description: isOutgoing ? `Transferência enviada` : `Transferência recebida`,
+          created_date: item.created_at,
+          reference_id: item.id,
+          reference_type: 'transfer',
+          direction: isOutgoing ? 'out' : 'in',
+          source: 'transfers'
+        };
+      }));
+    }
+
+    // Investments
+    if (investmentsResult.data) {
+      allTransactions.push(...investmentsResult.data.map(item => ({
+        id: item.id,
+        type: 'investment',
+        amount: parseFloat(item.amount || 0),
+        status: item.status,
+        description: `Investimento em ${item.plan_slug || 'plano'}`,
+        created_date: item.created_at,
+        reference_id: item.id,
+        reference_type: 'investment',
+        source: 'investments'
+      })));
+    }
+
+    // Ordenar por data (mais recente primeiro)
+    allTransactions.sort((a, b) => new Date(b.created_date) - new Date(a.created_date));
+
+    // Aplicar filtro de tipo se especificado
     if (type) {
-      query = query.eq('type', type);
+      allTransactions = allTransactions.filter(t => t.type === type);
     }
 
-    const { data: transactions, error: transactionsError } = await query;
+    const offset = (page - 1) * limit;
+    const paginatedTransactions = allTransactions.slice(offset, offset + parseInt(limit));
 
-    if (transactionsError) {
-      console.error('Erro ao buscar transações:', transactionsError);
-      return res.status(500).json({ error: 'Erro ao buscar transações' });
-    }
+    console.log('✅ Total de transações combinadas:', allTransactions.length);
+    console.log('📋 Retornando:', paginatedTransactions.length, 'transações');
 
     res.json({
-      transactions: transactions || [],
+      transactions: paginatedTransactions,
       page: parseInt(page),
-      limit: parseInt(limit)
+      limit: parseInt(limit),
+      total: allTransactions.length
     });
 
   } catch (error) {
-    console.error('Erro no endpoint transactions:', error);
-    res.status(500).json({ error: 'Erro interno do servidor' });
+    console.error('❌ Erro no endpoint transactions:', error);
+    res.status(500).json({ error: 'Erro interno do servidor', details: error.message });
   }
 });
 
@@ -1166,31 +1294,56 @@ router.get('/transfers', async (req, res) => {
 
     const offset = (page - 1) * limit;
 
+    // Query simplificada sem joins complexos
     const { data: transfers, error } = await req.supabase
       .from('transfers')
-      .select(`
-        *,
-        sender:profiles!from_user_id(full_name, email),
-        recipient:profiles!to_user_id(full_name, email)
-      `)
+      .select('*')
       .or(`from_user_id.eq.${userId},to_user_id.eq.${userId}`)
       .order('created_at', { ascending: false })
       .range(offset, offset + limit - 1);
 
     if (error) {
       console.error('Erro ao buscar transferências:', error);
-      return res.status(500).json({ error: 'Erro ao buscar transferências' });
+      // Retornar array vazio em vez de erro 500
+      return res.json({ transfers: [], page: parseInt(page), limit: parseInt(limit) });
     }
 
+    // Buscar nomes dos usuários separadamente
+    const userIds = [...new Set([
+      ...(transfers || []).map(t => t.from_user_id),
+      ...(transfers || []).map(t => t.to_user_id)
+    ])].filter(Boolean);
+
+    let userMap = {};
+    if (userIds.length > 0) {
+      const { data: profiles } = await req.supabase
+        .from('profiles')
+        .select('user_id, full_name, email')
+        .in('user_id', userIds);
+      
+      if (profiles) {
+        profiles.forEach(p => {
+          userMap[p.user_id] = p;
+        });
+      }
+    }
+
+    // Enriquecer dados
+    const enrichedTransfers = (transfers || []).map(t => ({
+      ...t,
+      sender: userMap[t.from_user_id] || { full_name: 'N/A', email: '' },
+      recipient: userMap[t.to_user_id] || { full_name: 'N/A', email: '' }
+    }));
+
     res.json({
-      transfers: transfers || [],
+      transfers: enrichedTransfers,
       page: parseInt(page),
       limit: parseInt(limit)
     });
 
   } catch (error) {
     console.error('Erro no endpoint transfers:', error);
-    res.status(500).json({ error: 'Erro interno do servidor' });
+    res.json({ transfers: [], page: 1, limit: 20 });
   }
 });
 
@@ -1202,33 +1355,74 @@ router.get('/investments', async (req, res) => {
     const userId = req.user.id;
     const { status = 'active' } = req.query;
 
+    console.log('🔍 Buscando investimentos para userId:', userId, 'status:', status);
+
+    // Testar se tabela existe
+    try {
+      const { data: test, error: testError } = await req.supabase
+        .from('investments')
+        .select('count')
+        .limit(1);
+      
+      if (testError) {
+        console.error('❌ Tabela investments não existe ou sem acesso:', testError);
+        return res.status(500).json({ 
+          error: 'Erro ao acessar tabela investments', 
+          details: testError.message,
+          code: testError.code 
+        });
+      }
+      
+      console.log('✅ Tabela investments OK, count:', test?.length || 0);
+    } catch (testErr) {
+      console.error('❌ Erro ao testar tabela investments:', testErr);
+      return res.status(500).json({ 
+        error: 'Erro ao testar tabela investments', 
+        details: testErr.message 
+      });
+    }
+
     let query = req.supabase
       .from('investments')
-      .select(`
-        *,
-        plan:plans(*)
-      `)
-      .eq('user_id', userId)
-      .order('created_at', { ascending: false });
+      .select('*')
+      .eq('user_id', userId);
 
     if (status) {
       query = query.eq('status', status);
     }
 
+    // Adicionar order separadamente para evitar erro se coluna não existir
+    try {
+      query = query.order('created_at', { ascending: false });
+    } catch (orderErr) {
+      console.warn('⚠️ Erro ao adicionar order, continuando sem order:', orderErr.message);
+    }
+
     const { data: investments, error } = await query;
 
     if (error) {
-      console.error('Erro ao buscar investimentos:', error);
-      return res.status(500).json({ error: 'Erro ao buscar investimentos' });
+      console.error('❌ Erro ao buscar investimentos:', error);
+      console.error('Detalhes do erro:', JSON.stringify(error, null, 2));
+      return res.status(500).json({ 
+        error: 'Erro ao buscar investimentos', 
+        details: error.message,
+        code: error.code,
+        hint: error.hint 
+      });
     }
 
+    console.log('✅ Investimentos encontrados:', investments?.length || 0);
     res.json({
       investments: investments || []
     });
 
   } catch (error) {
-    console.error('Erro no endpoint investments:', error);
-    res.status(500).json({ error: 'Erro interno do servidor' });
+    console.error('❌ Erro no endpoint investments:', error);
+    console.error('Stack:', error.stack);
+    res.status(500).json({ 
+      error: 'Erro interno do servidor',
+      details: error.message 
+    });
   }
 });
 
@@ -1265,40 +1459,106 @@ router.get('/network', async (req, res) => {
   try {
     const userId = req.user.id;
 
-    // Buscar relações de rede (diretos e indiretos)
+    // Buscar relações de rede da tabela network_relations
     const { data: networkRelations, error: networkError } = await req.supabase
       .from('network_relations')
       .select('*')
-      .eq('referred_id', userId)
+      .eq('user_id', userId)
       .order('created_at', { ascending: false });
 
     if (networkError) {
       console.error('Erro ao buscar rede:', networkError);
-      return res.status(500).json({ error: 'Erro ao buscar rede' });
+      // Fallback para profiles.referred_by se network_relations não existir
+      const { data: fallbackProfiles, error: fallbackError } = await req.supabase
+        .from('profiles')
+        .select('user_id, full_name, email, referred_by, referral_code, created_at')
+        .eq('referred_by', userId)
+        .order('created_at', { ascending: false });
+      
+      if (fallbackError) {
+        console.error('Fallback também falhou:', fallbackError);
+        return res.status(500).json({ error: 'Erro ao buscar rede', details: networkError.message });
+      }
+
+      const network = (fallbackProfiles || []).map((profile) => ({
+        id: profile.user_id,
+        referred_id: profile.user_id,
+        referred_name: profile.full_name || 'N/A',
+        referred_email: profile.email || '',
+        level: 1,
+        referral_code: profile.referral_code || '',
+        created_at: profile.created_at
+      }));
+
+      const memberIds = network.map(m => m.referred_id);
+      let indirectInvestments = {};
+      if (memberIds.length > 0) {
+        const { data: investments } = await req.supabase
+          .from('investments')
+          .select('*')
+          .in('user_id', memberIds)
+          .eq('status', 'active');
+        
+        if (investments) {
+          investments.forEach(inv => {
+            indirectInvestments[inv.user_id] = inv;
+          });
+        }
+      }
+
+      return res.json({ network: network || [], indirectInvestments });
     }
 
-    // Buscar investments dos membros indiretos
-    const indirectIds = (networkRelations || [])
-      .filter(m => m.level > 1)
-      .map(m => m.referred_id);
+    // Buscar dados dos perfis referenciados
+    const referredIds = networkRelations.map(r => r.referred_id);
+    let profileMap = {};
+    
+    if (referredIds.length > 0) {
+      const { data: profiles } = await req.supabase
+        .from('profiles')
+        .select('user_id, full_name, email, referral_code')
+        .in('user_id', referredIds);
+      
+      if (profiles) {
+        profiles.forEach(p => {
+          profileMap[p.user_id] = p;
+        });
+      }
+    }
 
+    // Mapear para o formato esperado pelo frontend
+    const network = networkRelations.map((relation) => {
+      const profile = profileMap[relation.referred_id] || {};
+      return {
+        id: relation.id,
+        referred_id: relation.referred_id,
+        referred_name: profile.full_name || 'N/A',
+        referred_email: profile.email || '',
+        level: relation.level || 1,
+        referral_code: relation.referral_code || profile.referral_code || '',
+        status: relation.status,
+        created_at: relation.created_at
+      };
+    });
+
+    // Buscar investments dos membros da rede
     let indirectInvestments = {};
-    if (indirectIds.length > 0) {
+    if (referredIds.length > 0) {
       const { data: investments, error: invError } = await req.supabase
         .from('investments')
         .select('*')
-        .in('user_id', indirectIds)
+        .in('user_id', referredIds)
         .eq('status', 'active');
 
       if (!invError && investments) {
         investments.forEach(inv => {
-          indirectInvestments[inv.user_id] = inv.amount;
+          indirectInvestments[inv.user_id] = inv;
         });
       }
     }
 
     res.json({
-      network: networkRelations || [],
+      network: network || [],
       indirectInvestments
     });
 
@@ -1387,8 +1647,29 @@ router.post('/investments', async (req, res) => {
       return res.status(500).json({ error: 'Erro ao criar investimento' });
     }
 
+    // Registrar saída no financial_ledger para deduzir saldo
+    const { error: ledgerError } = await req.supabase
+      .from('financial_ledger')
+      .insert({
+        user_id: userId,
+        type: 'investment',
+        amount: -amount, // Valor negativo (saída)
+        description: `Investimento no plano ${plan_slug}`,
+        reference_id: investment.id,
+        reference_type: 'investment',
+        status: 'completed',
+        created_at: new Date().toISOString()
+      });
+
+    if (ledgerError) {
+      console.error('Erro ao registrar no ledger:', ledgerError);
+      // Não falhar o investimento se o ledger falhar, apenas logar
+    }
+
     // Gerar comissões para a rede
+    console.log('💰 Gerando comissões para investimento:', investment.id, 'usuário:', userId, 'valor:', amount);
     await generateNetworkCommissions(req.supabase, investment);
+    console.log('✅ Comissões geradas para investimento:', investment.id);
 
     res.json({ investment });
 
@@ -1579,30 +1860,401 @@ router.get('/referral', async (req, res) => {
   }
 });
 
-// Função auxiliar para gerar comissões de rede
+// @route   GET /api/financial/admin/check-network-schema
+// @desc    Verificar schema da tabela network_relations
+// @access  Admin
+router.get('/admin/check-network-schema', async (req, res) => {
+  try {
+    const userId = req.user.id;
+    
+    // Verificar se é admin
+    const { data: profile } = await req.supabase
+      .from('profiles')
+      .select('role')
+      .eq('user_id', userId)
+      .single();
+    
+    if (profile?.role !== 'admin' && profile?.role !== 'super_admin') {
+      return res.status(403).json({ error: 'Acesso negado' });
+    }
+
+    // Tentar buscar uma linha para ver o schema
+    const { data: sample, error } = await req.supabase
+      .from('network_relations')
+      .select('*')
+      .limit(1);
+
+    if (error) {
+      return res.json({ 
+        error: error.message,
+        hint: 'Tabela pode não existir ou sem permissão'
+      });
+    }
+
+    // Se tem dados, mostrar as colunas
+    if (sample && sample.length > 0) {
+      return res.json({
+        columns: Object.keys(sample[0]),
+        sample: sample[0]
+      });
+    }
+
+    // Tabela vazia, tentar descobrir colunas via information_schema
+    const { data: columns, error: colError } = await req.supabase
+      .rpc('get_table_columns', { table_name: 'network_relations' });
+
+    if (colError) {
+      return res.json({
+        message: 'Tabela existe mas está vazia',
+        sampleColumns: ['id', 'user_id', 'referee_id', 'level', 'created_at'], // chutes comuns
+        note: 'Não foi possível detectar colunas automaticamente'
+      });
+    }
+
+    res.json({ columns });
+
+  } catch (error) {
+    console.error('Erro ao verificar schema:', error);
+    res.status(500).json({ error: 'Erro interno', details: error.message });
+  }
+});
+// @desc    Migrar dados de profiles para network_relations (admin only)
+// @access  Admin
+router.post('/admin/migrate-network-relations', async (req, res) => {
+  try {
+    const userId = req.user.id;
+    
+    // Verificar se é admin
+    const { data: profile } = await req.supabase
+      .from('profiles')
+      .select('role')
+      .eq('user_id', userId)
+      .single();
+    
+    if (profile?.role !== 'admin' && profile?.role !== 'super_admin') {
+      return res.status(403).json({ error: 'Acesso negado' });
+    }
+
+    console.log('🚀 Iniciando migração de network_relations...');
+
+    // Buscar todos os perfis que têm referred_by (foram indicados por alguém)
+    const { data: profilesWithReferrer, error: profilesError } = await req.supabase
+      .from('profiles')
+      .select('user_id, referred_by, referral_code, created_at')
+      .not('referred_by', 'is', null);
+
+    if (profilesError) {
+      console.error('Erro ao buscar profiles:', profilesError);
+      return res.status(500).json({ error: 'Erro ao buscar profiles', details: profilesError.message });
+    }
+
+    console.log(`📊 Encontrados ${profilesWithReferrer?.length || 0} perfis com indicador`);
+
+    if (!profilesWithReferrer || profilesWithReferrer.length === 0) {
+      return res.json({ message: 'Nenhum perfil com referred_by encontrado', migrated: 0 });
+    }
+
+    // Buscar referral codes existentes para mapear referrer_id
+    const { data: allProfiles, error: allProfilesError } = await req.supabase
+      .from('profiles')
+      .select('user_id, referral_code');
+
+    if (allProfilesError) {
+      console.error('Erro ao buscar todos os profiles:', allProfilesError);
+      return res.status(500).json({ error: 'Erro ao buscar profiles para mapeamento' });
+    }
+
+    // Criar mapa de referral_code -> user_id
+    const referralCodeToUserId = {};
+    allProfiles.forEach(p => {
+      if (p.referral_code) {
+        referralCodeToUserId[p.referral_code] = p.user_id;
+      }
+    });
+
+    // Inserir registros em network_relations
+    let migrated = 0;
+    let errors = 0;
+    const errorDetails = [];
+
+    for (const profile of profilesWithReferrer) {
+      try {
+        // Buscar dados do referrer (quem indicou)
+        const referrerProfile = allProfiles.find(p => p.user_id === profile.referred_by);
+        
+        const referrerId = profile.referred_by;
+        const referredId = profile.user_id;
+
+        // Verificar se já existe esta relação
+        const { data: existing } = await req.supabase
+          .from('network_relations')
+          .select('id')
+          .eq('user_id', referrerId)
+          .eq('referred_id', referredId)
+          .single();
+
+        if (existing) {
+          console.log(`⏭️  Relação já existe: ${referrerId} -> ${referredId}`);
+          continue;
+        }
+
+        // Criar relação
+        const { error: insertError } = await req.supabase
+          .from('network_relations')
+          .insert({
+            user_id: referrerId,
+            user_email: referrerProfile?.email || '',
+            user_name: referrerProfile?.full_name || '',
+            referred_id: referredId,
+            referred_email: profile.email || '',
+            referred_name: profile.full_name || '',
+            level: 1,
+            status: 'active',
+            total_generated: 0,
+            created_at: profile.created_at || new Date().toISOString()
+          });
+
+        if (insertError) {
+          console.error(`❌ Erro ao inserir relação ${referrerId} -> ${referredId}:`, insertError);
+          errors++;
+          errorDetails.push({ referrerId, referredId, error: insertError.message });
+        } else {
+          migrated++;
+          console.log(`✅ Relação criada: ${referrerId} -> ${referredId}`);
+        }
+      } catch (err) {
+        console.error(`❌ Erro ao processar perfil ${profile.user_id}:`, err);
+        errors++;
+        errorDetails.push({ profile: profile.user_id, error: err.message });
+      }
+    }
+
+    res.json({
+      message: 'Migração concluída',
+      totalProcessed: profilesWithReferrer.length,
+      migrated,
+      errors,
+      errorDetails: errorDetails.slice(0, 10) // Limitar detalhes
+    });
+
+  } catch (error) {
+    console.error('Erro na migração:', error);
+    res.status(500).json({ error: 'Erro interno do servidor', details: error.message });
+  }
+});
+
+// @route   POST /api/financial/admin/create-multi-level-relations
+// @desc    Criar relações de nível 2-5 baseado na cadeia de indicações
+// @access  Admin
+router.post('/admin/create-multi-level-relations', async (req, res) => {
+  try {
+    const userId = req.user.id;
+    
+    // Verificar se é admin
+    const { data: profile } = await req.supabase
+      .from('profiles')
+      .select('role')
+      .eq('user_id', userId)
+      .single();
+    
+    if (profile?.role !== 'admin' && profile?.role !== 'super_admin') {
+      return res.status(403).json({ error: 'Acesso negado' });
+    }
+
+    console.log('🚀 Criando relações multi-nível...');
+
+    // Buscar todas as relações nível 1
+    const { data: level1Relations, error } = await req.supabase
+      .from('network_relations')
+      .select('*')
+      .eq('level', 1);
+
+    if (error) {
+      return res.status(500).json({ error: 'Erro ao buscar relações nível 1' });
+    }
+
+    // Criar mapa de user_id -> referrer_id (referred_id -> user_id)
+    const userToReferrer = {};
+    level1Relations.forEach(r => {
+      userToReferrer[r.referred_id] = r.user_id;
+    });
+
+    let created = 0;
+    let errors = 0;
+
+    // Para cada usuário, calcular a cadeia até o topo
+    for (const userId of Object.keys(userToReferrer)) {
+      let currentUserId = userId;
+      let level = 1;
+      const chain = [];
+
+      // Construir cadeia de referência
+      while (userToReferrer[currentUserId] && level < 5) {
+        const referrerId = userToReferrer[currentUserId];
+        level++;
+        chain.push({ referred_id: userId, user_id: referrerId, level });
+        currentUserId = referrerId;
+      }
+
+      // Inserir relações de nível 2-5
+      for (const relation of chain.slice(1)) { // Skip level 1 (já existe)
+        try {
+          const { data: existing } = await req.supabase
+            .from('network_relations')
+            .select('id')
+            .eq('user_id', relation.user_id)
+            .eq('referred_id', relation.referred_id)
+            .eq('level', relation.level)
+            .single();
+
+          if (existing) continue;
+
+          const { error: insertError } = await req.supabase
+            .from('network_relations')
+            .insert({
+              user_id: relation.user_id,
+              user_email: relation.user_email,
+              user_name: relation.user_name,
+              referred_id: relation.referred_id,
+              level: relation.level,
+              status: 'active',
+              total_generated: 0,
+              created_at: new Date().toISOString()
+            });
+
+          if (insertError) {
+            errors++;
+          } else {
+            created++;
+          }
+        } catch (err) {
+          errors++;
+        }
+      }
+    }
+
+    res.json({
+      message: 'Relações multi-nível criadas',
+      created,
+      errors
+    });
+
+  } catch (error) {
+    console.error('Erro ao criar relações multi-nível:', error);
+    res.status(500).json({ error: 'Erro interno do servidor' });
+  }
+});
+// @route   GET /api/financial/commissions
+// @desc    Buscar comissões do usuário
+// @access  Private
+router.get('/commissions', async (req, res) => {
+  try {
+    const userId = req.user.id;
+    
+    const { data: commissions, error } = await req.supabase
+      .from('commissions')
+      .select('*')
+      .eq('user_id', userId)
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error('Erro ao buscar comissões:', error);
+      return res.status(500).json({ error: 'Erro ao buscar comissões', details: error.message });
+    }
+
+    res.json({ commissions: commissions || [] });
+
+  } catch (error) {
+    console.error('Erro no endpoint commissions:', error);
+    res.status(500).json({ error: 'Erro interno do servidor' });
+  }
+});
+
+// @route   GET /api/financial/admin/check-commissions
+// @desc    Verificar todas as comissões (admin)
+// @access  Admin
+router.get('/admin/check-commissions', async (req, res) => {
+  try {
+    const userId = req.user.id;
+    
+    // Verificar se é admin
+    const { data: profile } = await req.supabase
+      .from('profiles')
+      .select('role')
+      .eq('user_id', userId)
+      .single();
+    
+    if (profile?.role !== 'admin' && profile?.role !== 'super_admin') {
+      return res.status(403).json({ error: 'Acesso negado' });
+    }
+
+    const { data: commissions, error, count } = await req.supabase
+      .from('commissions')
+      .select('*', { count: 'exact' })
+      .order('created_at', { ascending: false })
+      .limit(50);
+
+    if (error) {
+      return res.status(500).json({ error: 'Erro ao buscar comissões', details: error.message });
+    }
+
+    // Verificar schema da tabela
+    const { data: sample } = await req.supabase
+      .from('commissions')
+      .select('*')
+      .limit(1);
+
+    res.json({ 
+      count,
+      commissions: commissions || [],
+      sampleColumns: sample && sample.length > 0 ? Object.keys(sample[0]) : null
+    });
+
+  } catch (error) {
+    console.error('Erro ao verificar comissões:', error);
+    res.status(500).json({ error: 'Erro interno', details: error.message });
+  }
+});
+
 async function generateNetworkCommissions(supabase, investment) {
   try {
+    console.log('🚀 Iniciando generateNetworkCommissions para investimento:', investment.id);
+    
     const investmentAmount = parseFloat(investment.amount);
     let currentUserId = investment.user_id;
     let level = 1;
     const maxLevels = 5;
     const commissionRates = { 1: 0.10, 2: 0.05, 3: 0.03, 4: 0.02, 5: 0.01 };
 
+    console.log('📊 Valor do investimento:', investmentAmount, 'Usuário:', currentUserId);
+
     while (level <= maxLevels) {
-      const { data: userProfile } = await supabase
+      console.log(`🔍 Buscando perfil para nível ${level}, userId:`, currentUserId);
+      
+      const { data: userProfile, error: profileError } = await supabase
         .from('profiles')
         .select('referred_by')
         .eq('user_id', currentUserId)
         .single();
 
-      if (!userProfile?.referred_by) break;
+      if (profileError) {
+        console.error(`❌ Erro ao buscar perfil nível ${level}:`, profileError);
+        break;
+      }
+
+      if (!userProfile?.referred_by) {
+        console.log(`⚠️ Sem referred_by encontrado no nível ${level} para user:`, currentUserId);
+        break;
+      }
 
       const referrerId = userProfile.referred_by;
       const commissionRate = commissionRates[level] || 0;
-      const commissionAmount = investmentAmount * commissionRate;
+      const commissionAmount = parseFloat((investmentAmount * commissionRate).toFixed(2));
+
+      console.log(`💵 Nível ${level}: referrerId=${referrerId}, rate=${commissionRate}, amount=${commissionAmount}`);
 
       if (commissionAmount > 0) {
-        await supabase.from('commissions').insert({
+        const { error: insertError } = await supabase.from('commissions').insert({
           user_id: referrerId,
           source_user_id: investment.user_id,
           investment_id: investment.id,
@@ -1613,13 +2265,21 @@ async function generateNetworkCommissions(supabase, investment) {
           status: 'pending',
           created_at: new Date().toISOString()
         });
+
+        if (insertError) {
+          console.error(`❌ Erro ao inserir comissão nível ${level}:`, insertError);
+        } else {
+          console.log(`✅ Comissão nível ${level} criada: ${commissionAmount} para ${referrerId}`);
+        }
       }
 
       currentUserId = referrerId;
       level++;
     }
+    
+    console.log('🏁 generateNetworkCommissions concluído para investimento:', investment.id);
   } catch (err) {
-    console.error('Erro ao gerar comissões:', err);
+    console.error('❌ Erro ao gerar comissões:', err);
   }
 }
 

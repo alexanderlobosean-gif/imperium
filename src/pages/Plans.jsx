@@ -167,12 +167,19 @@ export default function Plans() {
       console.log('Investment created via API:', result);
       return result.investment;
     },
-    onSuccess: (investment) => {
+    onSuccess: async (investment) => {
       console.log('Investment mutation success:', investment);
+      
+      // Generate network commissions for this investment
+      if (investment && investment.id) {
+        await generateNetworkCommissions(investment);
+      }
+      
       setSuccessInvestment(investment);
       setShowSuccessModal(true);
       queryClient.invalidateQueries({ queryKey: ['investments'] });
       queryClient.invalidateQueries({ queryKey: ['plans'] });
+      queryClient.invalidateQueries({ queryKey: ['network'] });
       setShowDialog(false);
       setSelectedPlan(null);
       setAmount('');

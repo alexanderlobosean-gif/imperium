@@ -3,7 +3,7 @@
 
 import { supabase } from '@/lib/supabase';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
+const API_BASE_URL = import.meta.env.VITE_API_URL || '/api';
 
 console.log('API Base URL:', API_BASE_URL);
 
@@ -210,6 +210,9 @@ export const financialAPI = {
     body: JSON.stringify(data),
   }),
   
+  // Buscar comissões do usuário
+  getCommissions: () => apiRequest('/financial/commissions'),
+  
   // Buscar código de indicação
   getReferral: () => apiRequest('/financial/referral'),
 };
@@ -293,6 +296,16 @@ export const adminAPI = {
 
   // Dashboard Stats
   getStats: () => apiRequest('/admin/stats'),
+  
+  // Network Relations Migration
+  checkNetworkSchema: () => apiRequest('/financial/admin/check-network-schema'),
+  migrateNetworkRelations: () => apiRequest('/financial/admin/migrate-network-relations', {
+    method: 'POST',
+  }),
+  createMultiLevelRelations: () => apiRequest('/financial/admin/create-multi-level-relations', {
+    method: 'POST',
+  }),
+  checkCommissions: () => apiRequest('/financial/admin/check-commissions'),
 };
 
 export default { authAPI, financialAPI, networkAPI, adminAPI };
