@@ -123,6 +123,8 @@ export default function Dashboard() {
       }
     },
     enabled: !!user?.id,
+    refetchOnMount: 'always',
+    staleTime: 0,
   });
 
   const networkMemberIds = (Array.isArray(networkMembers) ? networkMembers : []).map((m) => m.referred_id).filter(Boolean);

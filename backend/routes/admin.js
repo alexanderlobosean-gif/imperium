@@ -232,7 +232,13 @@ router.put('/deposits/:id', requireAdmin, async (req, res) => {
     const { id } = req.params;
     const { status, admin_notes } = req.body;
 
-    console.log('🔍 Atualizando depósito:', id, 'status:', status);
+    console.log('🔍 ========== ATUALIZANDO DEPÓSITO ==========');
+    console.log('ID:', id);
+    console.log('Status recebido:', status);
+    console.log('Admin notes:', admin_notes);
+    console.log('Tipo do status:', typeof status);
+    console.log('Status === confirmed?:', status === 'confirmed');
+    console.log('===========================================');
 
     const { data: deposit, error } = await req.supabase
       .from('deposits')
@@ -260,36 +266,84 @@ router.put('/deposits/:id', requireAdmin, async (req, res) => {
 
     // Se aprovado, creditar na carteira
     if (status === 'confirmed') {
-      console.log('💰 Creditando na carteira, user_id:', deposit.user_id, 'amount:', deposit.amount);
+      const depositAmount = parseFloat(deposit.amount);
+      console.log('💰 ========== CREDITANDO CARTEIRA ==========');
+      console.log('User ID:', deposit.user_id);
+      console.log('Deposit ID:', deposit.id);
+      console.log('Amount:', depositAmount);
+      console.log('Original amount type:', typeof deposit.amount);
+      console.log('Parsed amount type:', typeof depositAmount);
       
       try {
+        console.log('🔍 Buscando saldo atual...');
         const { data: balance, error: balanceError } = await req.supabase
           .from('wallet_balances')
-          .select('wallet_balance')
+          .select('*')
           .eq('user_id', deposit.user_id)
           .single();
 
         if (balanceError) {
-          console.error('⚠️ Erro ao buscar saldo (continuando):', balanceError.message);
-        }
-
-        const { error: upsertError } = await req.supabase
-          .from('wallet_balances')
-          .upsert({
-            user_id: deposit.user_id,
-            wallet_balance: (balance?.wallet_balance || 0) + deposit.amount,
-            updated_at: new Date().toISOString()
-          });
-
-        if (upsertError) {
-          console.error('❌ Erro ao creditar carteira:', upsertError);
-          // Não falhar a operação, apenas logar
+          console.log('⚠️ Erro ao buscar saldo:', balanceError.message, '| Código:', balanceError.code);
+          console.log('⚠️ Provavelmente não existe registro, criando novo...');
         } else {
-          console.log('✅ Carteira creditada');
+          console.log('✅ Saldo encontrado:', balance);
         }
+
+        const currentBalance = parseFloat(balance?.wallet_balance || 0);
+        const newBalance = currentBalance + depositAmount;
+        
+        console.log('💰 Cálculo:');
+        console.log('  - Saldo atual:', currentBalance);
+        console.log('  - Valor depósito:', depositAmount);
+        console.log('  - Novo saldo:', newBalance);
+
+        console.log('📝 Executando UPDATE na wallet_balances...');
+        const updateData = {
+          wallet_balance: newBalance,
+          updated_at: new Date().toISOString()
+        };
+        console.log('  - Dados do update:', updateData);
+
+        const { data: updateResult, error: updateError } = await req.supabase
+          .from('wallet_balances')
+          .update(updateData)
+          .eq('user_id', deposit.user_id)
+          .select();
+
+        if (updateError) {
+          console.error('❌ ERRO no update:', updateError);
+          console.error('  - Mensagem:', updateError.message);
+          console.error('  - Código:', updateError.code);
+          console.error('  - Detalhes:', updateError.details);
+        } else if (!updateResult || updateResult.length === 0) {
+          console.log('⚠️ UPDATE não retornou linhas - registro não existe, criando novo...');
+          
+          const { data: insertResult, error: insertError } = await req.supabase
+            .from('wallet_balances')
+            .insert({
+              user_id: deposit.user_id,
+              wallet_balance: newBalance,
+              yield_balance: 0,
+              bonus_balance: 0,
+              locked_balance: 0,
+              updated_at: new Date().toISOString()
+            })
+            .select();
+          
+          if (insertError) {
+            console.error('❌ ERRO no insert:', insertError);
+          } else {
+            console.log('✅ INSERT executado! Novo saldo criado:', insertResult);
+          }
+        } else {
+          console.log('✅ UPDATE executado!');
+          console.log('  - Resultado:', updateResult);
+        }
+        
+        console.log('💰 ========== FIM CREDITO ==========');
       } catch (walletErr) {
-        console.error('❌ Erro ao processar carteira:', walletErr);
-        // Não falhar a operação principal
+        console.error('❌ ERRO GERAL ao processar carteira:', walletErr);
+        console.error('  - Stack:', walletErr.stack);
       }
     }
 
