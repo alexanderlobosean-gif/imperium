@@ -264,6 +264,9 @@ export const adminAPI = {
     body: JSON.stringify(data),
   }),
 
+  // Transfers
+  getTransfers: () => apiRequest('/admin/transfers'),
+
   // Investments/Yields
   getInvestments: () => apiRequest('/admin/investments'),
   getYields: () => apiRequest('/admin/yields'),
