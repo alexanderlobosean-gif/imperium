@@ -13,6 +13,7 @@ const TYPE_CONFIG = {
   reinvestment: { label: 'Reinvestimento', icon: RefreshCw, color: 'text-blue-400' },
   penalty: { label: 'Multa', icon: ArrowUpCircle, color: 'text-red-400' },
   career_bonus: { label: 'Bônus Carreira', icon: TrendingUp, color: 'text-amber-400' },
+  investment: { label: 'Investimento', icon: TrendingUp, color: 'text-gold' },
 };
 
 const STATUS_LABELS = {
@@ -20,6 +21,7 @@ const STATUS_LABELS = {
   approved: { label: 'Aprovado', color: 'bg-green-500/10 text-green-400' },
   rejected: { label: 'Rejeitado', color: 'bg-red-500/10 text-red-400' },
   completed: { label: 'Concluído', color: 'bg-blue-500/10 text-blue-400' },
+  active: { label: 'Ativo', color: 'bg-green-500/10 text-green-400' },
 };
 
 export default function RecentTransactions({ transactions = [], limit = 5 }) {

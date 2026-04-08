@@ -1720,6 +1720,37 @@ router.post('/investments', async (req, res) => {
       return res.status(500).json({ error: 'Erro ao criar investimento' });
     }
 
+    // Deduzir saldo da carteira do usuário
+    console.log('💰 Deduzindo saldo do usuário:', userId, 'Valor:', amount);
+    
+    // Buscar saldo atual
+    const { data: currentBalance, error: balanceFetchError } = await req.supabase
+      .from('wallet_balances')
+      .select('wallet_balance')
+      .eq('user_id', userId)
+      .single();
+    
+    if (balanceFetchError) {
+      console.error('⚠️ Erro ao buscar saldo atual:', balanceFetchError);
+    } else {
+      const newWalletBalance = (currentBalance?.wallet_balance || 0) - amount;
+      
+      // Atualizar saldo
+      const { error: balanceUpdateError } = await req.supabase
+        .from('wallet_balances')
+        .update({
+          wallet_balance: newWalletBalance,
+          updated_at: new Date().toISOString()
+        })
+        .eq('user_id', userId);
+      
+      if (balanceUpdateError) {
+        console.error('❌ Erro ao atualizar saldo:', balanceUpdateError);
+      } else {
+        console.log('✅ Saldo atualizado! Novo valor:', newWalletBalance);
+      }
+    }
+
     // Registrar saída no financial_ledger para deduzir saldo
     const { error: ledgerError } = await req.supabase
       .from('financial_ledger')
