@@ -1,7 +1,6 @@
 import React from 'react';
 import { useAuth } from '@/lib/AuthContext';
-// import { base44 } from '@/api/base44Client'; // Removido - agora usa Supabase
-import { supabase } from '@/lib/supabase'; // Adicionado
+import { financialAPI } from '@/services/api'; // Usar API em vez de Supabase direto
 import { useQuery } from '@tanstack/react-query';
 import { formatCurrency, RESIDUAL_PERCENTAGES } from '@/lib/planConfig';
 import { Users } from 'lucide-react';
@@ -9,56 +8,29 @@ import { Users } from 'lucide-react';
 export default function NetworkMembersTable() {
   const { user } = useAuth();
 
-  const { data: networkMembers = [], isLoading: isLoadingNetwork, error: networkError } = useQuery({
+  // Usar API para buscar rede e investimentos (bypass RLS)
+  const { data: networkData = {}, isLoading: isLoadingNetwork, error: networkError } = useQuery({
     queryKey: ['network', user?.id],
     queryFn: async () => {
-      if (!user?.id) return [];
+      if (!user?.id) return { network: [], indirectInvestments: {} };
       
-      console.log('Buscando membros da rede para user:', user.id);
+      console.log('Buscando dados da rede via API para user:', user.id);
       
-      // Buscar perfis onde referred_by = user.id (quem foi indicado por este usuário)
-      const userIdStr = String(user.id);
+      const data = await financialAPI.getNetwork();
+      console.log('Dados da rede recebidos:', data);
       
-      const { data: referredProfiles, error: profilesError } = await supabase
-        .from('profiles')
-        .select('user_id, full_name, email, referred_by, referral_cod, created_at')
-        .eq('referred_by', userIdStr);
-      
-      if (profilesError) {
-        console.error('Erro ao buscar profiles:', profilesError);
-        throw profilesError;
-      }
-      
-      console.log('Membros da rede encontrados:', referredProfiles);
-      
-      if (!referredProfiles || referredProfiles.length === 0) return [];
-
-      // Mapear para o formato esperado pelo componente
-      return referredProfiles.map((profile, index) => ({
-        id: profile.user_id,
-        referred_id: profile.user_id,
-        referred_name: profile.full_name || 'N/A',
-        referred_email: profile.email || '',
-        level: 1, // Nível 1 = indicação direta
-        referral_code: profile.referral_cod || '',
-        created_at: profile.created_at
-      }));
+      return data;
     },
     enabled: !!user?.id,
+    refetchOnMount: 'always',
+    staleTime: 0,
   });
 
-  const { data: allInvestments = [] } = useQuery({
-    queryKey: ['all-investments'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('investments')
-        .select('*')
-        .eq('status', 'active');
-      if (error) throw error;
-      return data || [];
-    },
-    enabled: !!user?.id,
-  });
+  const networkMembers = networkData.network || [];
+  const indirectInvestments = networkData.indirectInvestments || {};
+  
+  // Converter indirectInvestments (objeto) para array
+  const allInvestments = Object.values(indirectInvestments);
 
   // Map investment by user_id
   const investmentByUser = {};
@@ -66,8 +38,15 @@ export default function NetworkMembersTable() {
     investmentByUser[inv.user_id] = inv;
   });
 
+  // Debug logs
+  console.log('🔍 DEBUG NetworkMembersTable:');
+  console.log('  - networkMembers:', networkMembers);
+  console.log('  - allInvestments:', allInvestments);
+  console.log('  - investmentByUser:', investmentByUser);
+
   const totalInvested = (Array.isArray(networkMembers) ? networkMembers : []).reduce((sum, m) => {
     const inv = investmentByUser[m.referred_id];
+    console.log(`  - Membro ${m.referred_name} (${m.referred_id}):`, inv);
     return sum + (inv?.amount || 0);
   }, 0);
 
