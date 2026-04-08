@@ -1949,13 +1949,9 @@ router.get('/referral', async (req, res) => {
       }
     }
 
-    const origin = req.headers.origin || process.env.FRONTEND_URL || 'http://localhost:5173';
-    const referralLink = `${origin}/register?ref=${referralCode}`;
-
     console.log('✅ Referral gerado:', referralCode);
     res.json({ 
-      referral_code: referralCode,
-      referral_link: referralLink
+      referral_code: referralCode
     });
 
   } catch (error) {
