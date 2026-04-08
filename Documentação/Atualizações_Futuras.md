@@ -6,4 +6,4 @@ scp -r dist root@69.169.101.230:/var/www/imperium/
 
 
 
-cd /var/www/imperium/backend && bash deploy_from_git.sh
+cd /var/www/imperium && bash deploy_from_git.sh

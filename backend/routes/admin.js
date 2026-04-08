@@ -905,4 +905,70 @@ router.get('/stats', requireAdmin, async (req, res) => {
   }
 });
 
+// ==================== TRANSFERS ====================
+
+// @route   GET /api/admin/transfers
+// @desc    Listar todas as transferências entre usuários
+// @access  Admin
+router.get('/transfers', requireAdmin, async (req, res) => {
+  try {
+    const { page = 1, limit = 50, status = 'all' } = req.query;
+    const offset = (page - 1) * limit;
+
+    let query = req.supabase
+      .from('transfers')
+      .select('*')
+      .order('created_at', { ascending: false });
+
+    if (status !== 'all') {
+      query = query.eq('status', status);
+    }
+
+    const { data: transfers, error } = await query.range(offset, offset + limit - 1);
+
+    if (error) {
+      console.error('Erro ao buscar transferências:', error);
+      return res.status(500).json({ error: 'Erro ao buscar transferências' });
+    }
+
+    // Buscar nomes dos usuários (remetentes e destinatários)
+    const userIds = [...new Set([
+      ...(transfers || []).map(t => t.from_user_id),
+      ...(transfers || []).map(t => t.to_user_id)
+    ])].filter(Boolean);
+
+    let userMap = {};
+    if (userIds.length > 0) {
+      const { data: profiles } = await req.supabase
+        .from('profiles')
+        .select('user_id, full_name, email')
+        .in('user_id', userIds);
+
+      if (profiles) {
+        profiles.forEach(p => {
+          userMap[p.user_id] = p;
+        });
+      }
+    }
+
+    // Enriquecer dados com nomes dos usuários
+    const enrichedTransfers = (transfers || []).map(t => ({
+      ...t,
+      sender: userMap[t.from_user_id] || { full_name: 'N/A', email: '' },
+      recipient: userMap[t.to_user_id] || { full_name: 'N/A', email: '' }
+    }));
+
+    res.json({
+      transfers: enrichedTransfers,
+      page: parseInt(page),
+      limit: parseInt(limit),
+      total: enrichedTransfers.length
+    });
+
+  } catch (error) {
+    console.error('Erro no endpoint admin/transfers:', error);
+    res.status(500).json({ error: 'Erro interno do servidor' });
+  }
+});
+
 module.exports = router;

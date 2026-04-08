@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useAuth } from '@/lib/AuthContext';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { ShieldCheck, Users, Wallet, TrendingUp, CheckCircle, Settings, CreditCard, Network } from 'lucide-react';
+import { ShieldCheck, Users, Wallet, TrendingUp, CheckCircle, Settings, CreditCard, Network, ArrowRightLeft } from 'lucide-react';
 import AdminUsers from '@/components/admin/AdminUsers';
 import AdminDeposits from '@/components/admin/AdminDeposits';
 import AdminWithdrawals from '@/components/admin/AdminWithdrawals';
@@ -10,6 +10,7 @@ import AdminYields from '@/components/admin/AdminYields';
 import AdminPlans from '@/components/admin/AdminPlans';
 import AdminBanking from '@/components/admin/AdminBanking';
 import AdminNetworkMigration from '@/components/admin/AdminNetworkMigration';
+import AdminTransfers from '@/components/admin/AdminTransfers';
 
 export default function AdminPanel() {
   const { user } = useAuth();
@@ -45,7 +46,7 @@ export default function AdminPanel() {
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="bg-secondary border border-border grid grid-cols-8 w-full">
+        <TabsList className="bg-secondary border border-border grid grid-cols-9 w-full">
           <TabsTrigger value="stats" className="data-[state=active]:bg-gold/10 data-[state=active]:text-gold">
             <TrendingUp className="w-4 h-4 mr-2" /> Dashboard
           </TabsTrigger>
@@ -57,6 +58,9 @@ export default function AdminPanel() {
           </TabsTrigger>
           <TabsTrigger value="withdrawals" className="data-[state=active]:bg-red-500/10 data-[state=active]:text-red-400">
             <CheckCircle className="w-4 h-4 mr-2" /> Saques
+          </TabsTrigger>
+          <TabsTrigger value="transfers" className="data-[state=active]:bg-pink-500/10 data-[state=active]:text-pink-400">
+            <ArrowRightLeft className="w-4 h-4 mr-2" /> Transferências
           </TabsTrigger>
           <TabsTrigger value="yields" className="data-[state=active]:bg-green-500/10 data-[state=active]:text-green-400">
             <TrendingUp className="w-4 h-4 mr-2" /> Rendimentos
@@ -76,6 +80,7 @@ export default function AdminPanel() {
         <TabsContent value="users"><AdminUsers /></TabsContent>
         <TabsContent value="deposits"><AdminDeposits /></TabsContent>
         <TabsContent value="withdrawals"><AdminWithdrawals /></TabsContent>
+        <TabsContent value="transfers"><AdminTransfers /></TabsContent>
         <TabsContent value="yields"><AdminYields /></TabsContent>
         <TabsContent value="banking"><AdminBanking /></TabsContent>
         <TabsContent value="plans"><AdminPlans /></TabsContent>
