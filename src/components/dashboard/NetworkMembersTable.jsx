@@ -27,16 +27,11 @@ export default function NetworkMembersTable() {
   });
 
   const networkMembers = networkData.network || [];
-  const indirectInvestments = networkData.indirectInvestments || {};
-  
-  // Converter indirectInvestments (objeto) para array
-  const allInvestments = Object.values(indirectInvestments);
+  // indirectInvestments já vem como { user_id: investment } da API
+  const investmentByUser = networkData.indirectInvestments || {};
 
-  // Map investment by user_id
-  const investmentByUser = {};
-  allInvestments.forEach((inv) => {
-    investmentByUser[inv.user_id] = inv;
-  });
+  // Converter indirectInvestments (objeto) para array
+  const allInvestments = Object.values(investmentByUser);
 
   // Debug logs
   console.log('🔍 DEBUG NetworkMembersTable:');
