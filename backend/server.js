@@ -41,8 +41,27 @@ app.use(helmet({
 }));
 
 // ✅ CORS - PRIMEIRO, antes de todas as rotas
+const allowedOrigins = [
+  'http://imperiumclub.asia',
+  'http://www.imperiumclub.asia',
+  'https://imperiumclub.asia',
+  'https://www.imperiumclub.asia',
+  'http://69.169.101.230',
+  'http://localhost:5173',
+  'http://localhost:3000'
+];
+
 app.use(cors({
-  origin: true,
+  origin: function(origin, callback) {
+    // Permitir requests sem origin (como mobile apps ou curl)
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.indexOf(origin) === -1) {
+      console.log('⚠️ CORS - Origin não permitida:', origin);
+      // Em produção, você pode querer bloquear. Por enquanto, permitimos com log.
+      return callback(null, true);
+    }
+    return callback(null, true);
+  },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin']
