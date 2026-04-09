@@ -38,6 +38,7 @@ app.use(
 const allowedOrigins = [
   'https://imperiumclub.asia',
   'https://www.imperiumclub.asia',
+  'https://api.imperiumclub.asia',
   'https://imperiumclub.vercel.app',
   'https://homolog.imperiumclub.vercel.app',
   'http://localhost:5173',
