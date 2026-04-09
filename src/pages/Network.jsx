@@ -61,7 +61,8 @@ export default function Network() {
 
   const totalGenerated = networkMembers.reduce((sum, m) => sum + (m.total_generated || 0), 0);
   const activeInvestment = investments[0];
-  const unlockedLevels = activeInvestment?.unlocked_levels || 0;
+  const totalInvested = activeInvestment ? (parseFloat(activeInvestment.amount) || 0) : 0;
+  const unlockedLevels = getUnlockedLevels(totalInvested);
 
   const referralLink = referralData?.referral_link || 
     (user?.referral_code ? `${import.meta.env.VITE_APP_URL}/register?ref=${user.referral_code}` : '');
@@ -188,9 +189,11 @@ export default function Network() {
                 <div className="text-right">
                   <Badge variant="outline" className="text-purple-400 border-purple-500/30 mb-1">N{member.level}</Badge>
                   {indirectInvestments[member.referred_id] != null && (
-                    <p className="text-xs text-muted-foreground">Investiu: <span className="text-gold font-semibold">{formatCurrency(indirectInvestments[member.referred_id])}</span></p>
+                    <>
+                      <p className="text-xs text-muted-foreground">Investiu: <span className="text-gold font-semibold">{formatCurrency(indirectInvestments[member.referred_id].amount)}</span></p>
+                      <p className="text-xs font-semibold text-green-400">Bônus: {formatCurrency((indirectInvestments[member.referred_id].total_yield || 0) * ((RESIDUAL_PERCENTAGES[member.level] || 0) / 100))}</p>
+                    </>
                   )}
-                  <p className="text-xs font-semibold text-green-400">Bônus: {formatCurrency((member.total_generated || 0) * ((RESIDUAL_PERCENTAGES[member.level] || 0) / 100))}</p>
                 </div>
               </div>
             ))}
