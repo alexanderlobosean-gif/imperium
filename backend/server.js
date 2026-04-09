@@ -46,7 +46,12 @@ const allowedOrigins = [
   'http://www.imperiumclub.asia',
   'https://imperiumclub.asia',
   'https://www.imperiumclub.asia',
+  'https://imperiumclub.vercel.app',
+  'https://homolog.imperiumclub.vercel.app',
+  'http://imperiumclub.vercel.app',
+  'http://www.imperiumclub.vercel.app',
   'http://69.169.101.230',
+  'https://69.169.101.230',
   'http://localhost:5173',
   'http://localhost:3000'
 ];
