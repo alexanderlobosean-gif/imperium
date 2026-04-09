@@ -40,6 +40,7 @@ import {
   Building2,
   Copy,
   Check,
+  CheckCircle,
   QrCode,
   DollarSign,
   Clock
@@ -225,7 +226,7 @@ const fetchUserInvestments = async () => {
 
 // Fetch user deposits via API
 const fetchUserDeposits = async () => {
-  const response = await financialAPI.getDeposits({ status: 'confirmed' });
+  const response = await financialAPI.getDeposits({});
   return response.deposits || [];
 };
 
@@ -293,6 +294,7 @@ export default function Wallet() {
   const [usdtWallet, setUsdtWallet] = useState('');
   const [pendingDepositId, setPendingDepositId] = useState(null);
   const [transactionHash, setTransactionHash] = useState('');
+  const [showDepositSuccessModal, setShowDepositSuccessModal] = useState(false);
 
   // Deposit
   const [depositAmount, setDepositAmount] = useState('');
@@ -537,10 +539,19 @@ export default function Wallet() {
     },
     onSuccess: (data) => {
       console.log('✅ Transaction Hash enviado:', data);
-      toast.success('Transaction Hash enviado com sucesso! Aguarde aprovação do admin.');
+      toast.success('Solicitação Enviada com Sucesso!');
       setTransactionHash('');
-      // Invalidar queries para forçar refresh
+      // Fechar aba de depósito (igual botão Fechar)
+      setShowUSDTDeposit(false);
+      setUsdtQRCode(null);
+      setDepositAmount('');
+      setAcceptedTerms(false);
+      setPendingDepositId(null);
+      // Mostrar modal de sucesso
+      setShowDepositSuccessModal(true);
+      // Invalidar queries para forçar refresh do histórico
       queryClient.invalidateQueries({ queryKey: ['confirmed-deposits', user?.id] });
+      queryClient.invalidateQueries({ queryKey: ['transactions', user?.id] });
     },
     onError: (error) => {
       console.error('❌ Erro ao enviar Transaction Hash:', error);
@@ -1480,6 +1491,37 @@ export default function Wallet() {
               ) : (
                 'Confirmar Transferência'
               )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Success Modal for Deposit */}
+      <Dialog open={showDepositSuccessModal} onOpenChange={setShowDepositSuccessModal}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-green-600">
+              <CheckCircle className="w-6 h-6" />
+              Solicitação Enviada com Sucesso!
+            </DialogTitle>
+          </DialogHeader>
+          <div className="py-4 text-center">
+            <div className="bg-green-50 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
+              <CheckCircle className="w-8 h-8 text-green-500" />
+            </div>
+            <p className="text-gray-700 mb-2">
+              Seu depósito foi registrado e está aguardando confirmação.
+            </p>
+            <p className="text-sm text-gray-500">
+              O saldo será creditado automaticamente após a aprovação do administrador.
+            </p>
+          </div>
+          <DialogFooter>
+            <Button
+              onClick={() => setShowDepositSuccessModal(false)}
+              className="w-full bg-gold hover:bg-gold/90"
+            >
+              Entendi
             </Button>
           </DialogFooter>
         </DialogContent>
