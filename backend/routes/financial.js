@@ -1599,9 +1599,30 @@ router.get('/network', async (req, res) => {
       }
     }
 
+    // Buscar investments dos membros da rede primeiro (para usar no mapeamento)
+    let indirectInvestments = {};
+    if (referredIds.length > 0) {
+      const { data: investments, error: invError } = await req.supabase
+        .from('investments')
+        .select('user_id, amount, total_yield')
+        .in('user_id', referredIds)
+        .eq('status', 'active');
+
+      if (!invError && investments) {
+        investments.forEach(inv => {
+          // Retornar objeto com amount e total_yield separados
+          indirectInvestments[inv.user_id] = {
+            amount: parseFloat(inv.amount) || 0,
+            total_yield: parseFloat(inv.total_yield) || 0
+          };
+        });
+      }
+    }
+
     // Mapear para o formato esperado pelo frontend
     const network = networkRelations.map((relation) => {
       const profile = profileMap[relation.referred_id] || {};
+      const investment = indirectInvestments[relation.referred_id] || {};
       return {
         id: relation.id,
         referred_id: relation.referred_id,
@@ -1610,25 +1631,10 @@ router.get('/network', async (req, res) => {
         level: relation.level || 1,
         referral_code: relation.referral_code || profile.referral_code || '',
         status: relation.status,
-        created_at: relation.created_at
+        created_at: relation.created_at,
+        total_generated: investment.total_yield || 0
       };
     });
-
-    // Buscar investments dos membros da rede
-    let indirectInvestments = {};
-    if (referredIds.length > 0) {
-      const { data: investments, error: invError } = await req.supabase
-        .from('investments')
-        .select('*')
-        .in('user_id', referredIds)
-        .eq('status', 'active');
-
-      if (!invError && investments) {
-        investments.forEach(inv => {
-          indirectInvestments[inv.user_id] = inv;
-        });
-      }
-    }
 
     res.json({
       network: network || [],
