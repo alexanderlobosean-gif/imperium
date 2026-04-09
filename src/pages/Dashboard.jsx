@@ -145,15 +145,16 @@ export default function Dashboard() {
 
   // Calcular totais reais a partir dos investimentos
   const totalInvested = investments.reduce((sum, i) => sum + (parseFloat(i.amount) || 0), 0);
-  const totalEarnings = investments.reduce((sum, i) => sum + (parseFloat(i.total_earned) || 0), 0);
+  const totalEarnings = investments.reduce((sum, i) => sum + (parseFloat(i.total_yield) || 0), 0);
 
   const availableBalance = balanceData?.available_balance || 0;
 
   const activeInvestment = investments.find((i) => i.status === 'active');
+  
   const networkEarnings = (Array.isArray(networkMembers) ? networkMembers : []).reduce((sum, m) => {
     const inv = investmentByUser[m.referred_id];
     const pct = (RESIDUAL_PERCENTAGES[m.level] || 0) / 100;
-    return sum + (inv?.total_earned || 0) * pct;
+    return sum + (inv?.total_yield || 0) * pct;
   }, 0);
   const totalValue = availableBalance;
 
