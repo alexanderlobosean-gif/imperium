@@ -204,24 +204,35 @@ export default function AdminWithdrawals() {
                     </div>
                   </div>
                   
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-                    <div>
-                      <p className="text-muted-foreground">Valor</p>
-                      <p className="font-medium">{formatCurrency(withdrawal.amount)}</p>
-                    </div>
-                    <div>
-                      <p className="text-muted-foreground">Taxa de Processamento</p>
-                      <p className="font-medium">{formatCurrency(withdrawal.processing_fee || 0)}</p>
-                    </div>
-                    <div>
-                      <p className="text-muted-foreground">Valor Líquido</p>
-                      <p className="font-medium">{formatCurrency(withdrawal.amount - (withdrawal.processing_fee || 0))}</p>
-                    </div>
-                    <div>
-                      <p className="text-muted-foreground">Data</p>
-                      <p className="font-medium">{new Date(withdrawal.created_at).toLocaleDateString('pt-BR')}</p>
-                    </div>
-                  </div>
+                  {/* Valores calculados com taxa de 5% */}
+                  {(() => {
+                    const amount = parseFloat(withdrawal.amount) || 0;
+                    const processingFee = parseFloat(withdrawal.processing_fee) > 0 
+                      ? parseFloat(withdrawal.processing_fee) 
+                      : amount * 0.05;
+                    const netAmount = amount - processingFee;
+                    
+                    return (
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                        <div>
+                          <p className="text-muted-foreground">Valor Solicitado</p>
+                          <p className="font-medium text-lg">{formatCurrency(amount)}</p>
+                        </div>
+                        <div>
+                          <p className="text-muted-foreground">Taxa de Processamento (5%)</p>
+                          <p className="font-medium text-amber-600">{formatCurrency(processingFee)}</p>
+                        </div>
+                        <div>
+                          <p className="text-muted-foreground">Valor Líquido a Transferir</p>
+                          <p className="font-medium text-green-600 text-lg">{formatCurrency(netAmount)}</p>
+                        </div>
+                        <div>
+                          <p className="text-muted-foreground">Data</p>
+                          <p className="font-medium">{new Date(withdrawal.created_at).toLocaleDateString('pt-BR')}</p>
+                        </div>
+                      </div>
+                    );
+                  })()}
                   
                   <div className="mt-4">
                     <p className="text-sm text-muted-foreground">Endereço de Destino</p>
@@ -296,6 +307,7 @@ export default function AdminWithdrawals() {
           
           {selectedWithdrawal && (
             <div className="space-y-6">
+              {/* Valores com taxa de 5% calculada */}
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <p className="text-sm text-muted-foreground">Usuário</p>
@@ -304,16 +316,33 @@ export default function AdminWithdrawals() {
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">Valor Solicitado</p>
-                  <p className="font-medium text-lg">{formatCurrency(selectedWithdrawal.amount)}</p>
+                  <p className="font-medium text-lg text-blue-600">{formatCurrency(selectedWithdrawal.amount)}</p>
                 </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">Taxa de Processamento</p>
-                  <p className="font-medium">{formatCurrency(selectedWithdrawal.processing_fee || 0)}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">Valor Líquido</p>
-                  <p className="font-medium text-lg">{formatCurrency(selectedWithdrawal.amount - (selectedWithdrawal.processing_fee || 0))}</p>
-                </div>
+                {/* Calcular valores com taxa de 5% */}
+                {(() => {
+                  const amount = parseFloat(selectedWithdrawal.amount) || 0;
+                  const processingFee = parseFloat(selectedWithdrawal.processing_fee) > 0 
+                    ? parseFloat(selectedWithdrawal.processing_fee) 
+                    : amount * 0.05;
+                  const netAmount = amount - processingFee;
+                  
+                  return (
+                    <>
+                      <div>
+                        <p className="text-sm text-muted-foreground">Taxa de Processamento (5%)</p>
+                        <p className="font-medium text-amber-600">{formatCurrency(processingFee)}</p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-muted-foreground">Valor Líquido a Transferir</p>
+                        <p className="font-medium text-lg text-green-600">{formatCurrency(netAmount)}</p>
+                      </div>
+                    </>
+                  );
+                })()}
+              </div>
+              
+              {/* Grid com informações adicionais */}
+              <div className="grid grid-cols-2 gap-4">
                 <div>
                   <p className="text-sm text-muted-foreground">Método</p>
                   <div className="mt-1">{getMethodBadge(selectedWithdrawal.method)}</div>
