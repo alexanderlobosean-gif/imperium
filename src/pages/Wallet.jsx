@@ -305,6 +305,7 @@ export default function Wallet() {
   const [withdrawMethod, setWithdrawMethod] = useState('usdt'); // 'usdt' | 'pix'
   const [withdrawWallet, setWithdrawWallet] = useState(user?.crypto_wallet || '');
   const [withdrawType, setWithdrawType] = useState('yield');
+  const [showWithdrawSuccessModal, setShowWithdrawSuccessModal] = useState(false);
 
   // Transfer
   const [transferAmount, setTransferAmount] = useState('');
@@ -463,12 +464,53 @@ export default function Wallet() {
       setWithdrawAmount('');
       setWithdrawWallet('');
       setAcceptedTerms(false);
+      // Mostrar modal de sucesso
+      setShowWithdrawSuccessModal(true);
       // Refetch withdrawals list
       queryClient.invalidateQueries({ queryKey: ['withdrawals', user?.id] });
     },
     onError: (error) => {
       console.error('❌ onError chamado:', error);
-      toast.error(`Erro ao solicitar saque: ${error.message}`);
+      
+      // Extrair mensagem de erro da API
+      const errorMessage = error.message || error.error || 'Erro desconhecido';
+      
+      // Tratamento específico para diferentes tipos de erro
+      if (errorMessage.includes('Saldo insuficiente')) {
+        toast.error(
+          <div className="flex flex-col gap-1">
+            <span className="font-semibold">Saldo Insuficiente</span>
+            <span className="text-sm">Você não possui saldo suficiente para realizar este saque.</span>
+            <span className="text-xs text-gray-400 mt-1">Verifique seu saldo disponível na carteira.</span>
+          </div>,
+          { duration: 5000 }
+        );
+      } else if (errorMessage.includes('valor mínimo') || errorMessage.includes('minimum')) {
+        toast.error(
+          <div className="flex flex-col gap-1">
+            <span className="font-semibold">Valor Mínimo Não Atendido</span>
+            <span className="text-sm">O valor solicitado está abaixo do mínimo permitido.</span>
+          </div>,
+          { duration: 5000 }
+        );
+      } else if (errorMessage.includes('limite') || errorMessage.includes('limit')) {
+        toast.error(
+          <div className="flex flex-col gap-1">
+            <span className="font-semibold">Limite Excedido</span>
+            <span className="text-sm">Você excedeu o limite de saques permitido.</span>
+          </div>,
+          { duration: 5000 }
+        );
+      } else {
+        // Erro genérico com mensagem da API
+        toast.error(
+          <div className="flex flex-col gap-1">
+            <span className="font-semibold">Erro ao Solicitar Saque</span>
+            <span className="text-sm">{errorMessage}</span>
+          </div>,
+          { duration: 5000 }
+        );
+      }
     }
   });
 
@@ -594,19 +636,28 @@ export default function Wallet() {
     
     if (!withdrawAmount) {
       console.log('❌ Erro: Valor não informado');
-      toast.error('Informe o valor do saque');
+      toast.error('Valor não informado! Por favor, informe o valor que deseja sacar.', {
+        description: 'O valor mínimo para saque é de R$ 10,00.',
+        duration: 5000
+      });
       return;
     }
 
     if (!withdrawWallet) {
       console.log('❌ Erro: Carteira não informada');
-      toast.error('Informe a carteira de destino');
+      toast.error(`Carteira não informada! Por favor, informe o endereço da carteira ${withdrawMethod === 'usdt' ? 'USDT (BEP20)' : 'PIX'}.`, {
+        description: 'Verifique se digitou corretamente o endereço.',
+        duration: 5000
+      });
       return;
     }
 
     if (!acceptedTerms) {
       console.log('❌ Erro: Termos não aceitos');
-      toast.error('Aceite os termos de saque');
+      toast.error('Termos não aceitos! Você precisa aceitar os termos de saque para continuar.', {
+        description: 'Marque a caixa de seleção abaixo dos termos.',
+        duration: 5000
+      });
       return;
     }
 
@@ -1057,21 +1108,34 @@ export default function Wallet() {
             <CardContent>
               <div className="space-y-4">
                 <div>
-                  <label htmlFor="withdraw-amount" className="text-sm font-medium">Valor do Saque (R$)</label>
+                  <label htmlFor="withdraw-amount" className="text-sm font-medium">
+                    Valor do Saque (R$)
+                    <span className="text-red-500 ml-1">*</span>
+                  </label>
                   <Input
                     id="withdraw-amount"
                     type="number"
                     placeholder="50,00"
                     value={withdrawAmount}
                     onChange={(e) => setWithdrawAmount(e.target.value)}
-                    className="font-mono"
+                    className={`font-mono ${!withdrawAmount ? 'border-red-500 focus:ring-red-500' : ''}`}
                     min="10"
                     step="0.01"
                     max={availableBalance}
                   />
-                  <p className="text-xs text-muted-foreground mt-1">
-                    Saldo disponível: {formatCurrency(availableBalance)}
-                  </p>
+                  {!withdrawAmount ? (
+                    <p className="text-xs text-red-500 mt-1">
+                      ⚠️ Informe o valor do saque (mínimo: R$ 10,00)
+                    </p>
+                  ) : parseFloat(withdrawAmount) < 10 ? (
+                    <p className="text-xs text-red-500 mt-1">
+                      ⚠️ Valor mínimo para saque é R$ 10,00
+                    </p>
+                  ) : (
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Saldo disponível: {formatCurrency(availableBalance)}
+                    </p>
+                  )}
                 </div>
 
                 {/* Aviso sobre saques aos sábados */}
@@ -1105,13 +1169,20 @@ export default function Wallet() {
                 <div>
                   <label htmlFor="withdraw-wallet" className="text-sm font-medium">
                     {withdrawMethod === 'usdt' ? 'Carteira USDT (BEP20)' : 'Chave PIX'}
+                    <span className="text-red-500 ml-1">*</span>
                   </label>
                   <Input
                     id="withdraw-wallet"
                     placeholder={withdrawMethod === 'usdt' ? 'Endereço da carteira USDT' : 'Chave PIX (CPF, CNPJ, Email, Celular ou Chave Aleatória)'}
                     value={withdrawWallet}
                     onChange={(e) => setWithdrawWallet(e.target.value)}
+                    className={!withdrawWallet && withdrawAmount ? 'border-red-500 focus:ring-red-500' : ''}
                   />
+                  {!withdrawWallet && (
+                    <p className="text-xs text-red-500 mt-1">
+                      ⚠️ Informe o endereço da carteira para receber o saque
+                    </p>
+                  )}
                 </div>
                 <div>
                   <label htmlFor="withdraw-type" className="text-sm font-medium">Tipo de Saque</label>
@@ -1138,9 +1209,17 @@ export default function Wallet() {
 
                 {/* Mensagem informativa quando termos não aceitos */}
                 {!acceptedTerms && (
-                  <p className="text-xs text-amber-600 bg-amber-50 p-2 rounded">
-                    Clique em "Ver Termos de Saque" e aceite-os para habilitar o botão de solicitação
-                  </p>
+                  <div className="flex items-start gap-2 bg-amber-50 border border-amber-200 rounded-lg p-3">
+                    <span className="text-amber-600 text-lg">⚠️</span>
+                    <div>
+                      <p className="text-sm font-medium text-amber-800">
+                        Termos de Saque Não Aceitos
+                      </p>
+                      <p className="text-xs text-amber-700 mt-1">
+                        Clique em "Ver Termos de Saque", leia e aceite-os para habilitar o botão de solicitação.
+                      </p>
+                    </div>
+                  </div>
                 )}
 
                 <Button 
@@ -1157,6 +1236,21 @@ export default function Wallet() {
                 >
                   {createWithdrawalMutation.isPending ? 'Processando...' : 'Solicitar Saque'}
                 </Button>
+                
+                {/* Mensagem explicando por que o botão está desabilitado */}
+                {(!withdrawAmount || !withdrawWallet || !acceptedTerms) && (
+                  <div className="bg-gray-50 border border-gray-200 rounded-lg p-3 text-center">
+                    <p className="text-xs text-gray-600">
+                      <span className="font-medium">Para solicitar o saque, preencha:</span>
+                      <br />
+                      {!withdrawAmount && '• Valor do saque (mínimo R$ 10,00)'}
+                      {!withdrawAmount && !withdrawWallet && <br />}
+                      {!withdrawWallet && '• Endereço da carteira de destino'}
+                      {!withdrawWallet && !acceptedTerms && <br />}
+                      {!acceptedTerms && '• Aceite os termos de saque'}
+                    </p>
+                  </div>
+                )}
               </div>
             </CardContent>
           </Card>
@@ -1519,6 +1613,48 @@ export default function Wallet() {
           <DialogFooter>
             <Button
               onClick={() => setShowDepositSuccessModal(false)}
+              className="w-full bg-gold hover:bg-gold/90"
+            >
+              Entendi
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Success Modal for Withdrawal */}
+      <Dialog open={showWithdrawSuccessModal} onOpenChange={setShowWithdrawSuccessModal}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-green-600">
+              <CheckCircle className="w-6 h-6" />
+              Saque Solicitado com Sucesso!
+            </DialogTitle>
+          </DialogHeader>
+          <div className="py-4 text-center">
+            <div className="bg-green-50 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
+              <CheckCircle className="w-8 h-8 text-green-500" />
+            </div>
+            <p className="text-gray-700 mb-2">
+              Sua solicitação de saque foi enviada e está aguardando processamento.
+            </p>
+            
+            {/* Informação sobre taxa */}
+            <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 mb-3">
+              <p className="text-sm text-amber-800 font-medium">
+                Taxa de Processamento: 5%
+              </p>
+              <p className="text-xs text-amber-700 mt-1">
+                Será cobrada uma taxa de 5% sobre o valor do saque para processamento da transação.
+              </p>
+            </div>
+            
+            <p className="text-sm text-gray-500">
+              O valor líquido será transferido em até 48 horas úteis após a aprovação.
+            </p>
+          </div>
+          <DialogFooter>
+            <Button
+              onClick={() => setShowWithdrawSuccessModal(false)}
               className="w-full bg-gold hover:bg-gold/90"
             >
               Entendi
