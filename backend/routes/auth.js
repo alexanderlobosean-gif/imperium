@@ -252,6 +252,95 @@ router.post('/logout', async (req, res) => {
   }
 });
 
+// @route   POST /api/auth/create-oauth-profile
+// @desc    Criar perfil para usuário OAuth (Google SSO)
+// @access  Private (requer token válido do Supabase)
+router.post('/create-oauth-profile', async (req, res) => {
+  try {
+    const { user_id, email, full_name } = req.body;
+
+    if (!user_id || !email) {
+      return res.status(400).json({ error: 'user_id e email são obrigatórios' });
+    }
+
+    console.log('🔍 Criando perfil OAuth para:', email);
+
+    // Verificar se perfil já existe
+    const { data: existingProfile } = await req.supabase
+      .from('profiles')
+      .select('id, user_id, email')
+      .eq('user_id', user_id)
+      .single();
+
+    if (existingProfile) {
+      console.log('✅ Perfil já existe:', existingProfile);
+      return res.json({ 
+        success: true, 
+        message: 'Perfil já existe',
+        profile: existingProfile 
+      });
+    }
+
+    // Criar perfil usando service role (bypass RLS)
+    const { data: newProfile, error: createError } = await req.supabase
+      .from('profiles')
+      .insert({
+        user_id,
+        email,
+        full_name: full_name || email.split('@')[0],
+        role: 'user',
+        status: 'active'
+      })
+      .select('id, user_id, email, full_name, role, referral_code')
+      .single();
+
+    if (createError) {
+      // Se o perfil já existe (erro de duplicado), buscar e retornar
+      if (createError.code === '23505') {
+        console.log('⚠️ Perfil já existe (erro 23505), buscando...');
+        const { data: existingProfile, error: fetchError } = await req.supabase
+          .from('profiles')
+          .select('id, user_id, email, full_name, role, referral_code')
+          .eq('user_id', user_id)
+          .single();
+        
+        if (fetchError) {
+          console.error('❌ Erro ao buscar perfil existente:', fetchError);
+          return res.status(500).json({ 
+            error: 'Erro ao buscar perfil existente',
+            details: fetchError.message 
+          });
+        }
+        
+        console.log('✅ Perfil existente retornado:', existingProfile);
+        return res.json({ 
+          success: true, 
+          message: 'Perfil já existe',
+          profile: existingProfile 
+        });
+      }
+      
+      console.error('❌ Erro ao criar perfil OAuth:', createError);
+      return res.status(500).json({ 
+        error: 'Erro ao criar perfil',
+        details: createError.message 
+      });
+    }
+
+    console.log('✅ Perfil OAuth criado com sucesso:', newProfile);
+
+    res.json({ 
+      success: true, 
+      message: 'Perfil criado com sucesso',
+      profile: newProfile 
+    });
+
+  } catch (error) {
+    console.error('❌ Erro no endpoint create-oauth-profile:', error);
+    res.status(500).json({ error: 'Erro interno do servidor' });
+  }
+});
+
 // @route   GET /api/auth/me
 // @desc    Buscar dados do usuário logado
 // @access  Private

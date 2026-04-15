@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useRef } from 'react'
 import { supabase } from '@/lib/supabase'
+import { authAPI } from '@/services/api'
 
 const AuthContext = createContext()
 
@@ -16,15 +17,57 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     // Get initial session
     const getInitialSession = async () => {
+      console.log('Getting initial session...');
+      
+      // First, check if there's an OAuth callback in the URL
+      const hash = window.location.hash;
+      const hasAuthTokens = hash.includes('access_token=') || hash.includes('refresh_token=');
+      
+      if (hasAuthTokens) {
+        console.log('Detected OAuth callback with tokens in URL');
+        console.log('Current URL hash:', hash.substring(0, 50) + '...');
+        // Wait longer for Supabase to process the tokens from URL
+        await new Promise(resolve => setTimeout(resolve, 1500));
+        console.log('Waited for token processing, checking session again...');
+      }
+      
       const { data: { session }, error } = await supabase.auth.getSession()
       
+      console.log('Session result:', { hasSession: !!session, userId: session?.user?.id, error });
+      
       if (session?.user) {
+        console.log('User authenticated:', session.user.email);
+        console.log('User metadata:', session.user.user_metadata);
+        console.log('Email confirmed:', session.user.email_confirmed_at);
+        
+        // IMPORTANT: Set authenticated immediately so Dashboard doesn't redirect
+        setIsAuthenticated(true);
+        
         // Fetch user profile to get role and referral_code from profiles table
-        const { data: profile } = await supabase
+        let { data: profile, error: profileError } = await supabase
           .from('profiles')
           .select('role, referral_code, full_name, email')
           .eq('user_id', session.user.id)
           .single();
+        
+        console.log('Profile result:', { profile, profileError });
+        
+        // If profile doesn't exist (OAuth user), create it via API
+        if (!profile) {
+          console.log('Profile not found for existing session, creating via API...');
+          try {
+            const result = await authAPI.createOAuthProfile({
+              user_id: session.user.id,
+              email: session.user.email,
+              full_name: session.user.user_metadata?.full_name || session.user.user_metadata?.name || session.user.email?.split('@')[0] || 'Usuário',
+            });
+            profile = result.profile;
+            console.log('Profile created successfully via API:', profile);
+          } catch (apiError) {
+            console.error('Error creating profile via API:', apiError);
+            // Don't fail - user can still use the app, just without profile
+          }
+        }
         
         const userData = {
           ...session.user,
@@ -34,9 +77,15 @@ export const AuthProvider = ({ children }) => {
         }
         
         setUser(userData)
-        setIsAuthenticated(true)
         currentUserId.current = session.user.id
         hasInitialized.current = true
+        
+        // Clear the URL hash if it was an OAuth callback
+        if (hasAuthTokens && window.history.replaceState) {
+          window.history.replaceState({}, document.title, window.location.pathname + window.location.search);
+        }
+      } else {
+        console.log('No session found, user not authenticated');
       }
       
       setIsLoadingAuth(false)
@@ -63,11 +112,32 @@ export const AuthProvider = ({ children }) => {
         }
         
         if (event === 'SIGNED_IN' && session?.user) {
-          const { data: profile } = await supabase
+          // IMPORTANT: Set authenticated immediately so Dashboard doesn't redirect
+          setIsAuthenticated(true);
+          
+          // Check if profile exists
+          let { data: profile } = await supabase
             .from('profiles')
             .select('role, referral_code, full_name, email')
             .eq('user_id', session.user.id)
             .single();
+          
+          // If profile doesn't exist (OAuth user), create it via API
+          if (!profile) {
+            console.log('Profile not found for OAuth user, creating via API...');
+            try {
+              const result = await authAPI.createOAuthProfile({
+                user_id: session.user.id,
+                email: session.user.email,
+                full_name: session.user.user_metadata?.full_name || session.user.user_metadata?.name || session.user.email?.split('@')[0] || 'Usuário',
+              });
+              profile = result.profile;
+              console.log('Profile created successfully via API:', profile);
+            } catch (apiError) {
+              console.error('Error creating profile via API:', apiError);
+              // Don't fail - user can still use the app, just without profile
+            }
+          }
           
           const userData = {
             ...session.user,
@@ -77,7 +147,6 @@ export const AuthProvider = ({ children }) => {
           }
           
           setUser(userData)
-          setIsAuthenticated(true)
           currentUserId.current = session.user.id
         } else if (event === 'SIGNED_OUT') {
           setUser(null)

@@ -60,7 +60,7 @@ export default function Dashboard() {
     };
 
     processNewUser().catch(console.error);
-  }, [user?.id]);
+  }, [user?.id, isLoadingAuth, isAuthenticated]);
 
   const { data: investments = [] } = useQuery({
     queryKey: ['investments', user?.id],
