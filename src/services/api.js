@@ -101,6 +101,12 @@ export const authAPI = {
   logout: () => apiRequest('/auth/logout', { method: 'POST' }),
   
   me: () => apiRequest('/auth/me'),
+
+  // Create profile for OAuth users
+  createOAuthProfile: (userData) => apiRequest('/auth/create-oauth-profile', {
+    method: 'POST',
+    body: JSON.stringify(userData),
+  }),
 };
 
 // API Financeira
