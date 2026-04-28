@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/lib/AuthContext';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
@@ -265,6 +266,7 @@ const createWithdrawal = async (withdrawalData) => {
 };
 
 export default function Wallet() {
+  const { t } = useTranslation();
   const { user, isAuthenticated } = useAuth();
   const queryClient = useQueryClient();
   const urlParams = new URLSearchParams(window.location.search);
@@ -274,7 +276,7 @@ export default function Wallet() {
 
   // Se não estiver autenticado, redirecionar
   if (!isAuthenticated || !user) {
-    console.log('❌ Usuário não autenticado, redirecionando...');
+    console.log('❌ ' + t('errors.unauthorized'));
     window.location.href = '/login';
     return null;
   }
@@ -737,9 +739,9 @@ export default function Wallet() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-foreground">Carteira</h1>
+        <h1 className="text-2xl font-bold text-foreground">{t('wallet.title')}</h1>
         <p className="text-sm text-muted-foreground mt-1">
-          Gerencie seus depósitos, saques e transferências
+          {t('wallet.subtitle') || 'Gerencie seus depósitos, saques e transferências'}
         </p>
       </div>
 
@@ -748,21 +750,21 @@ export default function Wallet() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <WalletIcon className="w-5 h-5" />
-            Saldo Total
+            {t('wallet.totalBalance')}
           </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="text-center p-4 bg-secondary/50 rounded-lg">
-              <p className="text-sm text-muted-foreground">Saldo Disponível</p>
+              <p className="text-sm text-muted-foreground">{t('wallet.availableBalance')}</p>
               <p className="text-2xl font-bold text-gold">{formatCurrency(availableBalance)}</p>
             </div>
             <div className="text-center p-4 bg-secondary/50 rounded-lg">
-              <p className="text-sm text-muted-foreground">Total Investido</p>
+              <p className="text-sm text-muted-foreground">{t('wallet.totalInvested')}</p>
               <p className="text-2xl font-bold text-blue-600">{formatCurrency(totalInvested)}</p>
             </div>
             <div className="text-center p-4 bg-secondary/50 rounded-lg">
-              <p className="text-sm text-muted-foreground">Total Ganho</p>
+              <p className="text-sm text-muted-foreground">{t('wallet.totalEarned')}</p>
               <p className="text-2xl font-bold text-green-600">{formatCurrency(totalEarnings)}</p>
             </div>
           </div>
@@ -773,15 +775,15 @@ export default function Wallet() {
         <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="deposit" className="flex items-center gap-2">
             <ArrowDownCircle className="w-4 h-4" />
-            Depósito
+            {t('wallet.deposit')}
           </TabsTrigger>
           <TabsTrigger value="withdraw" className="flex items-center gap-2">
             <ArrowUpCircle className="w-4 h-4" />
-            Saque
+            {t('wallet.withdraw')}
           </TabsTrigger>
           <TabsTrigger value="transfer" className="flex items-center gap-2">
             <Send className="w-4 h-4" />
-            Transferência
+            {t('wallet.transfer')}
           </TabsTrigger>
         </TabsList>
 
@@ -791,13 +793,13 @@ export default function Wallet() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <DollarSign className="w-5 h-5" />
-                Novo Depósito
+                {t('wallet.newDeposit')}
               </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
                 <div>
-                  <label htmlFor="deposit-amount" className="text-sm font-medium">Valor do Depósito (R$)</label>
+                  <label htmlFor="deposit-amount" className="text-sm font-medium">{t('wallet.depositAmount')}</label>
                   <Input
                     id="deposit-amount"
                     type="number"
@@ -810,10 +812,10 @@ export default function Wallet() {
                   />
                 </div>
                 <div>
-                  <label htmlFor="deposit-description" className="text-sm font-medium">Descrição (opcional)</label>
+                  <label htmlFor="deposit-description" className="text-sm font-medium">{t('wallet.descriptionOptional')}</label>
                   <Input
                     id="deposit-description"
-                    placeholder="Descrição do depósito"
+                    placeholder={t('wallet.depositDescriptionPlaceholder')}
                     value={depositDescription}
                     onChange={(e) => setDepositDescription(e.target.value)}
                   />
@@ -825,7 +827,7 @@ export default function Wallet() {
                     onCheckedChange={setAcceptedTerms}
                   />
                   <label htmlFor="accept-deposit-terms" className="text-sm">
-                    Li e aceito os termos de depósito
+                    {t('wallet.acceptTerms')}
                   </label>
                 </div>
                 <Button 
@@ -833,7 +835,7 @@ export default function Wallet() {
                   variant="outline"
                   className="w-full"
                 >
-                  Ver Termos de Depósito
+                  {t('wallet.viewDepositTerms')}
                 </Button>
                 <div className="flex gap-2">
                   <Button 
@@ -844,7 +846,7 @@ export default function Wallet() {
                     disabled={createUSDTDepositMutation.isPending || !depositAmount || !acceptedTerms}
                     className="flex-1"
                   >
-                    {createUSDTDepositMutation.isPending ? 'Gerando QR Code...' : 'Gerar QR Code USDT'}
+                    {createUSDTDepositMutation.isPending ? t('wallet.generatingQR') : t('wallet.generateQRUSDT')}
                   </Button>
                 </div>
               </div>
@@ -852,7 +854,7 @@ export default function Wallet() {
               {/* QR Code Display */}
               {showQR && depositAmount && adminAccounts.length > 0 && (
                 <div className="mt-6 p-6 bg-white rounded-lg border">
-                  <h4 className="text-center font-semibold mb-4">QR Code para Pagamento PIX</h4>
+                  <h4 className="text-center font-semibold mb-4">{t('wallet.qrCodeForPIX')}</h4>
                   <div className="flex justify-center mb-4">
                     <div className="bg-gray-100 p-4 rounded-lg">
                       {/* QR Code PIX válido usando API externa */}
@@ -867,22 +869,22 @@ export default function Wallet() {
                         className="w-48 h-48"
                       />
                       <p className="text-xs text-center text-gray-500 mt-2">
-                        QR Code PIX válido
+                        {t('wallet.qrCodeValid')}
                       </p>
                     </div>
                   </div>
                   <div className="text-center space-y-2">
                     <p className="text-sm text-muted-foreground">
-                      <strong>Valor:</strong> {formatCurrency(parseFloat(depositAmount))}
+                      <strong>{t('wallet.amount')}:</strong> {formatCurrency(parseFloat(depositAmount))}
                     </p>
                     <p className="text-xs text-muted-foreground">
-                      Escaneie o QR Code acima com seu app bancário
+                      {t('wallet.scanQRWithBankApp')}
                     </p>
                     <p className="text-xs text-muted-foreground">
-                      Após o pagamento, envie o comprovante
+                      {t('wallet.sendReceiptAfterPayment')}
                     </p>
                     <div className="mt-4 p-3 bg-gray-50 rounded-lg">
-                      <p className="text-xs text-gray-600 mb-2">Código PIX (copia e cola):</p>
+                      <p className="text-xs text-gray-600 mb-2">{t('wallet.pixCopyPasteCode')}</p>
                       <div className="flex items-center gap-2">
                         <p className="text-xs font-mono text-gray-800 break-all flex-1">
                           {generatePIXQRCode(
@@ -903,7 +905,7 @@ export default function Wallet() {
                               'Sao Paulo'
                             );
                             navigator.clipboard.writeText(pixCode);
-                            toast.success('Código PIX copiado!');
+                            toast.success(t('wallet.pixCodeCopied'));
                           }}
                         >
                           <Copy className="w-3 h-3" />

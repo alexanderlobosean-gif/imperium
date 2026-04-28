@@ -1,5 +1,6 @@
 import React, { useState } from 'react'
 import { Link } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { 
   Mail, 
   Phone, 
@@ -15,6 +16,7 @@ import {
 } from 'lucide-react'
 
 const Contact = () => {
+  const { t } = useTranslation()
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -26,56 +28,56 @@ const Contact = () => {
   const [isSubmitted, setIsSubmitted] = useState(false)
 
   const categories = [
-    { value: 'general', label: 'Dúvida Geral' },
-    { value: 'technical', label: 'Suporte Técnico' },
-    { value: 'billing', label: 'Financeiro' },
-    { value: 'partnership', label: 'Parceria' },
-    { value: 'complaint', label: 'Reclamação' }
+    { value: 'general', label: t('contact.categories.general') },
+    { value: 'technical', label: t('contact.categories.technical') },
+    { value: 'billing', label: t('contact.categories.billing') },
+    { value: 'partnership', label: t('contact.categories.partnership') },
+    { value: 'complaint', label: t('contact.categories.complaint') }
   ]
 
   const contactInfo = [
     {
       icon: <Mail className="w-6 h-6" />,
-      title: 'E-mail',
+      title: t('contact.contactInfo.email'),
       value: 'suporte@imperiumclub.com',
-      description: 'Resposta em até 24 horas',
+      description: t('contact.contactInfo.response24h'),
       available: true
     },
     {
       icon: <Phone className="w-6 h-6" />,
-      title: 'Telefone',
+      title: t('contact.contactInfo.phone'),
       value: '+55 11 9999-9999',
-      description: 'Segunda a Sexta, 9h-18h',
+      description: t('contact.contactInfo.businessHours'),
       available: true
     },
     {
       icon: <MessageCircle className="w-6 h-6" />,
-      title: 'Chat ao Vivo',
-      value: 'Disponível 24/7',
-      description: 'Resposta imediata',
+      title: t('contact.contactInfo.liveChat'),
+      value: t('contact.contactInfo.available24_7'),
+      description: t('contact.contactInfo.immediateResponse'),
       available: true
     },
     {
       icon: <MapPin className="w-6 h-6" />,
-      title: 'Endereço',
+      title: t('contact.contactInfo.address'),
       value: 'São Paulo, SP - Brasil',
-      description: 'Atendimento online apenas',
+      description: t('contact.contactInfo.onlineOnly'),
       available: false
     }
   ]
 
   const faqItems = [
     {
-      question: 'Qual é o tempo médio de resposta?',
-      answer: 'E-mails respondemos em até 24 horas. Chat ao vivo oferece resposta imediata durante o horário comercial.'
+      question: t('contact.faq.responseTime'),
+      answer: t('contact.faq.responseTimeAnswer')
     },
     {
-      question: 'Posso agendar uma chamada?',
-      answer: 'Sim! Envie um e-mail com "Agendar Chamada" no assunto e nossa equipe entrará em contato.'
+      question: t('contact.faq.scheduleCall'),
+      answer: t('contact.faq.scheduleCallAnswer')
     },
     {
-      question: 'Como faço para relatar um problema?',
-      answer: 'Use o formulário de contato ou envie e-mail para suporte@imperiumclub.com com detalhes do problema.'
+      question: t('contact.faq.reportProblem'),
+      answer: t('contact.faq.reportProblemAnswer')
     }
   ]
 
@@ -113,22 +115,22 @@ const Contact = () => {
               <div className="inline-flex items-center justify-center w-16 h-16 bg-green-400/20 rounded-full mb-6">
                 <CheckCircle className="w-8 h-8 text-green-400" />
               </div>
-              <h2 className="text-2xl font-bold text-white mb-4">Mensagem Enviada!</h2>
+              <h2 className="text-2xl font-bold text-white mb-4">{t('contact.messageSent')}</h2>
               <p className="text-gray-300 mb-6">
-                Sua mensagem foi recebida com sucesso. Nossa equipe responderá em até 24 horas.
+                {t('contact.messageSuccess')}
               </p>
               <div className="space-y-3">
                 <Link
                   to="/"
                   className="block w-full bg-gradient-to-r from-yellow-400 to-yellow-600 text-slate-900 px-6 py-3 rounded-lg font-bold hover:from-yellow-500 hover:to-yellow-700 transition-all duration-200"
                 >
-                  Voltar ao Início
+                  {t('contact.backToHome')}
                 </Link>
                 <Link
                   to="/support"
                   className="block w-full bg-slate-800 text-white px-6 py-3 rounded-lg font-bold hover:bg-slate-700 transition-all duration-200 border border-slate-600"
                 >
-                  Central de Suporte
+                  {t('contact.supportCenter')}
                 </Link>
               </div>
             </div>
@@ -146,11 +148,11 @@ const Contact = () => {
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
               <Link to="/support" className="text-yellow-400 hover:text-yellow-300 transition-colors">
-                ← Voltar ao Suporte
+                {t('contact.backToSupport')}
               </Link>
               <div>
-                <h1 className="text-2xl font-bold text-white">Fale Conosco</h1>
-                <p className="text-gray-400">Estamos aqui para ajudar</p>
+                <h1 className="text-2xl font-bold text-white">{t('contact.title')}</h1>
+                <p className="text-gray-400">{t('contact.subtitle')}</p>
               </div>
             </div>
           </div>
@@ -163,14 +165,14 @@ const Contact = () => {
           <div className="lg:col-span-2">
             <div className="bg-slate-900/50 backdrop-blur-sm border border-slate-700 rounded-xl p-8">
               <h2 className="text-2xl font-bold text-white mb-6">
-                Envie sua <span className="bg-gradient-to-r from-yellow-400 to-yellow-600 bg-clip-text text-transparent">mensagem</span>
+                {t('contact.sendMessage')}
               </h2>
               
               <form onSubmit={handleSubmit} className="space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
                     <label className="block text-sm font-medium text-gray-300 mb-2">
-                      Nome Completo *
+                      {t('contact.fullName')} *
                     </label>
                     <input
                       type="text"
@@ -179,13 +181,13 @@ const Contact = () => {
                       onChange={handleChange}
                       required
                       className="w-full px-4 py-3 bg-slate-800 border border-slate-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-yellow-400/50 transition-all duration-300"
-                      placeholder="Seu nome"
+                      placeholder={t('contact.namePlaceholder')}
                     />
                   </div>
                   
                   <div>
                     <label className="block text-sm font-medium text-gray-300 mb-2">
-                      E-mail *
+                      {t('contact.email')} *
                     </label>
                     <input
                       type="email"
@@ -194,14 +196,14 @@ const Contact = () => {
                       onChange={handleChange}
                       required
                       className="w-full px-4 py-3 bg-slate-800 border border-slate-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-yellow-400/50 transition-all duration-300"
-                      placeholder="seu@email.com"
+                      placeholder={t('contact.emailPlaceholder')}
                     />
                   </div>
                 </div>
 
                 <div>
                   <label className="block text-sm font-medium text-gray-300 mb-2">
-                    Categoria *
+                    {t('contact.category')} *
                   </label>
                   <select
                     name="category"
@@ -220,7 +222,7 @@ const Contact = () => {
 
                 <div>
                   <label className="block text-sm font-medium text-gray-300 mb-2">
-                    Assunto *
+                    {t('contact.subject')} *
                   </label>
                   <input
                     type="text"
@@ -229,13 +231,13 @@ const Contact = () => {
                     onChange={handleChange}
                     required
                     className="w-full px-4 py-3 bg-slate-800 border border-slate-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-yellow-400/50 transition-all duration-300"
-                    placeholder="Breve descrição do assunto"
+                    placeholder={t('contact.subjectPlaceholder')}
                   />
                 </div>
 
                 <div>
                   <label className="block text-sm font-medium text-gray-300 mb-2">
-                    Mensagem *
+                    {t('contact.message')} *
                   </label>
                   <textarea
                     name="message"
@@ -244,7 +246,7 @@ const Contact = () => {
                     required
                     rows={6}
                     className="w-full px-4 py-3 bg-slate-800 border border-slate-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-yellow-400/50 transition-all duration-300 resize-none"
-                    placeholder="Descreva detalhadamente sua dúvida ou problema..."
+                    placeholder={t('contact.messagePlaceholder')}
                   />
                 </div>
 
@@ -256,12 +258,12 @@ const Contact = () => {
                   {isSubmitting ? (
                     <>
                       <div className="w-5 h-5 border-2 border-slate-900 border-t-transparent rounded-full animate-spin"></div>
-                      <span>Enviando...</span>
+                      <span>{t('contact.sending')}</span>
                     </>
                   ) : (
                     <>
                       <Send className="w-5 h-5" />
-                      <span>Enviar Mensagem</span>
+                      <span>{t('contact.send')}</span>
                     </>
                   )}
                 </button>
@@ -273,7 +275,7 @@ const Contact = () => {
           <div className="space-y-8">
             {/* Contact Methods */}
             <div className="bg-slate-900/50 backdrop-blur-sm border border-slate-700 rounded-xl p-6">
-              <h3 className="text-xl font-bold text-white mb-6">Formas de Contato</h3>
+              <h3 className="text-xl font-bold text-white mb-6">{t('contact.contactMethods')}</h3>
               <div className="space-y-4">
                 {contactInfo.map((info, index) => (
                   <div
@@ -299,7 +301,7 @@ const Contact = () => {
 
             {/* Quick FAQ */}
             <div className="bg-slate-900/50 backdrop-blur-sm border border-slate-700 rounded-xl p-6">
-              <h3 className="text-xl font-bold text-white mb-6">Dúvidas Frequentes</h3>
+              <h3 className="text-xl font-bold text-white mb-6">{t('contact.quickFAQ')}</h3>
               <div className="space-y-4">
                 {faqItems.map((item, index) => (
                   <div key={index} className="border-b border-slate-700 last:border-b-0 pb-4 last:pb-0">
@@ -319,24 +321,24 @@ const Contact = () => {
             <div className="bg-gradient-to-r from-yellow-400/10 to-yellow-600/10 border border-yellow-400/30 rounded-xl p-6">
               <div className="flex items-center space-x-3 mb-4">
                 <Clock className="w-6 h-6 text-yellow-400" />
-                <h3 className="text-lg font-bold text-white">Horário de Atendimento</h3>
+                <h3 className="text-lg font-bold text-white">{t('contact.officeHours')}</h3>
               </div>
               <div className="space-y-2 text-gray-300">
                 <div className="flex justify-between">
-                  <span>Segunda - Sexta:</span>
+                  <span>{t('contact.mondayToFriday')}:</span>
                   <span>9h - 18h</span>
                 </div>
                 <div className="flex justify-between">
-                  <span>Sábado:</span>
+                  <span>{t('contact.saturday')}:</span>
                   <span>9h - 14h</span>
                 </div>
                 <div className="flex justify-between">
-                  <span>Domingo:</span>
-                  <span>Fechado</span>
+                  <span>{t('contact.sunday')}:</span>
+                  <span>{t('contact.closed')}</span>
                 </div>
                 <div className="flex justify-between font-semibold text-yellow-400">
-                  <span>Chat Online:</span>
-                  <span>24/7</span>
+                  <span>{t('contact.chatOnline')}:</span>
+                  <span>{t('contact.hours24_7')}</span>
                 </div>
               </div>
             </div>

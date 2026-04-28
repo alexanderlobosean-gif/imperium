@@ -1,5 +1,6 @@
 import React, { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { Eye, EyeOff, Shield, Lock, Mail, User } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 
@@ -26,6 +27,7 @@ const GoogleIcon = () => (
 )
 
 const Login = () => {
+  const { t } = useTranslation()
   const [formData, setFormData] = useState({
     email: localStorage.getItem('rememberedEmail') || '',
     password: ''
@@ -72,7 +74,7 @@ const Login = () => {
         navigate('/dashboard')
       }
     } catch (err) {
-      setError('Erro ao fazer login. Tente novamente.')
+      setError(t('auth.errors.loginFailed'))
     } finally {
       setIsLoading(false)
     }
@@ -93,10 +95,10 @@ const Login = () => {
       
       if (error) throw error
       
-      setForgotPasswordMessage('Email de recuperação enviado! Verifique sua caixa de entrada.')
+      setForgotPasswordMessage(t('auth.resetSent'))
       setForgotPasswordEmail('')
     } catch (err) {
-      setError('Erro ao enviar email de recuperação. Verifique o email informado.')
+      setError(t('auth.errors.resetFailed'))
     } finally {
       setForgotPasswordLoading(false)
     }
@@ -119,13 +121,13 @@ const Login = () => {
       })
 
       if (error) {
-        setError('Erro ao iniciar login com Google. Tente novamente.')
+        setError(t('auth.errors.googleLoginFailed'))
         console.error('Google OAuth error:', error)
       }
       // Note: With OAuth, the user will be redirected to Google's login page,
       // then back to the redirectTo URL. No need to navigate here.
     } catch (err) {
-      setError('Erro ao fazer login com Google. Tente novamente.')
+      setError(t('auth.errors.googleLoginFailed'))
       console.error('Google login error:', err)
     } finally {
       setIsLoading(false)
@@ -154,11 +156,10 @@ const Login = () => {
 
               {/* Welcome Message */}
               <h2 className="text-2xl font-bold text-white mb-4">
-                Bem-vindo de volta!
+                {t('login.welcomeBack')}
               </h2>
               <p className="text-gray-300 mb-8 leading-relaxed">
-                Entre na sua conta para acessar seus investimentos, 
-                acompanhar rendimentos e gerenciar seu portfólio.
+                {t('login.accessAccount')}
               </p>
 
               {/* Features */}
@@ -166,22 +167,22 @@ const Login = () => {
                 <div className="flex items-start space-x-3">
                   <Shield className="w-5 h-5 text-yellow-400 mt-1 flex-shrink-0" />
                   <div>
-                    <h3 className="text-white font-semibold">Segurança Máxima</h3>
-                    <p className="text-gray-400 text-sm">Seus dados protegidos com criptografia avançada</p>
+                    <h3 className="text-white font-semibold">{t('login.features.security')}</h3>
+                    <p className="text-gray-400 text-sm">{t('login.features.securityDesc')}</p>
                   </div>
                 </div>
                 <div className="flex items-start space-x-3">
                   <Lock className="w-5 h-5 text-yellow-400 mt-1 flex-shrink-0" />
                   <div>
-                    <h3 className="text-white font-semibold">Acesso Rápido</h3>
-                    <p className="text-gray-400 text-sm">Interface intuitiva e navegação simplificada</p>
+                    <h3 className="text-white font-semibold">{t('login.features.fastAccess')}</h3>
+                    <p className="text-gray-400 text-sm">{t('login.features.fastAccessDesc')}</p>
                   </div>
                 </div>
                 <div className="flex items-start space-x-3">
                   <User className="w-5 h-5 text-yellow-400 mt-1 flex-shrink-0" />
                   <div>
-                    <h3 className="text-white font-semibold">Suporte Premium</h3>
-                    <p className="text-gray-400 text-sm">Assistência dedicada 24/7 para membros</p>
+                    <h3 className="text-white font-semibold">{t('login.features.premiumSupport')}</h3>
+                    <p className="text-gray-400 text-sm">{t('login.features.premiumSupportDesc')}</p>
                   </div>
                 </div>
               </div>
@@ -190,15 +191,15 @@ const Login = () => {
               <div className="grid grid-cols-3 gap-4 mt-8">
                 <div className="text-center">
                   <div className="text-2xl font-bold text-yellow-400">10K+</div>
-                  <div className="text-xs text-gray-400">Membros</div>
+                  <div className="text-xs text-gray-400">{t('stats.members')}</div>
                 </div>
                 <div className="text-center">
                   <div className="text-2xl font-bold text-yellow-400">$50M+</div>
-                  <div className="text-xs text-gray-400">Volume</div>
+                  <div className="text-xs text-gray-400">{t('stats.volume')}</div>
                 </div>
                 <div className="text-center">
                   <div className="text-2xl font-bold text-yellow-400">98%</div>
-                  <div className="text-xs text-gray-400">Satisfação</div>
+                  <div className="text-xs text-gray-400">{t('stats.satisfaction')}</div>
                 </div>
               </div>
             </div>
@@ -210,12 +211,12 @@ const Login = () => {
               {/* Header */}
               <div className="text-center mb-8">
                 <h2 className="text-3xl font-bold text-slate-900 mb-2">
-                  Entrar na Conta
+                  {t('login.loginTitle')}
                 </h2>
                 <p className="text-slate-600">
-                  Não tem uma conta?{' '}
+                  {t('login.noAccount')}{' '}
                   <Link to="/register" className="text-yellow-600 hover:text-yellow-700 font-semibold">
-                    Cadastre-se
+                    {t('login.registerLink')}
                   </Link>
                 </p>
               </div>
@@ -232,7 +233,7 @@ const Login = () => {
                 {/* Email */}
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-2">
-                    Email
+                    {t('auth.email')}
                   </label>
                   <div className="relative">
                     <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-slate-400" />
@@ -251,7 +252,7 @@ const Login = () => {
                 {/* Password */}
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-2">
-                    Senha
+                    {t('auth.password')}
                   </label>
                   <div className="relative">
                     <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-slate-400" />
@@ -283,14 +284,14 @@ const Login = () => {
                       onChange={(e) => setRememberMe(e.target.checked)}
                       className="w-4 h-4 text-yellow-600 border-slate-300 rounded focus:ring-yellow-500"
                     />
-                    <span className="ml-2 text-sm text-slate-600">Lembrar-me</span>
+                    <span className="ml-2 text-sm text-slate-600">{t('login.rememberMe')}</span>
                   </label>
                   <button
                     type="button"
                     onClick={() => setShowForgotPassword(true)}
                     className="text-sm text-yellow-600 hover:text-yellow-700"
                   >
-                    Esqueceu a senha?
+                    {t('login.forgotPassword')}
                   </button>
                 </div>
 
@@ -300,7 +301,7 @@ const Login = () => {
                   disabled={isLoading}
                   className="w-full bg-gradient-to-r from-yellow-400 to-yellow-600 text-slate-900 py-3 rounded-lg font-semibold hover:from-yellow-500 hover:to-yellow-700 transition-all duration-200 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  {isLoading ? 'Entrando...' : 'Entrar na Conta'}
+                  {isLoading ? t('login.loggingIn') : t('login.submit')}
                 </button>
               </form>
 
@@ -309,7 +310,7 @@ const Login = () => {
                 <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
                   <div className="bg-white rounded-2xl p-8 max-w-md w-full">
                     <h3 className="text-2xl font-bold text-slate-900 mb-4">
-                      Recuperar Senha
+                      {t('login.resetTitle')}
                     </h3>
                     
                     {forgotPasswordMessage ? (
@@ -319,13 +320,13 @@ const Login = () => {
                     ) : (
                       <>
                         <p className="text-slate-600 mb-6">
-                          Informe seu email para receber o link de recuperação de senha.
+                          {t('login.resetDescription')}
                         </p>
                         
                         <form onSubmit={handleForgotPassword} className="space-y-4">
                           <div>
                             <label className="block text-sm font-medium text-slate-700 mb-2">
-                              Email
+                              {t('auth.email')}
                             </label>
                             <input
                               type="email"
@@ -343,14 +344,14 @@ const Login = () => {
                               onClick={() => setShowForgotPassword(false)}
                               className="flex-1 py-3 border border-slate-300 rounded-lg font-semibold text-slate-700 hover:bg-slate-50 transition-colors"
                             >
-                              Cancelar
+                              {t('buttons.cancel')}
                             </button>
                             <button
                               type="submit"
                               disabled={forgotPasswordLoading}
                               className="flex-1 bg-gradient-to-r from-yellow-400 to-yellow-600 text-slate-900 py-3 rounded-lg font-semibold hover:from-yellow-500 hover:to-yellow-700 transition-all disabled:opacity-50"
                             >
-                              {forgotPasswordLoading ? 'Enviando...' : 'Enviar Link'}
+                              {forgotPasswordLoading ? t('buttons.sending') : t('buttons.sendLink')}
                             </button>
                           </div>
                         </form>
@@ -365,7 +366,7 @@ const Login = () => {
                         }}
                         className="w-full mt-4 py-3 border border-slate-300 rounded-lg font-semibold text-slate-700 hover:bg-slate-50 transition-colors"
                       >
-                        Fechar
+                        {t('buttons.close')}
                       </button>
                     )}
                   </div>
@@ -378,7 +379,7 @@ const Login = () => {
                   <div className="w-full border-t border-slate-300"></div>
                 </div>
                 <div className="relative flex justify-center text-sm">
-                  <span className="px-2 bg-white text-slate-500">ou continue com</span>
+                  <span className="px-2 bg-white text-slate-500">{t('login.orContinueWith')}</span>
                 </div>
               </div>
 
@@ -390,19 +391,19 @@ const Login = () => {
                 className="w-full flex items-center justify-center gap-3 bg-white border-2 border-slate-300 text-slate-700 py-3 rounded-lg font-semibold hover:bg-slate-50 hover:border-slate-400 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <GoogleIcon />
-                {isLoading ? 'Conectando...' : 'Entrar com Google'}
+                {isLoading ? t('login.connecting') : t('login.loginWithGoogle')}
               </button>
 
               {/* Footer */}
               <div className="mt-8 text-center">
                 <p className="text-sm text-slate-500">
-                  Ao entrar, você concorda com nossos{' '}
+                  {t('login.termsText')}{' '}
                   <a href="#" className="text-yellow-600 hover:text-yellow-700">
-                    Termos de Uso
+                    {t('login.termsLink')}
                   </a>{' '}
-                  e{' '}
+                  {t('login.and')}{' '}
                   <a href="#" className="text-yellow-600 hover:text-yellow-700">
-                    Política de Privacidade
+                    {t('login.privacyLink')}
                   </a>
                 </p>
               </div>

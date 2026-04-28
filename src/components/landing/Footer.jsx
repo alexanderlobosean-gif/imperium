@@ -1,7 +1,9 @@
 import React from 'react'
+import { useTranslation } from 'react-i18next'
 import { Facebook, Twitter, Instagram, Linkedin, Mail, Phone, MapPin, ChevronUp } from 'lucide-react'
 
 const Footer = () => {
+  const { t } = useTranslation()
   const scrollToTop = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' })
   }
@@ -25,7 +27,7 @@ const Footer = () => {
                 </div>
               </div>
               <p className="text-gray-300 mb-6 leading-relaxed">
-                Transformando vidas através de investimentos inteligentes e oportunidades exclusivas.
+                {t('footer.description')}
               </p>
               <div className="flex space-x-4">
                 <a href="#" className="text-gray-400 hover:text-yellow-400 transition-colors duration-200">
@@ -45,31 +47,31 @@ const Footer = () => {
 
             {/* Quick Links */}
             <div>
-              <h3 className="text-lg font-semibold text-white mb-4">Links Rápidos</h3>
+              <h3 className="text-lg font-semibold text-white mb-4">{t('footer.quickLinks')}</h3>
               <ul className="space-y-2">
                 <li>
                   <a href="#home" className="text-gray-300 hover:text-yellow-400 transition-colors duration-200">
-                    Início
+                    {t('nav.home')}
                   </a>
                 </li>
                 <li>
                   <a href="#about" className="text-gray-300 hover:text-yellow-400 transition-colors duration-200">
-                    Sobre Nós
+                    {t('nav.about')}
                   </a>
                 </li>
                 <li>
                   <a href="#plans" className="text-gray-300 hover:text-yellow-400 transition-colors duration-200">
-                    Planos de Investimento
+                    {t('nav.plans')}
                   </a>
                 </li>
                 <li>
                   <a href="#testimonials" className="text-gray-300 hover:text-yellow-400 transition-colors duration-200">
-                    Depoimentos
+                    {t('nav.testimonials')}
                   </a>
                 </li>
                 <li>
                   <a href="#faq" className="text-gray-300 hover:text-yellow-400 transition-colors duration-200">
-                    FAQ
+                    {t('nav.faq')}
                   </a>
                 </li>
               </ul>
@@ -77,31 +79,31 @@ const Footer = () => {
 
             {/* Services */}
             <div>
-              <h3 className="text-lg font-semibold text-white mb-4">Serviços</h3>
+              <h3 className="text-lg font-semibold text-white mb-4">{t('footer.services')}</h3>
               <ul className="space-y-2">
                 <li>
                   <a href="#" className="text-gray-300 hover:text-yellow-400 transition-colors duration-200">
-                    Planos de Investimento
+                    {t('nav.investmentPlans')}
                   </a>
                 </li>
                 <li>
                   <a href="#" className="text-gray-300 hover:text-yellow-400 transition-colors duration-200">
-                    Programa de Indicação
+                    {t('footer.referralProgram')}
                   </a>
                 </li>
                 <li>
                   <a href="#" className="text-gray-300 hover:text-yellow-400 transition-colors duration-200">
-                    Suporte VIP
+                    {t('footer.vipSupport')}
                   </a>
                 </li>
                 <li>
                   <a href="#" className="text-gray-300 hover:text-yellow-400 transition-colors duration-200">
-                    Eventos Exclusivos
+                    {t('footer.exclusiveEvents')}
                   </a>
                 </li>
                 <li>
                   <a href="#" className="text-gray-300 hover:text-yellow-400 transition-colors duration-200">
-                    Consultoria Financeira
+                    {t('footer.financialConsulting')}
                   </a>
                 </li>
               </ul>
@@ -109,7 +111,7 @@ const Footer = () => {
 
             {/* Contact */}
             <div>
-              <h3 className="text-lg font-semibold text-white mb-4">Contato</h3>
+              <h3 className="text-lg font-semibold text-white mb-4">{t('nav.contact')}</h3>
               <div className="space-y-3">
                 <div className="flex items-center">
                   <Mail className="w-5 h-5 text-yellow-400 mr-3" />
@@ -135,19 +137,19 @@ const Footer = () => {
         <div className="border-t border-slate-800 py-8">
           <div className="max-w-2xl mx-auto text-center">
             <h3 className="text-xl font-semibold text-white mb-4">
-              Fique por dentro das novidades
+              {t('footer.newsletter.title')}
             </h3>
             <p className="text-gray-300 mb-6">
-              Receba informações exclusivas sobre novos planos e oportunidades de investimento
+              {t('footer.newsletter.description')}
             </p>
             <div className="flex flex-col sm:flex-row gap-4 max-w-md mx-auto">
               <input
                 type="email"
-                placeholder="Seu melhor email"
+                placeholder={t('footer.newsletter.placeholder')}
                 className="flex-1 bg-slate-800 border border-slate-700 rounded-lg px-4 py-3 text-white placeholder-gray-400 focus:outline-none focus:border-yellow-400 transition-colors duration-200"
               />
               <button className="bg-gradient-to-r from-yellow-400 to-yellow-600 text-slate-900 px-6 py-3 rounded-lg font-bold hover:from-yellow-500 hover:to-yellow-700 transition-all duration-200 transform hover:scale-105">
-                Inscrever
+                {t('footer.newsletter.subscribe')}
               </button>
             </div>
           </div>
@@ -157,20 +159,20 @@ const Footer = () => {
         <div className="border-t border-slate-800 py-6">
           <div className="flex flex-col md:flex-row justify-between items-center">
             <div className="text-gray-400 text-sm mb-4 md:mb-0">
-              © 2024 Imperium Club. Todos os direitos reservados.
+              © 2024 Imperium Club. {t('footer.allRightsReserved')}
             </div>
             <div className="flex space-x-6 text-sm">
               <a href="#" className="text-gray-400 hover:text-yellow-400 transition-colors duration-200">
-                Política de Privacidade
+                {t('footer.privacyPolicy')}
               </a>
               <a href="#" className="text-gray-400 hover:text-yellow-400 transition-colors duration-200">
-                Termos de Uso
+                {t('footer.termsOfUse')}
               </a>
               <a href="#" className="text-gray-400 hover:text-yellow-400 transition-colors duration-200">
-                Política de Cookies
+                {t('footer.cookiePolicy')}
               </a>
               <a href="#" className="text-gray-400 hover:text-yellow-400 transition-colors duration-200">
-                Compliance
+                {t('footer.compliance')}
               </a>
             </div>
           </div>
@@ -181,7 +183,7 @@ const Footer = () => {
       <button
         onClick={scrollToTop}
         className="fixed bottom-8 right-8 bg-gradient-to-r from-yellow-400 to-yellow-600 text-slate-900 p-3 rounded-full shadow-lg hover:from-yellow-500 hover:to-yellow-700 transition-all duration-200 transform hover:scale-110 z-40"
-        aria-label="Voltar ao topo"
+        aria-label={t('footer.backToTop')}
       >
         <ChevronUp className="w-5 h-5" />
       </button>

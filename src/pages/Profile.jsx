@@ -9,6 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { User, Phone, FileText, MapPin, Calendar, Building, CreditCard, Wallet, Globe, Building2 } from 'lucide-react';
 import { toast } from 'sonner';
+import { useTranslation } from 'react-i18next';
 
 const Field = React.memo(({ label, field, placeholder, icon: Icon, value, onChange }) => (
   <div>
@@ -25,6 +26,7 @@ const Field = React.memo(({ label, field, placeholder, icon: Icon, value, onChan
 ));
 
 export default function Profile() {
+  const { t } = useTranslation();
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const [saving, setSaving] = useState(false);
@@ -105,7 +107,7 @@ export default function Profile() {
     onSuccess: (data) => {
       console.log('Profile saved successfully:', data);
       queryClient.invalidateQueries({ queryKey: ['profile', user?.id] });
-      toast.success('Perfil atualizado com sucesso!');
+      toast.success(t('profile.profileUpdated'));
       setIsEditing(false);
       setShowSuccess(true);
       // Hide success message after 3 seconds
@@ -113,7 +115,7 @@ export default function Profile() {
     },
     onError: (error) => {
       console.error('Error saving profile:', error);
-      toast.error('Erro ao atualizar perfil: ' + (error.message || 'Tente novamente.'));
+      toast.error(t('profile.profileError') + ': ' + (error.message || 'Tente novamente.'));
     }
   });
 
@@ -141,27 +143,27 @@ export default function Profile() {
   return (
     <div className="space-y-6 max-w-4xl">
       <div>
-        <h1 className="text-2xl font-bold text-foreground">Meu Perfil</h1>
-        <p className="text-sm text-muted-foreground mt-1">Gerencie suas informações pessoais</p>
+        <h1 className="text-2xl font-bold text-foreground">{t('profile.title')}</h1>
+        <p className="text-sm text-muted-foreground mt-1">{t('profile.subtitle')}</p>
       </div>
 
       {/* Personal info - read only */}
       <div className="rounded-xl border border-border bg-card p-6">
         <h3 className="font-semibold text-foreground mb-4 flex items-center gap-2">
-          <User className="w-4 h-4 text-gold" /> Dados Pessoais
+          <User className="w-4 h-4 text-gold" /> {t('profile.personalData')}
         </h3>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
-            <Label className="text-sm text-muted-foreground">Nome</Label>
+            <Label className="text-sm text-muted-foreground">{t('profile.name')}</Label>
             <p className="text-sm font-medium text-foreground mt-1">{form.full_name || user?.full_name}</p>
           </div>
           <div>
-            <Label className="text-sm text-muted-foreground">Email</Label>
+            <Label className="text-sm text-muted-foreground">{t('profile.email')}</Label>
             <p className="text-sm font-medium text-foreground mt-1">{user?.email}</p>
           </div>
           <div>
             <Label className="text-sm text-muted-foreground flex items-center gap-1.5">
-              <Phone className="w-3.5 h-3.5" /> Telefone
+              <Phone className="w-3.5 h-3.5" /> {t('profile.phone')}
             </Label>
             <Input
               value={form.phone}
@@ -173,7 +175,7 @@ export default function Profile() {
           </div>
           <div>
             <Label className="text-sm text-muted-foreground flex items-center gap-1.5">
-              <FileText className="w-3.5 h-3.5" /> CPF
+              <FileText className="w-3.5 h-3.5" /> {t('profile.document')}
             </Label>
             <Input
               value={form.document_number}
@@ -189,12 +191,12 @@ export default function Profile() {
       {/* Address */}
       <div className="rounded-xl border border-border bg-card p-6">
         <h3 className="font-semibold text-foreground mb-4 flex items-center gap-2">
-          <MapPin className="w-4 h-4 text-blue-400" /> Endereço
+          <MapPin className="w-4 h-4 text-blue-400" /> {t('profile.address')}
         </h3>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="sm:col-span-2">
             <Label className="text-sm text-muted-foreground flex items-center gap-1.5">
-              <MapPin className="w-3.5 h-3.5" /> Endereço
+              <MapPin className="w-3.5 h-3.5" /> {t('profile.address')}
             </Label>
             <Input
               value={form.address}
@@ -205,7 +207,7 @@ export default function Profile() {
             />
           </div>
           <div>
-            <Label className="text-sm text-muted-foreground">Cidade</Label>
+            <Label className="text-sm text-muted-foreground">{t('profile.city')}</Label>
             <Input
               value={form.city}
               onChange={(e) => handleChange('city', e.target.value)}
@@ -215,7 +217,7 @@ export default function Profile() {
             />
           </div>
           <div>
-            <Label className="text-sm text-muted-foreground">Estado</Label>
+            <Label className="text-sm text-muted-foreground">{t('profile.state')}</Label>
             <Input
               value={form.state}
               onChange={(e) => handleChange('state', e.target.value)}
@@ -225,7 +227,7 @@ export default function Profile() {
             />
           </div>
           <div>
-            <Label className="text-sm text-muted-foreground">CEP</Label>
+            <Label className="text-sm text-muted-foreground">{t('profile.postalCode')}</Label>
             <Input
               value={form.postal_code}
               onChange={(e) => handleChange('postal_code', e.target.value)}
@@ -240,12 +242,12 @@ export default function Profile() {
       {/* Bank */}
       <div className="rounded-xl border border-border bg-card p-6">
         <h3 className="font-semibold text-foreground mb-4 flex items-center gap-2">
-          <Building2 className="w-4 h-4 text-green-400" /> Dados Bancários
+          <Building2 className="w-4 h-4 text-green-400" /> {t('profile.bankData')}
         </h3>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <Label className="text-sm text-muted-foreground flex items-center gap-1.5">
-              <Building2 className="w-3.5 h-3.5" /> Banco
+              <Building2 className="w-3.5 h-3.5" /> {t('profile.bank')}
             </Label>
             <Input
               value={form.bank_name}
@@ -256,7 +258,7 @@ export default function Profile() {
             />
           </div>
           <div>
-            <Label className="text-sm text-muted-foreground">Agência</Label>
+            <Label className="text-sm text-muted-foreground">{t('profile.agency')}</Label>
             <Input
               value={form.bank_agency}
               onChange={(e) => handleChange('bank_agency', e.target.value)}
@@ -266,7 +268,7 @@ export default function Profile() {
             />
           </div>
           <div>
-            <Label className="text-sm text-muted-foreground">Conta</Label>
+            <Label className="text-sm text-muted-foreground">{t('profile.account')}</Label>
             <Input
               value={form.bank_account}
               onChange={(e) => handleChange('bank_account', e.target.value)}
@@ -276,7 +278,7 @@ export default function Profile() {
             />
           </div>
           <div>
-            <Label className="text-sm text-muted-foreground">Chave PIX</Label>
+            <Label className="text-sm text-muted-foreground">{t('profile.pixKey')}</Label>
             <Input
               value={form.pix_key}
               onChange={(e) => handleChange('pix_key', e.target.value)}
@@ -291,11 +293,11 @@ export default function Profile() {
       {/* Crypto */}
       <div className="rounded-xl border border-border bg-card p-6">
         <h3 className="font-semibold text-foreground mb-4 flex items-center gap-2">
-          <Wallet className="w-4 h-4 text-purple-400" /> Carteira Cripto
+          <Wallet className="w-4 h-4 text-purple-400" /> {t('wallet.cryptoWallet')}
         </h3>
         <div>
           <Label className="text-sm text-muted-foreground flex items-center gap-1.5">
-            <Wallet className="w-3.5 h-3.5" /> Endereço da Carteira
+            <Wallet className="w-3.5 h-3.5" /> {t('profile.cryptoWallet')}
           </Label>
           <Input
             value={form.crypto_wallet}
@@ -310,7 +312,7 @@ export default function Profile() {
       {/* Success Message */}
       {showSuccess && (
         <div className="rounded-xl border border-green-500/30 bg-green-500/10 p-4 text-center">
-          <p className="text-green-600 font-medium">✓ Dados atualizados com sucesso!</p>
+          <p className="text-green-600 font-medium">✓ {t('profile.profileUpdated')}</p>
         </div>
       )}
 
@@ -321,14 +323,14 @@ export default function Profile() {
             disabled={saving}
             className="flex-1 bg-gold hover:bg-gold-hover text-primary-foreground font-semibold"
           >
-            {saving ? 'Salvando...' : 'Salvar Perfil'}
+            {saving ? t('profile.saving') : t('profile.save')}
           </Button>
         ) : (
           <Button
             onClick={() => setIsEditing(true)}
             className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-semibold"
           >
-            Editar Perfil
+            {t('profile.edit')}
           </Button>
         )}
       </div>

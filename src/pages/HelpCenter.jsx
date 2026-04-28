@@ -1,5 +1,6 @@
 import React, { useState } from 'react'
 import { Link } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { 
   Search, 
   Book, 
@@ -20,6 +21,7 @@ import {
 } from 'lucide-react'
 
 const HelpCenter = () => {
+  const { t } = useTranslation()
   const [searchTerm, setSearchTerm] = useState('')
   const [expandedCategory, setExpandedCategory] = useState(null)
   const [expandedArticle, setExpandedArticle] = useState(null)
@@ -27,44 +29,44 @@ const HelpCenter = () => {
   const categories = [
     {
       id: 'getting-started',
-      name: 'Primeiros Passos',
+      name: t('helpCenter.gettingStarted'),
       icon: <Book className="w-6 h-6" />,
-      description: 'Comece a usar a plataforma',
+      description: t('helpCenter.gettingStartedDesc', 'Comece a usar a plataforma'),
       color: 'blue'
     },
     {
       id: 'account',
-      name: 'Minha Conta',
+      name: t('helpCenter.myAccount'),
       icon: <Users className="w-6 h-6" />,
-      description: 'Gerencie seu perfil e configurações',
+      description: t('helpCenter.myAccountDesc'),
       color: 'green'
     },
     {
       id: 'investments',
-      name: 'Investimentos',
+      name: t('helpCenter.investments'),
       icon: <CreditCard className="w-6 h-6" />,
-      description: 'Planos, rendimentos e saques',
+      description: t('helpCenter.investmentsDesc', 'Planos, rendimentos e saques'),
       color: 'yellow'
     },
     {
       id: 'security',
-      name: 'Segurança',
+      name: t('helpCenter.security'),
       icon: <Shield className="w-6 h-6" />,
-      description: 'Proteção e privacidade',
+      description: t('helpCenter.securityDesc'),
       color: 'red'
     },
     {
       id: 'features',
-      name: 'Funcionalidades',
+      name: t('helpCenter.features'),
       icon: <Settings className="w-6 h-6" />,
-      description: 'Recursos avançados',
+      description: t('helpCenter.featuresDesc'),
       color: 'purple'
     },
     {
       id: 'troubleshooting',
-      name: 'Problemas Comuns',
+      name: t('helpCenter.troubleshooting'),
       icon: <HelpCircle className="w-6 h-6" />,
-      description: 'Soluções para questões frequentes',
+      description: t('helpCenter.troubleshootingDesc'),
       color: 'orange'
     }
   ]
@@ -73,60 +75,60 @@ const HelpCenter = () => {
     'getting-started': [
       {
         id: 'what-is-imperium',
-        title: 'O que é a Imperium Club?',
-        content: 'A Imperium Club é uma plataforma de investimentos automatizados que oferece acesso a negociações profissionais de nível institucional para investidores comuns. Nossa missão é transformar investidores em construtores de riqueza a longo prazo através de soluções seguras e automatizadas.',
+        title: t('helpCenter.whatIsImperium'),
+        content: t('helpCenter.whatIsImperiumContent'),
         tags: ['básico', 'plataforma']
       },
       {
         id: 'how-to-start',
-        title: 'Como começar a investir?',
-        content: 'Para começar: 1) Crie sua conta gratuita. 2) Complete seu perfil com informações básicas. 3) Escolha um plano de investimento. 4) Faça seu primeiro depósito. 5) Acompanhe seus rendimentos diários. Todo o processo leva menos de 5 minutos!',
+        title: t('helpCenter.howToStart'),
+        content: t('helpCenter.howToStartContent'),
         tags: ['início', 'passo a passo']
       },
       {
         id: 'plans-overview',
-        title: 'Quais planos estão disponíveis?',
-        content: 'Oferecemos 3 planos: Start (R$ 500+), Basic (R$ 1.000+) e Silver (R$ 2.000+). Cada plano oferece diferentes taxas de rendimento diário e benefícios exclusivos. Todos os planos incluem saques rápidos e suporte dedicado.',
+        title: t('helpCenter.availablePlans'),
+        content: t('helpCenter.availablePlansContent'),
         tags: ['planos', 'valores']
       }
     ],
     'account': [
       {
         id: 'create-account',
-        title: 'Como criar minha conta?',
-        content: 'Clique em "Cadastre-se" no menu superior. Preencha seus dados pessoais, crie uma senha segura e confirme seu e-mail. Após a confirmação, você terá acesso total à plataforma.',
+        title: t('helpCenter.createAccount'),
+        content: t('helpCenter.createAccountContent'),
         tags: ['cadastro', 'registro']
       },
       {
         id: 'reset-password',
-        title: 'Como resetar minha senha?',
-        content: 'Na página de login, clique em "Esqueci minha senha". Digite seu e-mail cadastrado e enviaremos um link de recuperação. Siga as instruções no e-mail para criar uma nova senha.',
+        title: t('helpCenter.resetPassword'),
+        content: t('helpCenter.resetPasswordContent'),
         tags: ['senha', 'recuperação']
       },
       {
         id: 'update-profile',
-        title: 'Como atualizar meus dados?',
-        content: 'Acesse seu perfil no menu lateral. Lá você pode atualizar informações pessoais, dados bancários, configurações de notificação e preferências de segurança. Salve as alterações ao final.',
+        title: t('helpCenter.updateProfile'),
+        content: t('helpCenter.updateProfileContent'),
         tags: ['perfil', 'dados']
       }
     ],
     'investments': [
       {
         id: 'how-yields-work',
-        title: 'Como funcionam os rendimentos?',
-        content: 'Os rendimentos são calculados diariamente com base no seu plano e valor investido. As taxas variam de 1% a 3% ao dia. Os rendimentos são creditados automaticamente na sua conta e você pode sacar a qualquer momento.',
+        title: t('helpCenter.howYieldsWork'),
+        content: t('helpCenter.howYieldsWorkContent'),
         tags: ['rendimentos', 'cálculo']
       },
       {
         id: 'withdrawal-process',
-        title: 'Como fazer saques?',
-        content: 'Acesse a área de investimentos, clique em "Sacar" e escolha o valor. Os saques são processados em até 24 horas. Mínimo de saque: R$ 50. Taxas podem aplicar dependendo do método escolhido.',
+        title: t('helpCenter.withdrawalProcess'),
+        content: t('helpCenter.withdrawalProcessContent'),
         tags: ['saques', 'retirada']
       },
       {
         id: 'compound-interest',
-        title: 'O que é juros compostos?',
-        content: 'Juros compostos significam que seus rendimentos diários são reinvestidos automaticamente, gerando mais rendimentos no dia seguinte. Isso cria um efeito bola de neve que acelera seu crescimento financeiro.',
+        title: t('helpCenter.compoundInterest', 'O que é juros compostos?'),
+        content: t('helpCenter.compoundInterestContent', 'Juros compostos significam que seus rendimentos diários são reinvestidos automaticamente, gerando mais rendimentos no dia seguinte. Isso cria um efeito bola de neve que acelera seu crescimento financeiro.'),
         tags: ['juros', 'crescimento']
       }
     ],
@@ -212,11 +214,11 @@ const HelpCenter = () => {
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
               <Link to="/support" className="text-yellow-400 hover:text-yellow-300 transition-colors">
-                ← Voltar ao Suporte
+                ← {t('support.back')}
               </Link>
               <div>
-                <h1 className="text-2xl font-bold text-white">Central de Ajuda</h1>
-                <p className="text-gray-400">Guia completo da plataforma</p>
+                <h1 className="text-2xl font-bold text-white">{t('helpCenter.title')}</h1>
+                <p className="text-gray-400">{t('helpCenter.subtitle')}</p>
               </div>
             </div>
           </div>
@@ -231,7 +233,7 @@ const HelpCenter = () => {
               <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
               <input
                 type="text"
-                placeholder="Buscar artigos, tópicos ou palavras-chave..."
+                placeholder={t('helpCenter.searchPlaceholder')}
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="w-full pl-12 pr-4 py-4 bg-slate-900/50 border border-slate-700 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:border-yellow-400/50 transition-all duration-300"
@@ -244,19 +246,19 @@ const HelpCenter = () => {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-12">
           <div className="bg-slate-900/50 border border-slate-700 rounded-xl p-6 text-center">
             <div className="text-3xl font-bold text-yellow-400 mb-2">24/7</div>
-            <div className="text-gray-400">Suporte Online</div>
+            <div className="text-gray-400">{t('helpCenter.supportOnline', 'Suporte Online')}</div>
           </div>
           <div className="bg-slate-900/50 border border-slate-700 rounded-xl p-6 text-center">
             <div className="text-3xl font-bold text-yellow-400 mb-2">50+</div>
-            <div className="text-gray-400">Artigos</div>
+            <div className="text-gray-400">{t('helpCenter.articles', 'Artigos')}</div>
           </div>
           <div className="bg-slate-900/50 border border-slate-700 rounded-xl p-6 text-center">
             <div className="text-3xl font-bold text-yellow-400 mb-2">6</div>
-            <div className="text-gray-400">Categorias</div>
+            <div className="text-gray-400">{t('helpCenter.categories', 'Categorias')}</div>
           </div>
           <div className="bg-slate-900/50 border border-slate-700 rounded-xl p-6 text-center">
             <div className="text-3xl font-bold text-yellow-400 mb-2">98%</div>
-            <div className="text-gray-400">Satisfação</div>
+            <div className="text-gray-400">{t('helpCenter.satisfaction', 'Satisfação')}</div>
           </div>
         </div>
 
@@ -285,7 +287,7 @@ const HelpCenter = () => {
                 </div>
                 <div className="flex items-center space-x-2">
                   <span className="text-sm text-gray-400">
-                    {articles[category.id]?.length || 0} artigos
+                    {articles[category.id]?.length || 0} {t('helpCenter.articles', 'artigos')}
                   </span>
                   {expandedCategory === category.id ? 
                     <ChevronUp className="w-5 h-5 text-gray-400" /> : 
@@ -347,16 +349,16 @@ const HelpCenter = () => {
         <div className="mt-12 text-center">
           <div className="bg-gradient-to-r from-yellow-400/10 to-yellow-600/10 border border-yellow-400/30 rounded-xl p-8">
             <h3 className="text-2xl font-bold text-white mb-4">
-              Ainda precisa de ajuda?
+              {t('helpCenter.stillNeedHelp', 'Ainda precisa de ajuda?')}
             </h3>
             <p className="text-gray-300 mb-6 max-w-2xl mx-auto">
-              Nossa equipe de suporte está disponível 24/7 para ajudar com qualquer questão
+              {t('helpCenter.supportAvailable', 'Nossa equipe de suporte está disponível 24/7 para ajudar com qualquer questão')}
             </p>
             <Link
               to="/support"
               className="bg-gradient-to-r from-yellow-400 to-yellow-600 text-slate-900 px-8 py-3 rounded-lg font-bold hover:from-yellow-500 hover:to-yellow-700 transition-all duration-200 transform hover:scale-105 inline-block"
             >
-              Falar com Suporte
+              {t('helpCenter.contactSupport', 'Falar com Suporte')}
             </Link>
           </div>
         </div>

@@ -1,8 +1,11 @@
 import React, { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { Menu, X, ChevronDown } from 'lucide-react'
+import LanguageSwitcher from '@/components/LanguageSwitcher'
 
 const Navbar = () => {
+  const { t } = useTranslation()
   const [isOpen, setIsOpen] = useState(false)
   const [isScrolled, setIsScrolled] = useState(false)
 
@@ -37,59 +40,64 @@ const Navbar = () => {
           <div className="hidden md:block">
             <div className="ml-10 flex items-baseline space-x-8">
               <Link to="/" className="text-slate-700 hover:text-yellow-500 transition-colors duration-200">
-                Início
+                {t('nav.home')}
               </Link>
               <Link to="/#about" className="text-slate-700 hover:text-yellow-500 transition-colors duration-200">
-                Sobre
+                {t('nav.about')}
               </Link>
               <div className="relative group">
                 <button className="text-slate-700 hover:text-yellow-500 transition-colors duration-200 flex items-center">
-                  Planos
+                  {t('nav.plans')}
                   <ChevronDown className="ml-1 h-4 w-4" />
                 </button>
                 <div className="absolute top-full left-0 mt-2 w-48 bg-white rounded-lg shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200">
                   <Link to="/#plans" className="block px-4 py-2 text-sm text-slate-700 hover:bg-slate-100 hover:text-yellow-500">
-                    Planos de Investimento
+                    {t('nav.investmentPlans')}
                   </Link>
                   <Link to="/#plans" className="block px-4 py-2 text-sm text-slate-700 hover:bg-slate-100 hover:text-yellow-500">
-                    Planos Leadership
+                    {t('nav.leadershipPlans')}
                   </Link>
                 </div>
               </div>
               <Link to="/#testimonials" className="text-slate-700 hover:text-yellow-500 transition-colors duration-200">
-                Depoimentos
+                {t('nav.testimonials')}
               </Link>
               <Link to="/#faq" className="text-slate-700 hover:text-yellow-500 transition-colors duration-200">
-                FAQ
+                {t('nav.faq')}
               </Link>
               <div className="relative group">
                 <button className="text-slate-700 hover:text-yellow-500 transition-colors duration-200 flex items-center">
-                  Suporte
+                  {t('nav.support')}
                   <ChevronDown className="ml-1 h-4 w-4" />
                 </button>
                 <div className="absolute top-full left-0 mt-2 w-48 bg-white rounded-lg shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200">
                   <Link to="/support" className="block px-4 py-2 text-sm text-slate-700 hover:bg-slate-100 hover:text-yellow-500">
-                    Central de Suporte
+                    {t('nav.supportCenter')}
                   </Link>
                   <Link to="/help-center" className="block px-4 py-2 text-sm text-slate-700 hover:bg-slate-100 hover:text-yellow-500">
-                    Ajuda
+                    {t('nav.help')}
                   </Link>
                   <Link to="/contact" className="block px-4 py-2 text-sm text-slate-700 hover:bg-slate-100 hover:text-yellow-500">
-                    Contato
+                    {t('nav.contact')}
                   </Link>
                 </div>
               </div>
             </div>
           </div>
 
+          {/* Language Switcher */}
+          <div className="hidden md:flex items-center">
+            <LanguageSwitcher />
+          </div>
+
           {/* CTA Buttons */}
           <div className="hidden md:block">
-            <div className="ml-10 flex items-center space-x-4">
+            <div className="ml-6 flex items-center space-x-4">
               <button className="text-slate-700 hover:text-yellow-500 transition-colors duration-200">
-                <Link to="/login">Entrar</Link>
+                <Link to="/login">{t('nav.login')}</Link>
               </button>
               <button className="bg-gradient-to-r from-yellow-400 to-yellow-600 text-slate-900 px-6 py-2 rounded-lg font-semibold hover:from-yellow-500 hover:to-yellow-700 transition-all duration-200 transform hover:scale-105">
-                <Link to="/register">Cadastrar</Link>
+                <Link to="/register">{t('nav.register')}</Link>
               </button>
             </div>
           </div>
@@ -109,38 +117,42 @@ const Navbar = () => {
         {isOpen && (
           <div className="md:hidden bg-white/95 backdrop-blur-md rounded-lg mt-2 p-4 shadow-lg">
             <div className="space-y-2">
+              {/* Mobile Language Switcher */}
+              <div className="pb-2 border-b border-slate-200">
+                <LanguageSwitcher />
+              </div>
               <Link to="/" className="block text-slate-700 hover:text-yellow-500 py-2" onClick={() => setIsOpen(false)}>
-                Início
+                {t('nav.home')}
               </Link>
               <Link to="/#about" className="block text-slate-700 hover:text-yellow-500 py-2" onClick={() => setIsOpen(false)}>
-                Sobre
+                {t('nav.about')}
               </Link>
               <Link to="/#plans" className="block text-slate-700 hover:text-yellow-500 py-2" onClick={() => setIsOpen(false)}>
-                Planos
+                {t('nav.plans')}
               </Link>
               <Link to="/#testimonials" className="block text-slate-700 hover:text-yellow-500 py-2" onClick={() => setIsOpen(false)}>
-                Depoimentos
+                {t('nav.testimonials')}
               </Link>
               <Link to="/#faq" className="block text-slate-700 hover:text-yellow-500 py-2" onClick={() => setIsOpen(false)}>
-                FAQ
+                {t('nav.faq')}
               </Link>
               <div className="border-t border-slate-200 pt-2 mt-2">
                 <Link to="/support" className="block text-slate-700 hover:text-yellow-500 py-2" onClick={() => setIsOpen(false)}>
-                  Central de Suporte
+                  {t('nav.supportCenter')}
                 </Link>
                 <Link to="/help-center" className="block text-slate-700 hover:text-yellow-500 py-2" onClick={() => setIsOpen(false)}>
-                  Ajuda
+                  {t('nav.help')}
                 </Link>
                 <Link to="/contact" className="block text-slate-700 hover:text-yellow-500 py-2" onClick={() => setIsOpen(false)}>
-                  Contato
+                  {t('nav.contact')}
                 </Link>
               </div>
               <div className="pt-4 border-t border-slate-200 space-y-2">
                 <Link to="/login" className="block text-slate-700 hover:text-yellow-500 py-2">
-                  Entrar
+                  {t('nav.login')}
                 </Link>
                 <Link to="/register" className="block bg-gradient-to-r from-yellow-400 to-yellow-600 text-slate-900 px-4 py-2 rounded-lg font-semibold hover:from-yellow-500 hover:to-yellow-700 transition-all duration-200 text-center">
-                  Cadastrar
+                  {t('nav.register')}
                 </Link>
               </div>
             </div>
