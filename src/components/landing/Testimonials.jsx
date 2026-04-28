@@ -1,7 +1,9 @@
 import React, { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Star, Quote } from 'lucide-react'
 
 const Testimonials = () => {
+  const { t } = useTranslation()
   const [activeIndex, setActiveIndex] = useState(0)
 
   const testimonials = [
@@ -62,10 +64,10 @@ const Testimonials = () => {
   ]
 
   const stats = [
-    { value: "10K+", label: "Investidores Ativos" },
-    { value: "98%", label: "Satisfação" },
-    { value: "$50M+", label: "Volume Total" },
-    { value: "24/7", label: "Suporte" }
+    { value: "10K+", label: t('testimonials.stats.investors') },
+    { value: "98%", label: t('testimonials.stats.satisfaction') },
+    { value: "$50M+", label: t('testimonials.stats.volume') },
+    { value: "24/7", label: t('testimonials.stats.support') }
   ]
 
   return (
@@ -74,19 +76,19 @@ const Testimonials = () => {
         {/* Section Header */}
         <div className="text-center mb-16">
           <h2 className="text-4xl md:text-5xl font-bold text-white mb-4">
-            O que nossos <span className="bg-gradient-to-r from-yellow-400 to-yellow-600 bg-clip-text text-transparent">investidores</span> dizem
+            {t('testimonials.title.part1')} <span className="bg-gradient-to-r from-yellow-400 to-yellow-600 bg-clip-text text-transparent">{t('testimonials.title.highlight')}</span> {t('testimonials.title.part2')}
           </h2>
           <p className="text-xl text-gray-300 max-w-3xl mx-auto">
-            Histórias reais de sucesso e transformação financeira através do Imperium Club
+            {t('testimonials.subtitle')}
           </p>
         </div>
 
-        {/* Stats */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-16">
+        {/* Stats Section */}
+        <div className="mt-20 grid grid-cols-2 md:grid-cols-4 gap-8">
           {stats.map((stat, index) => (
             <div key={index} className="text-center">
               <div className="text-3xl md:text-4xl font-bold text-yellow-400 mb-2">{stat.value}</div>
-              <div className="text-gray-300">{stat.label}</div>
+              <div className="text-gray-400">{stat.label}</div>
             </div>
           ))}
         </div>
@@ -109,18 +111,16 @@ const Testimonials = () => {
               </div>
 
               {/* Content */}
-              <p className="text-gray-300 mb-6 leading-relaxed">
-                "{testimonial.content}"
-              </p>
+              <p className="text-gray-300 mb-4 italic">"{testimonial.content}"</p>
 
-              {/* Investment Info */}
-              <div className="flex justify-between mb-4 text-sm">
+              {/* Investment & Returns */}
+              <div className="flex items-center justify-between text-sm mb-4">
                 <div>
-                  <span className="text-gray-400">Investimento:</span>
+                  <span className="text-gray-400">{t('testimonials.investment')}:</span>
                   <span className="text-white ml-2 font-semibold">{testimonial.investment}</span>
                 </div>
                 <div>
-                  <span className="text-gray-400">Retorno:</span>
+                  <span className="text-gray-400">{t('testimonials.return')}:</span>
                   <span className="text-green-400 ml-2 font-semibold">{testimonial.returns}</span>
                 </div>
               </div>

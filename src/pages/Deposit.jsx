@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
 import { financialAPI } from '@/services/api';
@@ -38,6 +39,7 @@ const createDeposit = async (depositData) => {
 };
 
 export default function Deposit() {
+  const { t } = useTranslation();
   const [selectedAccount, setSelectedAccount] = useState(null);
   const [depositAmount, setDepositAmount] = useState('');
   const [depositDescription, setDepositDescription] = useState('');
@@ -57,10 +59,10 @@ export default function Deposit() {
       setDepositAmount('');
       setDepositDescription('');
       setShowQRCode(false);
-      alert('Depósito criado com sucesso! Envie o comprovante para aprovação.');
+      alert(t('deposit.depositSuccess'));
     },
     onError: (error) => {
-      alert(`Erro ao criar depósito: ${error.message}`);
+      alert(`${t('deposit.depositError')}: ${error.message}`);
     }
   });
 
@@ -72,7 +74,7 @@ export default function Deposit() {
 
   const handleCreateDeposit = () => {
     if (!selectedAccount || !depositAmount) {
-      alert('Selecione uma conta e informe o valor do depósito');
+      alert(t('deposit.selectAccountAndAmount'));
       return;
     }
 
@@ -82,7 +84,7 @@ export default function Deposit() {
       user_id: user?.id,
       amount: parseFloat(depositAmount),
       method: 'pix',
-      description: depositDescription || 'Depósito via PIX',
+      description: depositDescription || t('deposit.descriptionPlaceholder'),
       admin_account_id: selectedAccount.id,
       bank_name: selectedAccount.bank_name,
       account_holder: selectedAccount.account_holder
@@ -93,7 +95,7 @@ export default function Deposit() {
     const pixData = {
       key: account.pix_key,
       amount: parseFloat(amount).toFixed(2),
-      description: depositDescription || `Depósito Imperium Club`,
+      description: depositDescription || t('deposit.descriptionPlaceholder'),
       merchant: account.account_holder,
       transaction_id: `DEP_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
     };
@@ -112,9 +114,9 @@ export default function Deposit() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-foreground">Depósito</h1>
+        <h1 className="text-2xl font-bold text-foreground">{t('deposit.title')}</h1>
         <p className="text-sm text-muted-foreground mt-1">
-          Deposite fundos em sua conta usando as contas bancárias do Imperium Club
+          {t('deposit.subtitle')}
         </p>
       </div>
 
@@ -124,12 +126,12 @@ export default function Deposit() {
           <div className="flex items-start gap-3">
             <AlertCircle className="w-5 h-5 text-blue-600 mt-0.5" />
             <div>
-              <h3 className="font-semibold text-blue-900">Instruções de Depósito</h3>
+              <h3 className="font-semibold text-blue-900">{t('deposit.instructions')}</h3>
               <p className="text-sm text-blue-700 mt-1">
-                1. Selecione uma conta bancária abaixo<br/>
-                2. Informe o valor do depósito<br/>
-                3. Faça a transferência PIX para os dados da conta selecionada<br/>
-                4. Após o pagamento, clique em "Criar Depósito" e envie o comprovante
+                {t('deposit.instructionsStep1')}<br/>
+                {t('deposit.instructionsStep2')}<br/>
+                {t('deposit.instructionsStep3')}<br/>
+                {t('deposit.instructionsStep4')}
               </p>
             </div>
           </div>
@@ -159,7 +161,7 @@ export default function Deposit() {
                 </div>
                 <div className="flex items-center gap-2">
                   {account.is_default && (
-                    <Badge variant="secondary">Recomendada</Badge>
+                    <Badge variant="secondary">{t('deposit.recommended')}</Badge>
                   )}
                   {selectedAccount?.id === account.id && (
                     <div className="w-4 h-4 rounded-full bg-gold"></div>
@@ -170,11 +172,11 @@ export default function Deposit() {
             <CardContent>
               <div className="space-y-3">
                 <div>
-                  <Label className="text-xs text-muted-foreground">Titular</Label>
+                  <Label className="text-xs text-muted-foreground">{t('deposit.accountHolder')}</Label>
                   <p className="font-medium">{account.account_holder}</p>
                 </div>
                 <div>
-                  <Label className="text-xs text-muted-foreground">Agência</Label>
+                  <Label className="text-xs text-muted-foreground">{t('deposit.agency')}</Label>
                   <div className="flex items-center gap-2">
                     <p className="font-mono text-sm">{account.bank_agency}</p>
                     <Button
@@ -194,7 +196,7 @@ export default function Deposit() {
                   </div>
                 </div>
                 <div>
-                  <Label className="text-xs text-muted-foreground">Conta</Label>
+                  <Label className="text-xs text-muted-foreground">{t('deposit.account')}</Label>
                   <div className="flex items-center gap-2">
                     <p className="font-mono text-sm">{account.bank_account}</p>
                     <Button
@@ -214,7 +216,7 @@ export default function Deposit() {
                   </div>
                 </div>
                 <div>
-                  <Label className="text-xs text-muted-foreground">CPF/CNPJ</Label>
+                  <Label className="text-xs text-muted-foreground">{t('deposit.document')}</Label>
                   <div className="flex items-center gap-2">
                     <p className="font-mono text-sm">{account.document_cpf}</p>
                     <Button
@@ -234,7 +236,7 @@ export default function Deposit() {
                   </div>
                 </div>
                 <div>
-                  <Label className="text-xs text-muted-foreground">Chave PIX ({account.pix_key_type})</Label>
+                  <Label className="text-xs text-muted-foreground">{t('deposit.pixKey')} ({account.pix_key_type})</Label>
                   <div className="flex items-center gap-2">
                     <p className="font-mono text-sm">{account.pix_key}</p>
                     <Button
@@ -265,13 +267,13 @@ export default function Deposit() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <DollarSign className="w-5 h-5" />
-              Criar Depósito
+              {t('deposit.createDeposit')}
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
               <div>
-                <Label htmlFor="deposit-amount">Valor do Depósito (R$)</Label>
+                <Label htmlFor="deposit-amount">{t('deposit.depositAmount')}</Label>
                 <Input
                   id="deposit-amount"
                   type="number"
@@ -284,10 +286,10 @@ export default function Deposit() {
                 />
               </div>
               <div>
-                <Label htmlFor="deposit-description">Descrição (opcional)</Label>
+                <Label htmlFor="deposit-description">{t('deposit.description')}</Label>
                 <Input
                   id="deposit-description"
-                  placeholder="Descrição do depósito"
+                  placeholder={t('deposit.descriptionPlaceholder')}
                   value={depositDescription}
                   onChange={(e) => setDepositDescription(e.target.value)}
                 />
@@ -298,7 +300,7 @@ export default function Deposit() {
                   disabled={createDepositMutation.isPending || !depositAmount}
                   className="flex-1"
                 >
-                  {createDepositMutation.isPending ? 'Criando...' : 'Criar Depósito'}
+                  {createDepositMutation.isPending ? t('deposit.creating') : t('deposit.createDeposit')}
                 </Button>
                 <Button
                   variant="outline"
@@ -307,7 +309,7 @@ export default function Deposit() {
                   className="flex-1"
                 >
                   <QrCode className="w-4 h-4 mr-2" />
-                  {showQRCode ? 'Ocultar QR Code' : 'Gerar QR Code'}
+                  {showQRCode ? t('deposit.hideQRCode') : t('deposit.generateQRCode')}
                 </Button>
               </div>
             </div>
@@ -315,24 +317,24 @@ export default function Deposit() {
             {/* QR Code Display */}
             {showQRCode && depositAmount && (
               <div className="mt-6 p-6 bg-white rounded-lg border">
-                <h4 className="text-center font-semibold mb-4">QR Code para Pagamento PIX</h4>
+                <h4 className="text-center font-semibold mb-4">{t('deposit.qrCodeTitle')}</h4>
                 <div className="flex justify-center mb-4">
                   <div className="bg-gray-100 p-4 rounded-lg">
                     <QrCode className="w-32 h-32 text-gray-400" />
                     <p className="text-xs text-center text-gray-500 mt-2">
-                      QR Code simulado
+                      {t('deposit.qrCodeSimulated')}
                     </p>
                   </div>
                 </div>
                 <div className="text-center space-y-2">
                   <p className="text-sm text-muted-foreground">
-                    <strong>Valor:</strong> {formatCurrency(parseFloat(depositAmount))}
+                    <strong>{t('deposit.amount')}:</strong> {formatCurrency(parseFloat(depositAmount))}
                   </p>
                   <p className="text-sm text-muted-foreground">
-                    <strong>Chave PIX:</strong> {selectedAccount.pix_key}
+                    <strong>{t('deposit.pixKey')}:</strong> {selectedAccount.pix_key}
                   </p>
                   <p className="text-xs text-muted-foreground">
-                    Escaneie o QR Code ou copie a chave PIX acima
+                    {t('deposit.scanOrCopy')}
                   </p>
                 </div>
               </div>

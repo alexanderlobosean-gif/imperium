@@ -1,0 +1,699 @@
+{
+  "nav": {
+    "home": "Inicio",
+    "about": "Acerca de",
+    "plans": "Planes",
+    "investmentPlans": "Planes de Inversión",
+    "leadershipPlans": "Planes Leadership",
+    "testimonials": "Testimonios",
+    "faq": "FAQ",
+    "support": "Soporte",
+    "supportCenter": "Centro de Soporte",
+    "help": "Ayuda",
+    "contact": "Contacto",
+    "network": "Red",
+    "career": "Carrera",
+    "profile": "Perfil",
+    "admin": "Admin",
+    "login": "Iniciar Sesión",
+    "register": "Registrarse",
+    "logout": "Cerrar Sesión",
+    "indication": "Referido"
+  },
+  "hero": {
+    "badge": "El Futuro de las Inversiones",
+    "subtitle": {
+      "part1": "Transforme su futuro con inversiones inteligentes y ",
+      "highlight": "rendimientos excepcionales",
+      "part2": "Únase a la élite de inversores."
+    },
+    "stats": {
+      "return": "Retorno Máximo",
+      "dailyRate": "Tasa Diaria",
+      "investors": "Inversores Activos",
+      "secure": "Seguro"
+    },
+    "cta": {
+      "register": "Comenzar Ahora",
+      "login": "Iniciar Sesión"
+    },
+    "trusted": "Plataforma confiada por inversores en",
+    "popular": "MÁS POPULAR",
+    "investment": "Inversión",
+    "return": "Retorno"
+  },
+  "downloadApp": {
+    "title": "Descarga la App",
+    "description": "Instala nuestra aplicación en tu celular para acceso rápido, notificaciones en tiempo real y experiencia optimizada.",
+    "android": {
+      "title": "Android",
+      "step1": "Abre Chrome",
+      "step2": "Toca el menú (⋮)",
+      "step3": "Selecciona \"Agregar a pantalla de inicio\"",
+      "step4": "¡Listo! La app está instalada",
+      "tip": "¡La app tendrá un ícono en tu pantalla de inicio igual a una app nativa!"
+    },
+    "iphone": {
+      "title": "iPhone",
+      "step1": "Abre Safari",
+      "step2": "Toca el botón Compartir",
+      "step3": "Selecciona \"Agregar a Pantalla de Inicio\"",
+      "step4": "Toca \"Agregar\"",
+      "tip": "¡El ícono de Imperium aparecerá junto con tus otras apps!"
+    },
+    "tip": "Consejo",
+    "features": {
+      "fastAccess": {
+        "title": "Acceso Rápido",
+        "desc": "Abre la app directamente desde tu pantalla de inicio"
+      },
+      "notifications": {
+        "title": "Notificaciones",
+        "desc": "Recibe alertas en tiempo real"
+      },
+      "optimized": {
+        "title": "Experiencia Optimizada",
+        "desc": "Interfaz adaptada para mobile"
+      }
+    },
+    "pwa": {
+      "title": "Progressive Web App",
+      "description": "Funciona como una app nativa, sin necesidad de descargar de la tienda"
+    }
+  },
+  "visionMission": {
+    "title": "Nuestra",
+    "highlight": "Identidad",
+    "subtitle": "Descubre nuestra visión de futuro y nuestra misión de transformar inversores comunes en constructores de riqueza",
+    "vision": {
+      "title": "Visión",
+      "description": "Empoderar a individuos en todo el mundo con acceso descomplicado a negociaciones profesionales de nivel institucional, transformando inversores comunes en constructores de riqueza a largo plazo.",
+      "highlights": [
+        {
+          "title": "Acceso Institucional",
+          "desc": "Negociaciones profesionales para todos"
+        },
+        {
+          "title": "Transformación",
+          "desc": "De inversores comunes a constructores de riqueza"
+        },
+        {
+          "title": "Alcance Global",
+          "desc": "Capacitando individuos en todo el mundo"
+        }
+      ]
+    },
+    "mission": {
+      "title": "Misión",
+      "description": "Llenar el vacío entre la experiencia profesional en negociación y los inversores de todos los días, ofreciendo soluciones de negociación seguras, automatizadas y orientadas a resultados, al mismo tiempo que permitimos la creación de riqueza pasiva y recompensamos el crecimiento de la comunidad a través de un modelo de afiliados robusto.",
+      "highlights": [
+        {
+          "title": "Soluciones Seguras",
+          "desc": "Negociaciones automatizadas y orientadas a resultados"
+        },
+        {
+          "title": "Riqueza Pasiva",
+          "desc": "Posibilitando la creación de ingresos automáticos"
+        },
+        {
+          "title": "Comunidad Robusta",
+          "desc": "Modelo de afiliados con recompensas generosas"
+        }
+      ]
+    },
+    "cta": {
+      "title": "Sé parte de nuestra misión",
+      "description": "Únete a nosotros en la transformación del futuro de las inversiones y construye tu libertad financiera",
+      "register": "Comenzar Ahora",
+      "login": "Ya tengo cuenta"
+    }
+  },
+  "features": {
+    "title": "Por qué elegir",
+    "subtitle": "Descubre las ventajas que hacen de nuestra plataforma la elección preferida de los inversores más exigentes",
+    "items": [
+      {
+        "title": "Rendimientos Excepcionales",
+        "description": "Hasta 300% de retorno sobre tus inversiones con tasas diarias competitivas y planes flexibles."
+      },
+      {
+        "title": "Seguridad Máxima",
+        "description": "Tu protección es nuestra prioridad con cifrado avanzado y fondos de seguro garantizados."
+      },
+      {
+        "title": "Comunidad Exclusiva",
+        "description": "Sé parte de la élite de inversores con acceso a contenido exclusivo y networking premium."
+      },
+      {
+        "title": "Retiros Rápidos",
+        "description": "Procesamiento de retiros en hasta 24 horas con soporte dedicado y múltiples opciones de pago."
+      },
+      {
+        "title": "Acceso Global",
+        "description": "Invierte desde cualquier lugar del mundo con nuestra plataforma multilingüe y soporte 24/7."
+      },
+      {
+        "title": "Programa de Recompensas",
+        "description": "Gana generosos bonos a través de nuestro programa de referidos y recompensas por lealtad."
+      }
+    ],
+    "cta": {
+      "title": "Comienza tu viaje de inversiones hoy",
+      "description": "Únete a miles de inversores que ya están transformando sus vidas con Imperium Club",
+      "button": "Abrir Cuenta Gratuita"
+    }
+  },
+  "auth": {
+    "login": "Iniciar Sesión",
+    "register": "Registrarse",
+    "email": "Correo Electrónico",
+    "password": "Contraseña",
+    "confirmPassword": "Confirmar Contraseña",
+    "fullName": "Nombre Completo",
+    "forgotPassword": "¿Olvidó su contraseña?",
+    "noAccount": "¿No tiene una cuenta?",
+    "hasAccount": "¿Ya tiene una cuenta?",
+    "loginWithGoogle": "Iniciar con Google",
+    "registerWithGoogle": "Registrarse con Google",
+    "agreeTerms": "Acepto los Términos de Uso",
+    "acceptTerms": "Acepte los términos para continuar",
+    "resetPassword": "Restablecer Contraseña",
+    "sendResetLink": "Enviar enlace de restablecimiento"
+  },
+  "faq": {
+    "title": {
+      "part1": "Preguntas",
+      "part2": "Frecuentes"
+    },
+    "subtitle": "Resuelve tus dudas y conoce más sobre cómo Imperium Club puede transformar tus inversiones",
+    "items": [
+      {
+        "question": "¿Cómo funciona Imperium Club?",
+        "answer": "Imperium Club es una plataforma de inversiones que ofrece rendimientos diarios a través de varios planes de inversión. Eliges un plan, haces tu depósito y comienzas a recibir retornos diarios hasta alcanzar el 300% de tu inversión inicial."
+      },
+      {
+        "question": "¿Es seguro invertir en Imperium Club?",
+        "answer": "Sí, nuestra plataforma utiliza encriptación avanzada, fondos de seguro y auditorías regulares para garantizar la seguridad de tus inversiones. Además, contamos con un equipo dedicado a la seguridad y cumplimiento."
+      },
+      {
+        "question": "¿Qué métodos de depósito están disponibles?",
+        "answer": "Aceptamos varias criptomonedas incluyendo Bitcoin (BTC), Ethereum (ETH), Tether (USDT), USD Coin (USDC) y otras altcoins populares. También estamos agregando constantemente nuevas opciones de pago."
+      },
+      {
+        "question": "¿Cómo funcionan los retiros?",
+        "answer": "Los retiros se procesan según tu plan de inversión. Los planes básicos pueden tardar hasta 48 horas, mientras que los planes premium tienen retiros en 6 horas. Los planes Leadership cuentan con retiros instantáneos."
+      },
+      {
+        "question": "¿Qué es el programa de referidos?",
+        "answer": "Nuestro programa de referidos te permite ganar bonos generosos al traer nuevos inversores a la plataforma. Las comisiones varían del 5% al 15% dependiendo de tu plan, y también ganas comisiones sobre las referencias de tu red."
+      },
+      {
+        "question": "¿Puedo tener múltiples inversiones?",
+        "answer": "Sí, puedes tener múltiples inversiones activas simultáneamente en diferentes planes. Esto te permite diversificar tu cartera y optimizar tus retornos según tus objetivos financieros."
+      },
+      {
+        "question": "¿Cómo se calculan los rendimientos?",
+        "answer": "Los rendimientos se calculan diariamente según la tasa de tu plan y se acreditan automáticamente en tu cuenta. Las tasas varían del 0.2% al 0.8% por día, dependiendo del plan elegido."
+      },
+      {
+        "question": "¿Existen tarifas ocultas?",
+        "answer": "No, somos completamente transparentes sobre nuestras tarifas. La única tarifa aplicada es una pequeña comisión de procesamiento para retiros, que se informa claramente antes de la confirmación de la transacción."
+      },
+      {
+        "question": "¿Cómo funciona el soporte al cliente?",
+        "answer": "Ofrecemos soporte 24/7 a través de correo electrónico, chat en vivo y teléfono. Los planes premium incluyen soporte prioritario y gerentes dedicados para asistencia personalizada."
+      },
+      {
+        "question": "¿Puedo cancelar mi inversión en cualquier momento?",
+        "answer": "Sí, puedes solicitar la cancelación de tu inversión en cualquier momento. Sin embargo, recuerda que los rendimientos se calculan hasta la fecha de cancelación y pueden aplicarse tarifas de procesamiento."
+      }
+    ],
+    "cta": {
+      "title": "¿Aún tienes dudas?",
+      "description": "Nuestro equipo de soporte está listo para ayudar. Contáctanos y resuelve todas tus dudas.",
+      "contactSupport": "Hablar con Soporte",
+      "helpCenter": "Ver Centro de Ayuda"
+    }
+  },
+  "dashboard": {
+    "hello": "Hola",
+    "welcome": "Bienvenido",
+    "user": "Usuario",
+    "balance": "Saldo",
+    "invested": "Invertido",
+    "earnings": "Ganancias",
+    "networkEarnings": "Ganancias de Red",
+    "availableBalance": "Saldo Disponible",
+    "yourLink": "Su enlace",
+    "linkCopied": "¡Enlace copiado!",
+    "copyLink": "Copiar enlace",
+    "quickActions": "Acciones Rápidas",
+    "recentTransactions": "Transacciones Recientes",
+    "networkMembers": "Miembros de la Red",
+    "viewAll": "Ver Todos",
+    "loading": "Cargando...",
+    "welcomeMessage": "🎉 ¡Registro aprobado! ¡Bienvenido a Imperium Club!"
+  },
+  "wallet": {
+    "title": "Billetera",
+    "subtitle": "Gestiona tus depósitos, retiros y transferencias",
+    "deposit": "Depositar",
+    "withdraw": "Retirar",
+    "transfer": "Transferir",
+    "reinvest": "Reinvertir",
+    "totalBalance": "Saldo Total",
+    "availableBalance": "Saldo Disponible",
+    "totalInvested": "Total Invertido",
+    "totalEarned": "Total Ganado",
+    "newDeposit": "Nuevo Depósito",
+    "newWithdrawal": "Nuevo Retiro",
+    "newTransfer": "Nueva Transferencia",
+    "depositAmount": "Monto del Depósito ($)",
+    "withdrawAmount": "Monto del Retiro ($)",
+    "transferAmount": "Monto de la Transferencia ($)",
+    "descriptionOptional": "Descripción (opcional)",
+    "depositDescriptionPlaceholder": "Descripción del depósito",
+    "acceptTerms": "He leído y acepto los términos de depósito",
+    "viewDepositTerms": "Ver Términos de Depósito",
+    "generatingQR": "Generando Código QR...",
+    "generateQRUSDT": "Generar Código QR USDT",
+    "qrCodeForPIX": "Código QR para Pago PIX",
+    "qrCodeValid": "Código QR PIX válido",
+    "amount": "Monto",
+    "scanQRWithBankApp": "Escanea el código QR arriba con tu app bancaria",
+    "sendReceiptAfterPayment": "Después del pago, envía el comprobante",
+    "pixCopyPasteCode": "Código PIX (copia y pega):",
+    "pixCodeCopied": "¡Código PIX copiado!",
+    "walletAddress": "Dirección de Billetera",
+    "scanToCopy": "Escanea para copiar dirección",
+    "usdtWalletBEP20": "Billetera USDT (BEP20):",
+    "awaitingApproval": "Depósito USDT - Esperando Aprobación",
+    "copy": "Copiar",
+    "copied": "¡Copiado!",
+    "linkCopied": "¡Enlace copiado!",
+    "insufficientBalance": "Saldo insuficiente",
+    "max": "Máx",
+    "transferTo": "Transferir a",
+    "emailPlaceholder": "email@ejemplo.com",
+    "transferDescription": "Descripción de la transferencia",
+    "confirmTransfer": "Confirmar Transferencia",
+    "enterVerificationCode": "Ingresa el código de 6 dígitos",
+    "codeSentToEmail": "Código enviado a tu correo",
+    "resendCode": "Reenviar código",
+    "transferConfirmation": "Confirmación de Transferencia",
+    "transferTerms": "Al confirmar, aceptas los términos de transferencia",
+    "withdrawalMethod": "Método de Retiro",
+    "pix": "PIX",
+    "crypto": "Cripto",
+    "bankTransfer": "Transferencia Bancaria",
+    "pixKey": "Clave PIX",
+    "walletAddressPlaceholder": "Dirección de billetera",
+    "withdrawalTerms": "Términos de Retiro",
+    "acceptWithdrawalTerms": "Acepto los términos de retiro",
+    "requestWithdrawal": "Solicitar Retiro",
+    "processing": "Procesando...",
+    "history": "Historial",
+    "noTransactions": "No se encontraron transacciones",
+    "depositPending": "Depósito Pendiente",
+    "depositApproved": "Depósito Aprobado",
+    "withdrawalPending": "Retiro Pendiente",
+    "withdrawalApproved": "Retiro Aprobado",
+    "transferSent": "Transferencia Enviada",
+    "transferReceived": "Transferencia Recibida",
+    "type": "Tipo",
+    "status": "Estado",
+    "date": "Fecha",
+    "pending": "Pendiente",
+    "completed": "Completado",
+    "cancelled": "Cancelado",
+    "failed": "Fallido"
+  },
+  "network": {
+    "title": "Red",
+    "subtitle": "Seguimiento de tus referidos y ganancias de red",
+    "directReferrals": "Referidos Directos",
+    "indirectReferrals": "Referidos Indirectos",
+    "totalMembers": "Total de Miembros",
+    "teamVolume": "Volumen del Equipo",
+    "referralLink": "Enlace de Referido",
+    "yourReferralLink": "Tu enlace de referido",
+    "copy": "Copiar",
+    "totalGenerated": "Total Generado",
+    "unlockedLevels": "Niveles Desbloqueados",
+    "user": "Usuario",
+    "members": "miembro(s)",
+    "levelCommissions": "Comisiones por Nivel",
+    "commissionEarned": "Comisión generada"
+  },
+  "depositBanner": {
+    "startInvesting": "¡Comience a Invertir!",
+    "financialJourney": "Su viaje financiero comienza aquí",
+    "startIn24h": "Comience en 24 horas",
+    "firstDepositDesc": "Haga su primer depósito y comience a ver rendimientos desde el primer día",
+    "from": "Desde",
+    "upTo": "Hasta",
+    "perDay": "por día",
+    "withdrawalsIn": "Retiros en",
+    "dailyReturns": "Rendimientos diarios automáticos",
+    "securityGuaranteed": "Seguridad y confianza garantizadas",
+    "dedicatedSupport": "Soporte dedicado 24/7",
+    "depositNow": "Depositar Ahora",
+    "later": "Después",
+    "tip": "Consejo",
+    "startSmallTip": "Comience pequeño y vea su dinero crecer todos los días"
+  },
+  "profitabilityClock": {
+    "currentYield": "Rentabilidad Actual",
+    "noActiveInvestment": "Sin inversión activa",
+    "getPlanToStart": "Adquiera un plan para comenzar",
+    "nextMinute": "en el próximo minuto",
+    "currentRate": "Tasa actual (actualiza cada minuto)",
+    "nextIncrementIn": "Próximo incremento en",
+    "perMinuteRate": "+0.000013889% cada minuto",
+    "perDay": "por día",
+    "after24hNoWithdraw": "Después de 24h sin retiro",
+    "rateProgress": "Progreso de tasa",
+    "daysWithoutWithdrawal": "Días sin retiro",
+    "days": "días",
+    "earningNow": "Ganando ahora",
+    "capProgress": "Progreso cap",
+    "max": "Máx"
+  },
+  "profile": {
+    "title": "Mi Perfil",
+    "subtitle": "Gestiona tu información personal",
+    "personalData": "Datos Personales",
+    "name": "Nombre",
+    "email": "Correo",
+    "phone": "Teléfono",
+    "document": "Documento",
+    "address": "Dirección",
+    "city": "Ciudad",
+    "state": "Estado",
+    "postalCode": "Código Postal",
+    "country": "País",
+    "bankData": "Datos Bancarios",
+    "bank": "Banco",
+    "agency": "Agencia",
+    "account": "Cuenta",
+    "pixKey": "Clave PIX",
+    "cryptoWallet": "Dirección de Billetera",
+    "edit": "Editar",
+    "save": "Guardar",
+    "cancel": "Cancelar",
+    "saving": "Guardando...",
+    "profileUpdated": "¡Perfil actualizado con éxito!",
+    "profileError": "Error al actualizar el perfil"
+  },
+  "support": {
+    "title": "Centro de Soporte",
+    "subtitle": "Estamos aquí para ayudar",
+    "back": "Volver",
+    "online": "En línea",
+    "howCanWeHelp": "Cómo podemos",
+    "help": "ayudar",
+    "categories": {
+      "general": "General",
+      "generalDesc": "Preguntas comunes e información general",
+      "account": "Cuenta",
+      "accountDesc": "Inicio de sesión, registro y configuración de perfil",
+      "investment": "Inversiones",
+      "investmentDesc": "Planes, rendimientos y retiros",
+      "security": "Seguridad",
+      "securityDesc": "Protección de datos y medidas de seguridad"
+    },
+    "quickContact": "Contacto Rápido",
+    "liveChat": "Chat en Vivo",
+    "liveChatDesc": "Chatee con nuestro equipo en tiempo real",
+    "startChat": "Iniciar Chat",
+    "email": "Correo",
+    "emailDesc": "Envíe su consulta por correo",
+    "sendEmail": "Enviar Correo",
+    "phone": "Teléfono",
+    "phoneDesc": "Soporte telefónico de 9h a 18h",
+    "callNow": "Llamar Ahora",
+    "unavailable": "No disponible en este momento",
+    "commonTopics": "Temas Comunes",
+    "howItWorks": "¿Cómo funciona Imperium Club?",
+    "howItWorksDesc": "Comprenda nuestra plataforma de inversiones automatizada",
+    "resetPassword": "¿Cómo restablecer mi contraseña?",
+    "resetPasswordDesc": "Paso a paso para recuperar su cuenta",
+    "yieldRates": "¿Cuáles son las tasas de rendimiento?",
+    "yieldRatesDesc": "Conozca nuestros planes y retornos",
+    "dataSecurity": "¿Mis datos están seguros?",
+    "dataSecurityDesc": "Medidas de seguridad que adoptamos",
+    "notFound": "¿No encontró lo que buscaba?",
+    "helpCenterDesc": "Nuestro Centro de Ayuda completo está disponible con guías detalladas y tutoriales paso a paso",
+    "visitHelpCenter": "Visitar Centro de Ayuda"
+  },
+  "deposit": {
+    "title": "Depósito",
+    "subtitle": "Deposite fondos en su cuenta usando las cuentas bancarias de Imperium Club",
+    "instructions": "Instrucciones de Depósito",
+    "instructionsStep1": "1. Seleccione una cuenta bancaria abajo",
+    "instructionsStep2": "2. Ingrese el monto del depósito",
+    "instructionsStep3": "3. Realice la transferencia PIX a los datos de la cuenta seleccionada",
+    "instructionsStep4": "4. Después del pago, haga clic en 'Crear Depósito' y envíe el comprobante",
+    "accountHolder": "Titular",
+    "agency": "Agencia",
+    "account": "Cuenta",
+    "document": "CPF/CNPJ",
+    "pixKey": "Clave PIX",
+    "pixKeyType": "Tipo",
+    "recommended": "Recomendada",
+    "createDeposit": "Crear Depósito",
+    "creating": "Creando...",
+    "depositAmount": "Monto del Depósito ($)",
+    "description": "Descripción (opcional)",
+    "descriptionPlaceholder": "Descripción del depósito",
+    "hideQRCode": "Ocultar Código QR",
+    "generateQRCode": "Generar Código QR",
+    "qrCodeTitle": "Código QR para Pago PIX",
+    "qrCodeSimulated": "Código QR simulado",
+    "amount": "Monto",
+    "scanOrCopy": "Escanee el Código QR o copie la clave PIX arriba",
+    "depositSuccess": "¡Depósito creado con éxito! Envíe el comprobante para aprobación.",
+    "depositError": "Error al crear depósito",
+    "selectAccountAndAmount": "Seleccione una cuenta e ingrese el monto del depósito"
+  },
+  "helpCenter": {
+    "title": "Centro de Ayuda",
+    "subtitle": "Encuentre respuestas a sus preguntas",
+    "search": "Buscar",
+    "searchPlaceholder": "Buscar artículos...",
+    "gettingStarted": "Primeros Pasos",
+    "gettingStartedDesc": "Comience a usar la plataforma",
+    "myAccount": "Mi Cuenta",
+    "myAccountDesc": "Gestione su perfil y configuración",
+    "investments": "Inversiones",
+    "investmentsDesc": "Planes, rendimientos y retiros",
+    "security": "Seguridad",
+    "securityDesc": "Protección y privacidad",
+    "features": "Funcionalidades",
+    "featuresDesc": "Recursos avanzados",
+    "troubleshooting": "Problemas Comunes",
+    "troubleshootingDesc": "Soluciones para problemas frecuentes",
+    "whatIsImperium": "¿Qué es Imperium Club?",
+    "whatIsImperiumContent": "Imperium Club es una plataforma de inversiones automatizadas que ofrece acceso a operaciones profesionales de nivel institucional para inversores comunes. Nuestra misión es transformar a los inversores en constructores de riqueza a largo plazo a través de soluciones seguras y automatizadas.",
+    "howToStart": "¿Cómo empezar a invertir?",
+    "howToStartContent": "Para comenzar: 1) Cree su cuenta gratuita. 2) Complete su perfil con información básica. 3) Elija un plan de inversión. 4) Haga su primer depósito. 5) Siga sus rendimientos diarios. ¡Todo el proceso toma menos de 5 minutos!",
+    "availablePlans": "¿Qué planes están disponibles?",
+    "availablePlansContent": "Ofrecemos 3 planes: Start ($500+), Basic ($1.000+) y Silver ($2.000+). Cada plan ofrece diferentes tasas de rendimiento diario y beneficios exclusivos. Todos los planes incluyen retiros rápidos y soporte dedicado.",
+    "createAccount": "¿Cómo crear mi cuenta?",
+    "createAccountContent": "Haga clic en 'Registrarse' en el menú superior. Complete sus datos personales, cree una contraseña segura y confirme su correo. Después de la confirmación, tendrá acceso completo a la plataforma.",
+    "resetPassword": "¿Cómo restablecer mi contraseña?",
+    "resetPasswordContent": "En la página de inicio de sesión, haga clic en 'Olvidé mi contraseña'. Ingrese su correo registrado y le enviaremos un enlace de recuperación. Siga las instrucciones en el correo para crear una nueva contraseña.",
+    "updateProfile": "¿Cómo actualizar mis datos?",
+    "updateProfileContent": "Acceda a su perfil en el menú lateral. Allí puede actualizar información personal, datos bancarios, configuraciones de notificación y preferencias de seguridad. Guarde los cambios al final.",
+    "howYieldsWork": "¿Cómo funcionan los rendimientos?",
+    "howYieldsWorkContent": "Los rendimientos se calculan diariamente según su plan y monto invertido. Las tasas varían del 1% al 3% por día. Los rendimientos se acreditan automáticamente en su cuenta y puede retirar en cualquier momento.",
+    "withdrawalProcess": "¿Cómo hacer retiros?",
+    "withdrawalProcessContent": "Acceda al área de inversiones, haga clic en 'Retirar' y elija el monto. Los retiros se procesan dentro de las 24 horas. Retiro mínimo: $50. Pueden aplicar tarifas según el método elegido.",
+    "compoundInterest": "¿Qué es el interés compuesto?",
+    "compoundInterestContent": "El interés compuesto significa que sus rendimientos diarios se reinvierten automáticamente, generando más rendimientos al día siguiente. Esto crea un efecto bola de nieve que acelera su crecimiento financiero.",
+    "supportOnline": "Soporte en Línea",
+    "articles": "Artículos",
+    "categories": "Categorías",
+    "satisfaction": "Satisfacción",
+    "stillNeedHelp": "¿Aún necesita ayuda?",
+    "supportAvailable": "Nuestro equipo de soporte está disponible 24/7 para ayudar con cualquier consulta",
+    "contactSupport": "Contactar Soporte"
+  },
+  "plans": {
+    "title": "Planes de Inversión",
+    "subtitle": "Elija el plan ideal para comenzar a invertir",
+    "availableBalance": "Saldo Disponible para Invertir",
+    "balance": "Saldo",
+    "invested": "Invertido",
+    "confirmInvestment": "Confirmar Inversión",
+    "selectedPlan": "Plan Seleccionado",
+    "minAmount": "Monto Mínimo",
+    "maxAmount": "Monto Máximo",
+    "investmentAmount": "Monto de Inversión",
+    "enterAmount": "Ingrese el monto",
+    "cancel": "Cancelar",
+    "processing": "Procesando...",
+    "confirm": "Confirmar Inversión",
+    "valueBetween": "El monto debe estar entre {{min}} y {{max}}",
+    "insufficientBalance": "Saldo insuficiente. Disponible: {{balance}}",
+    "investmentSuccess": "¡Inversión realizada con éxito!",
+    "investmentError": "Error al realizar inversión",
+    "choosePlan": "Elija su plan",
+    "dailyYield": "Rendimiento diario",
+    "monthlyYield": "Rendimiento mensual",
+    "investNow": "Invertir Ahora",
+    "success": "¡Inversión exitosa!",
+    "activeInvestments": "Inversiones Activas",
+    "pending": "Pendiente",
+    "completed": "Completado",
+    "totalInvested": "Total Invertido"
+  },
+  "contact": {
+    "title": "Contáctenos",
+    "subtitle": "Estamos aquí para ayudar",
+    "backToSupport": "← Volver a Soporte",
+    "sendMessage": "Envíe su mensaje",
+    "fullName": "Nombre Completo",
+    "email": "Correo Electrónico",
+    "category": "Categoría",
+    "subject": "Asunto",
+    "message": "Mensaje",
+    "namePlaceholder": "Su nombre",
+    "emailPlaceholder": "su@email.com",
+    "subjectPlaceholder": "Breve descripción del asunto",
+    "messagePlaceholder": "Describa su consulta o problema en detalle...",
+    "sending": "Enviando...",
+    "send": "Enviar Mensaje",
+    "messageSent": "¡Mensaje Enviado!",
+    "messageSuccess": "Su mensaje ha sido recibido con éxito. Nuestro equipo responderá dentro de 24 horas.",
+    "backToHome": "Volver al Inicio",
+    "supportCenter": "Centro de Soporte",
+    "contactMethods": "Formas de Contacto",
+    "quickFAQ": "Preguntas Frecuentes",
+    "officeHours": "Horario de Atención",
+    "mondayToFriday": "Lunes - Viernes",
+    "saturday": "Sábado",
+    "sunday": "Domingo",
+    "closed": "Cerrado",
+    "chatOnline": "Chat en Línea",
+    "hours24_7": "24/7",
+    "categories": {
+      "general": "Consulta General",
+      "technical": "Soporte Técnico",
+      "billing": "Facturación",
+      "partnership": "Alianza",
+      "complaint": "Reclamo"
+    },
+    "contactInfo": {
+      "email": "Correo",
+      "phone": "Teléfono",
+      "liveChat": "Chat en Vivo",
+      "address": "Dirección",
+      "response24h": "Respuesta en 24 horas",
+      "businessHours": "Lunes a Viernes, 9h-18h",
+      "immediateResponse": "Respuesta inmediata",
+      "onlineOnly": "Soporte online solo",
+      "available24_7": "Disponible 24/7"
+    },
+    "faq": {
+      "responseTime": "¿Cuál es el tiempo promedio de respuesta?",
+      "responseTimeAnswer": "Respondemos correos en 24 horas. Chat en vivo ofrece respuesta inmediata durante horario comercial.",
+      "scheduleCall": "¿Puedo agendar una llamada?",
+      "scheduleCallAnswer": "¡Sí! Envíe un correo con 'Agendar Llamada' en el asunto y nuestro equipo se contactará.",
+      "reportProblem": "¿Cómo reporto un problema?",
+      "reportProblemAnswer": "Use el formulario de contacto o envíe correo a support@imperiumclub.com con detalles del problema."
+    }
+  },
+  "career": {
+    "title": "Carrera",
+    "pageTitle": "Plan Imperial de Carrera",
+    "subtitle": "Recompensas mensuales por ventas directas - $1 = 1 VP",
+    "currentRank": "Rango Actual",
+    "nextRank": "Próximo Rango",
+    "points": "Puntos",
+    "progress": "Progreso",
+    "directActive": "Activos Directos",
+    "teamActive": "Activos en Equipo",
+    "yourCurrentVP": "Tu VP actual",
+    "currentTitle": "Título actual",
+    "none": "Ninguno",
+    "level": "Nivel",
+    "inBank": "en banca",
+    "vpGoal": "Meta VP",
+    "lines": "Líneas",
+    "minPerLine": "Mín/línea"
+  },
+  "footer": {
+    "description": "Transformando vidas a través de inversiones inteligentes y oportunidades exclusivas.",
+    "quickLinks": "Enlaces Rápidos",
+    "services": "Servicios",
+    "referralProgram": "Programa de Referidos",
+    "vipSupport": "Soporte VIP",
+    "exclusiveEvents": "Eventos Exclusivos",
+    "financialConsulting": "Asesoría Financiera",
+    "newsletter": {
+      "title": "Mantente actualizado",
+      "description": "Recibe información exclusiva sobre nuevos planes y oportunidades de inversión",
+      "placeholder": "Tu mejor correo",
+      "subscribe": "Suscribirse"
+    },
+    "allRightsReserved": "Todos los derechos reservados.",
+    "privacyPolicy": "Política de Privacidad",
+    "termsOfUse": "Términos de Uso",
+    "cookiePolicy": "Política de Cookies",
+    "compliance": "Cumplimiento",
+    "backToTop": "Volver arriba"
+  },
+  "admin": {
+    "panel": "Panel Admin",
+    "bankingData": "Datos Bancarios",
+    "users": "Usuarios",
+    "withdrawals": "Retiros",
+    "deposits": "Depósitos",
+    "yields": "Rendimientos",
+    "settings": "Configuración"
+  },
+  "transactions": {
+    "empty": "Sin transacciones aún",
+    "types": {
+      "deposit": "Depósito",
+      "withdrawal": "Retiro",
+      "transfer": "Transferencia",
+      "yield": "Rendimiento",
+      "network_bonus": "Bono de Red",
+      "referral_bonus": "Bono de Referido",
+      "reinvestment": "Reinversión",
+      "penalty": "Multa",
+      "career_bonus": "Bono de Carrera",
+      "investment": "Inversión"
+    }
+  },
+  "status": {
+    "pending": "Pendiente",
+    "approved": "Aprobado",
+    "rejected": "Rechazado",
+    "completed": "Completado",
+    "active": "Activo"
+  },
+  "buttons": {
+    "save": "Guardar",
+    "cancel": "Cancelar",
+    "confirm": "Confirmar",
+    "close": "Cerrar",
+    "submit": "Enviar",
+    "continue": "Continuar",
+    "back": "Volver",
+    "view": "Ver",
+    "edit": "Editar",
+    "delete": "Eliminar"
+  },
+  "errors": {
+    "required": "Este campo es obligatorio",
+    "invalidEmail": "Correo electrónico inválido",
+    "passwordMismatch": "Las contraseñas no coinciden",
+    "minLength": "Mínimo {{count}} caracteres",
+    "generic": "Ocurrió un error. Intente nuevamente.",
+    "unauthorized": "Acceso no autorizado",
+    "notFound": "Página no encontrada"
+  }
+}

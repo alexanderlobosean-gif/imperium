@@ -1,10 +1,12 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/lib/AuthContext';
 import { CAREER_LEVELS, formatCurrency } from '@/lib/planConfig';
 import { Award, CheckCircle, Lock } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
 
 export default function Career() {
+  const { t } = useTranslation();
   const { user } = useAuth();
   const currentVP = user?.career_vp || 0;
   const currentLevel = user?.career_level || 'none';
@@ -16,9 +18,9 @@ export default function Career() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-foreground">Plano Imperial de Carreira</h1>
+        <h1 className="text-2xl font-bold text-foreground">{t('career.pageTitle')}</h1>
         <p className="text-sm text-muted-foreground mt-1">
-          Premiação mensal por vendas diretas - $1 = 1 VP
+          {t('career.subtitle')}
         </p>
       </div>
 
@@ -26,7 +28,7 @@ export default function Career() {
       <div className="rounded-xl border border-gold/20 bg-gradient-to-br from-gold/10 to-transparent p-6 gold-glow">
         <div className="flex items-center justify-between mb-4">
           <div>
-            <p className="text-xs text-muted-foreground uppercase tracking-wider">Seu VP atual</p>
+            <p className="text-xs text-muted-foreground uppercase tracking-wider">{t('career.yourCurrentVP')}</p>
             <p className="text-3xl font-bold gold-text">{currentVP.toLocaleString()} VP</p>
           </div>
           <Award className="w-10 h-10 text-gold" />
@@ -34,7 +36,7 @@ export default function Career() {
         {currentLevel !== 'none' && (
           <div className="p-3 rounded-lg bg-gold/10 border border-gold/20">
             <p className="text-sm font-semibold text-gold">
-              Título atual: {CAREER_LEVELS[currentLevelIndex]?.title || 'Nenhum'}
+              {t('career.currentTitle')}: {CAREER_LEVELS[currentLevelIndex]?.title || t('career.none')}
             </p>
           </div>
         )}
@@ -69,26 +71,26 @@ export default function Career() {
                     <h3 className={`font-bold ${isCurrent ? 'gold-text' : 'text-foreground'}`}>
                       {level.title}
                     </h3>
-                    <p className="text-xs text-muted-foreground">Nível {level.level}</p>
+                    <p className="text-xs text-muted-foreground">{t('career.level')} {level.level}</p>
                   </div>
                 </div>
                 <div className="text-right">
                   <p className="text-sm font-bold text-gold">{formatCurrency(level.prize)}</p>
-                  <p className="text-xs text-muted-foreground">em banca</p>
+                  <p className="text-xs text-muted-foreground">{t('career.inBank')}</p>
                 </div>
               </div>
 
               <div className="grid grid-cols-3 gap-3 mb-3 text-center">
                 <div className="p-2 rounded-lg bg-secondary/50">
-                  <p className="text-xs text-muted-foreground">Meta VP</p>
+                  <p className="text-xs text-muted-foreground">{t('career.vpGoal')}</p>
                   <p className="text-sm font-semibold text-foreground">{level.vp.toLocaleString()}</p>
                 </div>
                 <div className="p-2 rounded-lg bg-secondary/50">
-                  <p className="text-xs text-muted-foreground">Linhas</p>
+                  <p className="text-xs text-muted-foreground">{t('career.lines')}</p>
                   <p className="text-sm font-semibold text-foreground">{level.lines}</p>
                 </div>
                 <div className="p-2 rounded-lg bg-secondary/50">
-                  <p className="text-xs text-muted-foreground">Mín/linha</p>
+                  <p className="text-xs text-muted-foreground">{t('career.minPerLine')}</p>
                   <p className="text-sm font-semibold text-foreground">{level.minPerLine}%</p>
                 </div>
               </div>

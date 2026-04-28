@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { formatCurrency, getPlanForAmount } from '@/lib/planConfig';
 import { useAuth } from '@/lib/AuthContext';
 import { supabase } from '@/lib/supabase';
@@ -19,6 +20,7 @@ const fetchPlans = async () => {
 };
 
 export default function Plans() {
+  const { t } = useTranslation();
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const [selectedPlan, setSelectedPlan] = useState(null);
@@ -206,12 +208,12 @@ export default function Plans() {
     const value = parseFloat(amount);
 
     if (!value || value < plan.min_amount || value > plan.max_amount) {
-      toast.error(`Valor deve estar entre ${formatCurrency(plan.min_amount)} e ${formatCurrency(plan.max_amount)}`);
+      toast.error(t('plans.valueBetween', { min: formatCurrency(plan.min_amount), max: formatCurrency(plan.max_amount) }));
       return;
     }
 
     if (value > availableBalance) {
-      toast.error(`Saldo insuficiente. Disponível: ${formatCurrency(availableBalance)}`);
+      toast.error(t('plans.insufficientBalance', { balance: formatCurrency(availableBalance) }));
       return;
     }
 
@@ -232,21 +234,21 @@ export default function Plans() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-foreground">Planos de Investimento</h1>
+        <h1 className="text-2xl font-bold text-foreground">{t('plans.title')}</h1>
         <p className="text-sm text-muted-foreground mt-1">
-          Escolha o plano ideal para começar a investir
+          {t('plans.subtitle')}
         </p>
       </div>
 
       <div className="bg-card border border-border rounded-xl p-4 mb-6">
         <div className="flex items-center justify-between">
           <div>
-            <p className="text-sm text-muted-foreground">Saldo Disponível para Investir</p>
+            <p className="text-sm text-muted-foreground">{t('plans.availableBalance')}</p>
             <p className="text-2xl font-bold text-gold">{formatCurrency(availableBalance)}</p>
           </div>
           <div className="text-right text-sm text-muted-foreground">
-            <p>Saldo: {formatCurrency(availableBalance)}</p>
-            <p>Investido: {formatCurrency(totalInvested)}</p>
+            <p>{t('plans.balance')}: {formatCurrency(availableBalance)}</p>
+            <p>{t('plans.invested')}: {formatCurrency(totalInvested)}</p>
           </div>
         </div>
       </div>
@@ -288,33 +290,33 @@ export default function Plans() {
       <Dialog open={showDialog} onOpenChange={setShowDialog}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Confirmar Investimento</DialogTitle>
+            <DialogTitle>{t('plans.confirmInvestment')}</DialogTitle>
           </DialogHeader>
           
           {selectedPlan && (
             <div className="space-y-4">
               <div>
-                <p className="text-sm text-muted-foreground">Plano selecionado</p>
+                <p className="text-sm text-muted-foreground">{t('plans.selectedPlan')}</p>
                 <p className="font-medium">{selectedPlan.name}</p>
               </div>
               
               <div>
-                <p className="text-sm text-muted-foreground">Valor mínimo</p>
+                <p className="text-sm text-muted-foreground">{t('plans.minAmount')}</p>
                 <p className="font-medium">{formatCurrency(selectedPlan.min_amount)}</p>
               </div>
               
               <div>
-                <p className="text-sm text-muted-foreground">Valor máximo</p>
+                <p className="text-sm text-muted-foreground">{t('plans.maxAmount')}</p>
                 <p className="font-medium">{formatCurrency(selectedPlan.max_amount)}</p>
               </div>
               
               <div>
-                <label className="text-sm font-medium">Valor do investimento</label>
+                <label className="text-sm font-medium">{t('plans.investmentAmount')}</label>
                 <Input
                   type="number"
                   value={amount}
                   onChange={(e) => setAmount(e.target.value)}
-                  placeholder="Digite o valor"
+                  placeholder={t('plans.enterAmount')}
                   min={selectedPlan.min_amount}
                   max={selectedPlan.max_amount}
                 />
@@ -324,13 +326,13 @@ export default function Plans() {
           
           <DialogFooter>
             <Button variant="outline" onClick={() => setShowDialog(false)}>
-              Cancelar
+              {t('plans.cancel')}
             </Button>
             <Button 
               onClick={handleInvest} 
               disabled={investMutation.isPending}
             >
-              {investMutation.isPending ? 'Processando...' : 'Confirmar Investimento'}
+              {investMutation.isPending ? t('plans.processing') : t('plans.confirm')}
             </Button>
           </DialogFooter>
         </DialogContent>

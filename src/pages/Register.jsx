@@ -1,5 +1,6 @@
 import React, { useState } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { Eye, EyeOff, Shield, Lock, Mail, User } from 'lucide-react'
 import { authAPI } from '@/services/api'
 import { supabase } from '@/lib/supabase'
@@ -27,6 +28,7 @@ const GoogleIcon = () => (
 )
 
 const Register = () => {
+  const { t } = useTranslation()
   const [searchParams] = useSearchParams()
   const referralCode = searchParams.get('ref')
   
@@ -55,22 +57,22 @@ const Register = () => {
 
   const validateForm = () => {
     if (!formData.fullName || !formData.email || !formData.password) {
-      setError('Preencha todos os campos obrigatórios')
+      setError(t('errors.required'))
       return false
     }
     
     if (formData.password !== formData.confirmPassword) {
-      setError('As senhas não coincidem')
+      setError(t('errors.passwordMismatch'))
       return false
     }
     
     if (formData.password.length < 6) {
-      setError('A senha deve ter pelo menos 6 caracteres')
+      setError(t('errors.minLength', { count: 6 }))
       return false
     }
     
     if (!formData.acceptTerms) {
-      setError('Você deve aceitar os termos de uso')
+      setError(t('auth.acceptTerms'))
       return false
     }
     
@@ -117,7 +119,7 @@ const Register = () => {
       
     } catch (err) {
       console.error('Erro no cadastro:', err)
-      setError(err.message || 'Erro ao criar conta. Tente novamente.')
+      setError(err.message || t('errors.generic'))
     } finally {
       setIsLoading(false)
     }
@@ -140,13 +142,13 @@ const Register = () => {
       })
 
       if (error) {
-        setError('Erro ao iniciar cadastro com Google. Tente novamente.')
+        setError(t('auth.errors.googleLoginFailed'))
         console.error('Google OAuth error:', error)
       }
       // Note: With OAuth, the user will be redirected to Google's login page,
       // then back to the redirectTo URL. The backend will handle user creation.
     } catch (err) {
-      setError('Erro ao fazer cadastro com Google. Tente novamente.')
+      setError(t('auth.errors.googleLoginFailed'))
       console.error('Google login error:', err)
     } finally {
       setIsLoading(false)
@@ -164,12 +166,12 @@ const Register = () => {
               {/* Header */}
               <div className="text-center mb-8">
                 <h2 className="text-3xl font-bold text-slate-900 mb-2">
-                  Criar Conta
+                  {t('auth.register')}
                 </h2>
                 <p className="text-slate-600">
-                  Já tem uma conta?{' '}
+                  {t('auth.hasAccount')}{' '}
                   <Link to="/login" className="text-yellow-600 hover:text-yellow-700 font-semibold">
-                    Entre aqui
+                    {t('login.submit')}
                   </Link>
                 </p>
               </div>
@@ -186,7 +188,7 @@ const Register = () => {
                 {/* Full Name */}
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-2">
-                    Nome Completo *
+                    {t('auth.fullName')} *
                   </label>
                   <div className="relative">
                     <User className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-slate-400" />
@@ -205,7 +207,7 @@ const Register = () => {
                 {/* Email */}
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-2">
-                    Email *
+                    {t('auth.email')} *
                   </label>
                   <div className="relative">
                     <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-slate-400" />
@@ -224,7 +226,7 @@ const Register = () => {
                 {/* Password */}
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-2">
-                    Senha *
+                    {t('auth.password')} *
                   </label>
                   <div className="relative">
                     <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-slate-400" />
@@ -250,7 +252,7 @@ const Register = () => {
                 {/* Confirm Password */}
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-2">
-                    Confirmar Senha *
+                    {t('auth.confirmPassword')} *
                   </label>
                   <div className="relative">
                     <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-slate-400" />
@@ -276,7 +278,7 @@ const Register = () => {
                 {/* Referral Code */}
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-2">
-                    Código de Indicação
+                    {t('nav.indication')}
                   </label>
                   <input
                     type="text"
@@ -284,7 +286,7 @@ const Register = () => {
                     value={formData.referralCode}
                     onChange={handleChange}
                     className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 transition-colors text-gray-900"
-                    placeholder="Opcional"
+                    placeholder={t('wallet.optional') || 'Opcional'}
                   />
                 </div>
 
@@ -298,13 +300,13 @@ const Register = () => {
                     className="w-4 h-4 text-yellow-600 border-slate-300 rounded focus:ring-yellow-500 mt-1"
                   />
                   <label className="ml-2 text-sm text-slate-600">
-                    Eu concordo com os{' '}
+                    {t('auth.agreeTerms')}{' '}
                     <a href="#" className="text-yellow-600 hover:text-yellow-700">
-                      Termos de Uso
+                      {t('login.termsLink')}
                     </a>{' '}
-                    e{' '}
+                    {t('login.and')}{' '}
                     <a href="#" className="text-yellow-600 hover:text-yellow-700">
-                      Política de Privacidade
+                      {t('login.privacyLink')}
                     </a>
                   </label>
                 </div>
@@ -315,7 +317,7 @@ const Register = () => {
                   disabled={isLoading}
                   className="w-full bg-gradient-to-r from-yellow-400 to-yellow-600 text-slate-900 py-3 rounded-lg font-semibold hover:from-yellow-500 hover:to-yellow-700 transition-all duration-200 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  {isLoading ? 'Criando Conta...' : 'Criar Conta'}
+                  {isLoading ? t('buttons.sending') : t('auth.register')}
                 </button>
               </form>
 
@@ -325,7 +327,7 @@ const Register = () => {
                   <div className="w-full border-t border-slate-300"></div>
                 </div>
                 <div className="relative flex justify-center text-sm">
-                  <span className="px-2 bg-white text-slate-500">ou cadastre-se com</span>
+                  <span className="px-2 bg-white text-slate-500">{t('login.orContinueWith')}</span>
                 </div>
               </div>
 
@@ -337,7 +339,7 @@ const Register = () => {
                 className="w-full flex items-center justify-center gap-3 bg-white border-2 border-slate-300 text-slate-700 py-3 rounded-lg font-semibold hover:bg-slate-50 hover:border-slate-400 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <GoogleIcon />
-                {isLoading ? 'Conectando...' : 'Cadastrar com Google'}
+                {isLoading ? t('login.connecting') : t('auth.registerWithGoogle')}
               </button>
             </div>
           </div>
@@ -359,11 +361,10 @@ const Register = () => {
 
               {/* Welcome Message */}
               <h2 className="text-2xl font-bold text-white mb-4">
-                Junte-se à Elite de Investidores
+                {t('register.welcomeTitle')}
               </h2>
               <p className="text-gray-300 mb-8 leading-relaxed">
-                Crie sua conta e comece a transformar seu futuro com 
-                investimentos inteligentes e rendimentos excepcionais.
+                {t('register.welcomeDesc')}
               </p>
 
               {/* Benefits */}
@@ -373,8 +374,8 @@ const Register = () => {
                     <span className="text-yellow-400 font-bold text-sm">1</span>
                   </div>
                   <div>
-                    <h3 className="text-white font-semibold">Cadastro Rápido</h3>
-                    <p className="text-gray-400 text-sm">Crie sua conta em menos de 2 minutos</p>
+                    <h3 className="text-white font-semibold">{t('register.benefits.fastSignup')}</h3>
+                    <p className="text-gray-400 text-sm">{t('register.benefits.fastSignupDesc')}</p>
                   </div>
                 </div>
                 <div className="flex items-start space-x-3">
@@ -382,8 +383,8 @@ const Register = () => {
                     <span className="text-yellow-400 font-bold text-sm">2</span>
                   </div>
                   <div>
-                    <h3 className="text-white font-semibold">Bônus de Boas-vindas</h3>
-                    <p className="text-gray-400 text-sm">Ganhe benefícios exclusivos ao se cadastrar</p>
+                    <h3 className="text-white font-semibold">{t('register.benefits.welcomeBonus')}</h3>
+                    <p className="text-gray-400 text-sm">{t('register.benefits.welcomeBonusDesc')}</p>
                   </div>
                 </div>
                 <div className="flex items-start space-x-3">
@@ -391,8 +392,8 @@ const Register = () => {
                     <span className="text-yellow-400 font-bold text-sm">3</span>
                   </div>
                   <div>
-                    <h3 className="text-white font-semibold">Suporte Prioritário</h3>
-                    <p className="text-gray-400 text-sm">Assistência dedicada desde o primeiro dia</p>
+                    <h3 className="text-white font-semibold">{t('register.benefits.prioritySupport')}</h3>
+                    <p className="text-gray-400 text-sm">{t('register.benefits.prioritySupportDesc')}</p>
                   </div>
                 </div>
               </div>
@@ -401,21 +402,21 @@ const Register = () => {
               <div className="grid grid-cols-3 gap-4 mt-8">
                 <div className="text-center">
                   <div className="text-2xl font-bold text-yellow-400">300%</div>
-                  <div className="text-xs text-gray-400">Retorno Máx</div>
+                  <div className="text-xs text-gray-400">{t('hero.stats.return')}</div>
                 </div>
                 <div className="text-center">
                   <div className="text-2xl font-bold text-yellow-400">0.2%</div>
-                  <div className="text-xs text-gray-400">Taxa Diária</div>
+                  <div className="text-xs text-gray-400">{t('hero.stats.dailyRate')}</div>
                 </div>
                 <div className="text-center">
                   <div className="text-2xl font-bold text-yellow-400">24h</div>
-                  <div className="text-xs text-gray-400">Saques</div>
+                  <div className="text-xs text-gray-400">{t('wallet.withdraw')}</div>
                 </div>
               </div>
 
               {/* Trust Indicators */}
               <div className="mt-8 pt-8 border-t border-slate-700">
-                <p className="text-gray-400 mb-4">Plataforma confiada por investidores em</p>
+                <p className="text-gray-400 mb-4">{t('hero.trusted')}</p>
                 <div className="flex flex-wrap justify-center items-center gap-6 opacity-60">
                   <div className="text-xl font-bold text-white">BTC</div>
                   <div className="text-xl font-bold text-white">ETH</div>

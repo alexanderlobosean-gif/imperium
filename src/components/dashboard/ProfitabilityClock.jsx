@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { PLANS } from '@/lib/planConfig';
 
 function CountdownCircle({ seconds }) {
@@ -36,7 +37,8 @@ function getMinutesSinceActivation(investment) {
 }
 
 export default function ProfitabilityClock({ investment }) {
-  const [seconds, setSeconds] = useState(60 - new Date().getSeconds());
+  const { t } = useTranslation();
+  const [seconds, setSeconds] = useState(59);
   const [minutesElapsed, setMinutesElapsed] = useState(() => getMinutesSinceActivation(investment));
 
   useEffect(() => {
@@ -59,8 +61,8 @@ export default function ProfitabilityClock({ investment }) {
   if (!investment || investment.status !== 'active') {
     return (
       <div className="rounded-xl border border-border bg-card p-6 text-center">
-        <p className="text-muted-foreground text-sm">Nenhum investimento ativo</p>
-        <p className="text-xs text-muted-foreground mt-1">Adquira um plano para começar</p>
+        <p className="text-muted-foreground text-sm">{t('profitabilityClock.noActiveInvestment')}</p>
+        <p className="text-xs text-muted-foreground mt-1">{t('profitabilityClock.getPlanToStart')}</p>
       </div>
     );
   }
@@ -85,43 +87,43 @@ export default function ProfitabilityClock({ investment }) {
     <div className="rounded-xl border border-gold/20 bg-gradient-to-br from-gold/5 to-transparent p-6 gold-glow">
       <div className="text-center mb-4">
         <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wider mb-1">
-          Rentabilidade Atual
+          {t('profitabilityClock.currentYield')}
         </h3>
         <div className="text-4xl font-bold gold-text mb-1">{liveRate.toFixed(6)}%</div>
         <div className="flex items-center justify-center gap-1 mb-1">
           <span className="text-xs text-green-400">→ {nextMinuteRate.toFixed(6)}%</span>
-          <span className="text-xs text-muted-foreground">no próximo minuto</span>
+          <span className="text-xs text-muted-foreground">{t('profitabilityClock.nextMinute')}</span>
         </div>
-        <p className="text-xs text-muted-foreground">Taxa atual (atualiza a cada minuto)</p>
+        <p className="text-xs text-muted-foreground">{t('profitabilityClock.currentRate')}</p>
       </div>
 
       {/* Countdown */}
       <div className="mb-4">
-        <p className="text-xs text-center text-muted-foreground mb-2">Próximo incremento em</p>
+        <p className="text-xs text-center text-muted-foreground mb-2">{t('profitabilityClock.nextIncrementIn')}</p>
         <CountdownCircle seconds={seconds} />
-        <p className="text-xs text-center text-muted-foreground mt-2">+0.000013889% a cada minuto</p>
+        <p className="text-xs text-center text-muted-foreground mt-2">{t('profitabilityClock.perMinuteRate')}</p>
       </div>
 
       {/* Info rows */}
       <div className="space-y-3">
         <div className="flex items-center justify-between p-3 rounded-lg bg-secondary/50">
-          <span className="text-xs text-muted-foreground">Ganhando agora</span>
-          <span className="text-sm font-bold text-green-400">{liveRate.toFixed(6)}% ao dia</span>
+          <span className="text-xs text-muted-foreground">{t('profitabilityClock.earningNow')}</span>
+          <span className="text-sm font-bold text-green-400">{liveRate.toFixed(6)}% {t('profitabilityClock.perDay')}</span>
         </div>
         <div className="flex items-center justify-between p-3 rounded-lg bg-secondary/50">
-          <span className="text-xs text-muted-foreground">Após 24h sem saque</span>
-          <span className="text-sm font-semibold text-gold">{nextDayRate.toFixed(2)}% ao dia</span>
+          <span className="text-xs text-muted-foreground">{t('profitabilityClock.after24hNoWithdraw')}</span>
+          <span className="text-sm font-semibold text-gold">{nextDayRate.toFixed(2)}% {t('profitabilityClock.perDay')}</span>
         </div>
         <div className="flex items-center justify-between p-3 rounded-lg bg-secondary/50">
-          <span className="text-xs text-muted-foreground">Dias sem saque</span>
-          <span className="text-sm font-semibold text-foreground">{daysWithoutWithdrawal} dias</span>
+          <span className="text-xs text-muted-foreground">{t('profitabilityClock.daysWithoutWithdrawal')}</span>
+          <span className="text-sm font-semibold text-foreground">{daysWithoutWithdrawal} {t('profitabilityClock.days')}</span>
         </div>
       </div>
 
       {/* Cap progress bar */}
       <div className="mt-4 pt-4 border-t border-border">
         <div className="flex items-center justify-between mb-2">
-          <span className="text-xs text-muted-foreground">Progresso do teto (300%)</span>
+          <span className="text-xs text-muted-foreground">{t('profitabilityClock.capProgress')} (300%)</span>
           <span className="text-xs font-medium text-gold">{capPercent.toFixed(1)}%</span>
         </div>
         <div className="h-3 rounded-full bg-secondary overflow-hidden">
@@ -131,7 +133,7 @@ export default function ProfitabilityClock({ investment }) {
           />
         </div>
         <div className="flex items-center justify-between mt-3">
-          <span className="text-xs text-muted-foreground">Progresso taxa (Máx {maxRate}%)</span>
+          <span className="text-xs text-muted-foreground">{t('profitabilityClock.rateProgress')} ({t('profitabilityClock.max')} {maxRate}%)</span>
           <span className="text-xs font-medium text-gold">{progressPercent.toFixed(1)}%</span>
         </div>
         <div className="h-3 rounded-full bg-secondary overflow-hidden mt-1">
