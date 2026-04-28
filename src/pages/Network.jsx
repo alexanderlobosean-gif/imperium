@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/lib/AuthContext';
 import { financialAPI } from '@/services/api';
 import { useQuery } from '@tanstack/react-query';
@@ -10,6 +11,7 @@ import DirectReferralBonuses from '@/components/network/DirectReferralBonuses';
 import { toast } from 'sonner';
 
 export default function Network() {
+  const { t } = useTranslation();
   const { user } = useAuth();
   const [copied, setCopied] = useState(false);
   const [generatingCode, setGeneratingCode] = useState(false);
@@ -47,7 +49,7 @@ export default function Network() {
           setReferralData(data);
           setGeneratingCode(false);
         } catch (e) {
-          console.error('Erro ao buscar referral:', e);
+          console.error('Error fetching referral:', e);
           setGeneratingCode(false);
         }
       }
@@ -84,7 +86,7 @@ export default function Network() {
       {/* Referral link */}
       {referralLink && (
         <div className="rounded-xl border border-gold/20 bg-gold/5 p-4">
-          <p className="text-sm font-medium text-foreground mb-2">Seu link de indicação</p>
+          <p className="text-sm font-medium text-foreground mb-2">{t('network.yourReferralLink')}</p>
           <div className="flex items-center gap-2">
             <input
               readOnly
@@ -100,10 +102,10 @@ export default function Network() {
 
       {/* Stats */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-        <StatsCard title="Indicados Diretos" value={directMembers.length} icon={User} color="blue" isCurrency={false} subtitle="" />
-        <StatsCard title="Indicados Indiretos" value={indirectMembers.length} icon={Users} color="purple" isCurrency={false} subtitle="" />
-        <StatsCard title="Total Gerado" value={totalGenerated} icon={TrendingUp} color="green" isCurrency={false} subtitle="" />
-        <StatsCard title="Níveis Liberados" value={`${unlockedLevels} / 20`} icon={Users} color="gold" isCurrency={false} subtitle="" />
+        <StatsCard title={t('network.directReferrals')} value={directMembers.length} icon={User} color="blue" isCurrency={false} subtitle="" />
+        <StatsCard title={t('network.indirectReferrals')} value={indirectMembers.length} icon={Users} color="purple" isCurrency={false} subtitle="" />
+        <StatsCard title={t('network.totalGenerated')} value={totalGenerated} icon={TrendingUp} color="green" isCurrency={false} subtitle="" />
+        <StatsCard title={t('network.unlockedLevels')} value={`${unlockedLevels} / 20`} icon={Users} color="gold" isCurrency={false} subtitle="" />
       </div>
 
       {/* Direct members */}
@@ -148,18 +150,19 @@ export default function Network() {
         return (
           <div className="rounded-xl border border-border bg-card p-6">
             <h3 className="font-semibold text-foreground mb-4 flex items-center gap-2">
-              <TrendingUp className="w-4 h-4 text-green-400" /> Comissões por Nível
+              <TrendingUp className="w-4 h-4 text-green-400" /> {t('network.levelCommissions')}
             </h3>
             <div className="space-y-2">
               {Object.keys(byLevel).sort((a, b) => parseInt(a) - parseInt(b)).map((lvl) => (
                 <div key={lvl} className="flex items-center justify-between p-3 rounded-lg bg-secondary/50 border border-border">
                   <div className="flex items-center gap-3">
                     <Badge variant="outline" className="text-purple-400 border-purple-500/30">N{lvl}</Badge>
+                    <p className="text-sm text-muted-foreground">{byLevel[lvl].count} {t('network.members')}</p>
                     <p className="text-sm text-muted-foreground">{byLevel[lvl].count} membro(s)</p>
                     <span className="text-xs text-amber-400 font-medium">{RESIDUAL_PERCENTAGES[lvl] || 0}%</span>
                   </div>
                   <div className="text-right">
-                    <p className="text-xs text-muted-foreground">Comissão gerada</p>
+                    <p className="text-xs text-muted-foreground">{t('network.commissionEarned')}</p>
                     <p className="text-sm font-bold text-green-400">{formatCurrency(byLevel[lvl].total * ((RESIDUAL_PERCENTAGES[lvl] || 0) / 100))}</p>
                   </div>
                 </div>

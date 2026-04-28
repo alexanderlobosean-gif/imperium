@@ -1,0 +1,761 @@
+{
+  "nav": {
+    "home": "Home",
+    "about": "About",
+    "plans": "Plans",
+    "investmentPlans": "Investment Plans",
+    "leadershipPlans": "Leadership Plans",
+    "testimonials": "Testimonials",
+    "faq": "FAQ",
+    "support": "Support",
+    "supportCenter": "Support Center",
+    "help": "Help",
+    "contact": "Contact",
+    "network": "Network",
+    "career": "Career",
+    "profile": "Profile",
+    "admin": "Admin",
+    "login": "Login",
+    "register": "Register",
+    "logout": "Logout",
+    "indication": "Referral"
+  },
+  "hero": {
+    "badge": "The Future of Investments",
+    "subtitle": {
+      "part1": "Transform your future with smart investments and ",
+      "highlight": "exceptional returns",
+      "part2": "Join the elite of investors."
+    },
+    "stats": {
+      "return": "Maximum Return",
+      "dailyRate": "Daily Rate",
+      "investors": "Active Investors",
+      "secure": "Secure"
+    },
+    "cta": {
+      "register": "Get Started",
+      "login": "Login"
+    },
+    "trusted": "Platform trusted by investors in",
+    "popular": "MOST POPULAR",
+    "investment": "Investment:",
+    "return": "Return:"
+  },
+  "downloadApp": {
+    "title": "Download the App",
+    "description": "Install our app on your phone for quick access, real-time notifications, and optimized experience.",
+    "android": {
+      "title": "Android",
+      "step1": "Open Chrome",
+      "step2": "Tap the menu (⋮)",
+      "step3": "Select \"Add to Home Screen\"",
+      "step4": "Done! The app is installed",
+      "tip": "The app will have an icon on your home screen just like a native app!"
+    },
+    "iphone": {
+      "title": "iPhone",
+      "step1": "Open Safari",
+      "step2": "Tap the Share button",
+      "step3": "Select \"Add to Home Screen\"",
+      "step4": "Tap \"Add\"",
+      "tip": "The Imperium icon will appear alongside your other apps!"
+    },
+    "tip": "Tip",
+    "features": {
+      "fastAccess": {
+        "title": "Quick Access",
+        "desc": "Open the app directly from your home screen"
+      },
+      "notifications": {
+        "title": "Notifications",
+        "desc": "Receive real-time alerts"
+      },
+      "optimized": {
+        "title": "Optimized Experience",
+        "desc": "Interface adapted for mobile"
+      }
+    },
+    "pwa": {
+      "title": "Progressive Web App",
+      "description": "Works like a native app, no need to download from the store"
+    }
+  },
+  "visionMission": {
+    "title": "Our",
+    "highlight": "Identity",
+    "subtitle": "Discover our vision for the future and our mission to transform common investors into wealth builders",
+    "vision": {
+      "title": "Vision",
+      "description": "Empower individuals worldwide with uncomplicated access to professional institutional-level trading, transforming common investors into long-term wealth builders.",
+      "highlights": [
+        {
+          "title": "Institutional Access",
+          "desc": "Professional trading for everyone"
+        },
+        {
+          "title": "Transformation",
+          "desc": "From common investors to wealth builders"
+        },
+        {
+          "title": "Global Reach",
+          "desc": "Empowering individuals worldwide"
+        }
+      ]
+    },
+    "mission": {
+      "title": "Mission",
+      "description": "Bridge the gap between professional trading expertise and everyday investors, offering secure, automated, and results-oriented trading solutions while enabling passive wealth creation and rewarding community growth through a robust affiliate model.",
+      "highlights": [
+        {
+          "title": "Secure Solutions",
+          "desc": "Automated and results-oriented trading"
+        },
+        {
+          "title": "Passive Wealth",
+          "desc": "Enabling automatic income creation"
+        },
+        {
+          "title": "Robust Community",
+          "desc": "Affiliate model with generous rewards"
+        }
+      ]
+    },
+    "cta": {
+      "title": "Join our mission",
+      "description": "Join us in transforming the future of investments and build your financial freedom",
+      "register": "Get Started",
+      "login": "I have an account"
+    }
+  },
+  "features": {
+    "title": "Why choose",
+    "subtitle": "Discover the advantages that make our platform the preferred choice of the most demanding investors",
+    "items": [
+      {
+        "title": "Exceptional Returns",
+        "description": "Up to 300% return on your investments with competitive daily rates and flexible plans."
+      },
+      {
+        "title": "Maximum Security",
+        "description": "Your protection is our priority with advanced encryption and guaranteed insurance funds."
+      },
+      {
+        "title": "Exclusive Community",
+        "description": "Be part of the elite of investors with access to exclusive content and premium networking."
+      },
+      {
+        "title": "Fast Withdrawals",
+        "description": "Withdrawal processing in up to 24 hours with dedicated support and multiple payment options."
+      },
+      {
+        "title": "Global Access",
+        "description": "Invest from anywhere in the world with our multilingual platform and 24/7 support."
+      },
+      {
+        "title": "Rewards Program",
+        "description": "Earn generous bonuses through our referral program and loyalty rewards."
+      }
+    ],
+    "cta": {
+      "title": "Start your investment journey today",
+      "description": "Join thousands of investors who are already transforming their lives with Imperium Club",
+      "button": "Open Free Account"
+    }
+  },
+  "testimonials": {
+    "title": {
+      "part1": "What our",
+      "highlight": "investors",
+      "part2": "say"
+    },
+    "subtitle": "Real stories of success and financial transformation through Imperium Club",
+    "stats": {
+      "investors": "Active Investors",
+      "satisfaction": "Satisfaction",
+      "volume": "Total Volume",
+      "support": "Support"
+    },
+    "investment": "Investment",
+    "return": "Return"
+  },
+  "faq": {
+    "title": {
+      "part1": "Frequently Asked",
+      "part2": "Questions"
+    },
+    "subtitle": "Get your questions answered and learn more about how Imperium Club can transform your investments",
+    "items": [
+      {
+        "question": "How does Imperium Club work?",
+        "answer": "Imperium Club is an investment platform that offers daily returns through various investment plans. You choose a plan, make your deposit, and start receiving daily returns until you reach 300% of your initial investment."
+      },
+      {
+        "question": "Is it safe to invest in Imperium Club?",
+        "answer": "Yes, our platform uses advanced encryption, insurance funds, and regular audits to ensure the security of your investments. Additionally, we have a dedicated team for security and compliance."
+      },
+      {
+        "question": "What deposit methods are available?",
+        "answer": "We accept various cryptocurrencies including Bitcoin (BTC), Ethereum (ETH), Tether (USDT), USD Coin (USDC), and other popular altcoins. We are also constantly adding new payment options."
+      },
+      {
+        "question": "How do withdrawals work?",
+        "answer": "Withdrawals are processed according to your investment plan. Basic plans may take up to 48 hours, while premium plans have withdrawals within 6 hours. Leadership plans feature instant withdrawals."
+      },
+      {
+        "question": "What is the referral program?",
+        "answer": "Our referral program allows you to earn generous bonuses by bringing new investors to the platform. Commissions range from 5% to 15% depending on your plan, and you also earn commissions on your network's referrals."
+      },
+      {
+        "question": "Can I have multiple investments?",
+        "answer": "Yes, you can have multiple active investments simultaneously in different plans. This allows you to diversify your portfolio and optimize your returns according to your financial goals."
+      },
+      {
+        "question": "How are returns calculated?",
+        "answer": "Returns are calculated daily based on your plan's rate and are automatically credited to your account. Rates vary from 0.2% to 0.8% per day, depending on the chosen plan."
+      },
+      {
+        "question": "Are there any hidden fees?",
+        "answer": "No, we are completely transparent about our fees. The only fee applied is a small processing commission for withdrawals, which is clearly informed before transaction confirmation."
+      },
+      {
+        "question": "How does customer support work?",
+        "answer": "We offer 24/7 support through email, live chat, and phone. Premium plans include priority support and dedicated managers for personalized assistance."
+      },
+      {
+        "question": "Can I cancel my investment at any time?",
+        "answer": "Yes, you can request the cancellation of your investment at any time. However, remember that returns are calculated until the cancellation date and there may be processing fees."
+      }
+    ],
+    "cta": {
+      "title": "Still have questions?",
+      "description": "Our support team is ready to help. Contact us and get all your questions answered.",
+      "contactSupport": "Contact Support",
+      "helpCenter": "View Help Center"
+    }
+  },
+  "login": {
+    "welcomeBack": "Welcome Back!",
+    "accessAccount": "Sign in to your account to access your investments, track earnings and manage your portfolio.",
+    "loginTitle": "Sign In",
+    "noAccount": "Don't have an account?",
+    "registerLink": "Sign Up",
+    "rememberMe": "Remember me",
+    "forgotPassword": "Forgot password?",
+    "loggingIn": "Signing in...",
+    "submit": "Sign In",
+    "resetTitle": "Reset Password",
+    "resetDescription": "Enter your email to receive the password reset link.",
+    "orContinueWith": "or continue with",
+    "connecting": "Connecting...",
+    "loginWithGoogle": "Sign in with Google",
+    "termsText": "By signing in, you agree to our",
+    "termsLink": "Terms of Use",
+    "and": "and",
+    "privacyLink": "Privacy Policy",
+    "features": {
+      "security": "Maximum Security",
+      "securityDesc": "Your data protected with advanced encryption",
+      "fastAccess": "Fast Access",
+      "fastAccessDesc": "Intuitive interface and simplified navigation",
+      "premiumSupport": "Premium Support",
+      "premiumSupportDesc": "Dedicated assistance 24/7 for members"
+    }
+  },
+  "register": {
+    "welcomeTitle": "Join the Elite of Investors",
+    "welcomeDesc": "Create your account and start transforming your future with smart investments and exceptional returns.",
+    "benefits": {
+      "fastSignup": "Fast Signup",
+      "fastSignupDesc": "Create your account in less than 2 minutes",
+      "welcomeBonus": "Welcome Bonus",
+      "welcomeBonusDesc": "Get exclusive benefits when you register",
+      "prioritySupport": "Priority Support",
+      "prioritySupportDesc": "Dedicated assistance from day one"
+    }
+  },
+  "stats": {
+    "members": "Members",
+    "volume": "Volume",
+    "satisfaction": "Satisfaction"
+  },
+  "dashboard": {
+    "hello": "Hello",
+    "user": "User",
+    "welcome": "Welcome to your Imperium Club dashboard",
+    "welcomeMessage": "🎉 Registration approved! Welcome to Imperium Club!",
+    "invested": "Invested Amount",
+    "earnings": "Earnings",
+    "networkEarnings": "Network Earnings",
+    "availableBalance": "Available Balance",
+    "yourLink": "Your link",
+    "linkCopied": "Link copied!",
+    "recentTransactions": "Recent Transactions"
+  },
+  "wallet": {
+    "title": "Wallet",
+    "subtitle": "Manage your deposits, withdrawals and transfers",
+    "deposit": "Deposit",
+    "withdraw": "Withdraw",
+    "transfer": "Transfer",
+    "reinvest": "Reinvest",
+    "totalBalance": "Total Balance",
+    "availableBalance": "Available Balance",
+    "totalInvested": "Total Invested",
+    "totalEarned": "Total Earned",
+    "newDeposit": "New Deposit",
+    "newWithdrawal": "New Withdrawal",
+    "newTransfer": "New Transfer",
+    "depositAmount": "Deposit Amount ($)",
+    "withdrawAmount": "Withdrawal Amount ($)",
+    "transferAmount": "Transfer Amount ($)",
+    "descriptionOptional": "Description (optional)",
+    "depositDescriptionPlaceholder": "Deposit description",
+    "acceptTerms": "I have read and accept the deposit terms",
+    "viewDepositTerms": "View Deposit Terms",
+    "generatingQR": "Generating QR Code...",
+    "generateQRUSDT": "Generate USDT QR Code",
+    "qrCodeForPIX": "QR Code for PIX Payment",
+    "qrCodeValid": "Valid PIX QR Code",
+    "amount": "Amount",
+    "scanQRWithBankApp": "Scan the QR Code above with your banking app",
+    "sendReceiptAfterPayment": "After payment, send the receipt",
+    "pixCopyPasteCode": "PIX Code (copy and paste):",
+    "pixCodeCopied": "PIX Code copied!",
+    "walletAddress": "Wallet Address",
+    "scanToCopy": "Scan to copy wallet address",
+    "usdtWalletBEP20": "USDT Wallet (BEP20):",
+    "awaitingApproval": "USDT Deposit - Awaiting Approval",
+    "copy": "Copy",
+    "copied": "Copied!",
+    "linkCopied": "Link copied!",
+    "insufficientBalance": "Insufficient balance",
+    "max": "Max",
+    "transferTo": "Transfer to",
+    "emailPlaceholder": "email@example.com",
+    "transferDescription": "Transfer description",
+    "confirmTransfer": "Confirm Transfer",
+    "enterVerificationCode": "Enter 6-digit code",
+    "codeSentToEmail": "Code sent to your email",
+    "resendCode": "Resend code",
+    "transferConfirmation": "Transfer Confirmation",
+    "transferTerms": "By confirming, you agree to the transfer terms",
+    "withdrawalMethod": "Withdrawal Method",
+    "pix": "PIX",
+    "crypto": "Crypto",
+    "bankTransfer": "Bank Transfer",
+    "pixKey": "PIX Key",
+    "walletAddressPlaceholder": "Wallet address",
+    "withdrawalTerms": "Withdrawal Terms",
+    "acceptWithdrawalTerms": "I accept the withdrawal terms",
+    "requestWithdrawal": "Request Withdrawal",
+    "processing": "Processing...",
+    "history": "History",
+    "noTransactions": "No transactions found",
+    "depositPending": "Deposit Pending",
+    "depositApproved": "Deposit Approved",
+    "withdrawalPending": "Withdrawal Pending",
+    "withdrawalApproved": "Withdrawal Approved",
+    "transferSent": "Transfer Sent",
+    "transferReceived": "Transfer Received",
+    "type": "Type",
+    "status": "Status",
+    "date": "Date",
+    "pending": "Pending",
+    "completed": "Completed",
+    "cancelled": "Cancelled",
+    "failed": "Failed"
+  },
+  "transactions": {
+    "empty": "No transactions yet",
+    "types": {
+      "deposit": "Deposit",
+      "withdrawal": "Withdrawal",
+      "transfer": "Transfer",
+      "yield": "Yield",
+      "network_bonus": "Network Bonus",
+      "referral_bonus": "Referral Bonus",
+      "reinvestment": "Reinvestment",
+      "penalty": "Penalty",
+      "career_bonus": "Career Bonus",
+      "investment": "Investment"
+    }
+  },
+  "status": {
+    "pending": "Pending",
+    "approved": "Approved",
+    "rejected": "Rejected",
+    "completed": "Completed",
+    "active": "Active"
+  },
+  "auth": {
+    "login": "Login",
+    "register": "Register",
+    "email": "Email",
+    "password": "Password",
+    "confirmPassword": "Confirm Password",
+    "fullName": "Full Name",
+    "forgotPassword": "Forgot password?",
+    "noAccount": "Don't have an account?",
+    "hasAccount": "Already have an account?",
+    "loginWithGoogle": "Login with Google",
+    "registerWithGoogle": "Register with Google",
+    "agreeTerms": "I agree to the Terms of Use",
+    "acceptTerms": "Please accept the terms to continue",
+    "resetPassword": "Reset Password",
+    "sendResetLink": "Send reset link"
+  },
+  "investments": {
+    "title": "Investment Plans",
+    "choosePlan": "Choose your plan",
+    "dailyYield": "Daily yield",
+    "monthlyYield": "Monthly yield",
+    "investNow": "Invest Now",
+    "investmentAmount": "Investment Amount",
+    "processing": "Processing...",
+    "success": "Investment successful!",
+    "activeInvestments": "Active Investments",
+    "pending": "Pending",
+    "completed": "Completed",
+    "totalInvested": "Total Invested"
+  },
+  "network": {
+    "title": "Network",
+    "subtitle": "Track your referrals and network earnings",
+    "directReferrals": "Direct Referrals",
+    "indirectReferrals": "Indirect Referrals",
+    "totalMembers": "Total Members",
+    "teamVolume": "Team Volume",
+    "referralLink": "Referral Link",
+    "yourReferralLink": "Your referral link",
+    "copy": "Copy",
+    "totalGenerated": "Total Generated",
+    "unlockedLevels": "Unlocked Levels",
+    "user": "User",
+    "members": "member(s)",
+    "levelCommissions": "Level Commissions",
+    "commissionEarned": "Commission earned"
+  },
+  "depositBanner": {
+    "startInvesting": "Start Investing!",
+    "financialJourney": "Your financial journey starts here",
+    "startIn24h": "Start in 24 hours",
+    "firstDepositDesc": "Make your first deposit and start seeing returns on the first day",
+    "from": "From",
+    "upTo": "Up to",
+    "perDay": "per day",
+    "withdrawalsIn": "Withdrawals in",
+    "dailyReturns": "Automatic daily returns",
+    "securityGuaranteed": "Security and trust guaranteed",
+    "dedicatedSupport": "24/7 dedicated support",
+    "depositNow": "Deposit Now",
+    "later": "Later",
+    "tip": "Tip",
+    "startSmallTip": "Start small and watch your money grow every day"
+  },
+  "profitabilityClock": {
+    "currentYield": "Current Yield",
+    "noActiveInvestment": "No active investment",
+    "getPlanToStart": "Get a plan to start",
+    "nextMinute": "in the next minute",
+    "currentRate": "Current rate (updates every minute)",
+    "nextIncrementIn": "Next increment in",
+    "perMinuteRate": "+0.000013889% every minute",
+    "perDay": "per day",
+    "after24hNoWithdraw": "After 24h without withdrawal",
+    "rateProgress": "Rate progress",
+    "daysWithoutWithdrawal": "Days without withdrawal",
+    "days": "days",
+    "earningNow": "Earning now",
+    "capProgress": "Cap progress",
+    "max": "Max"
+  },
+  "support": {
+    "title": "Support Center",
+    "subtitle": "We're here to help",
+    "back": "Back",
+    "online": "Online",
+    "howCanWeHelp": "How can we",
+    "help": "help",
+    "categories": {
+      "general": "General",
+      "generalDesc": "Common questions and general information",
+      "account": "Account",
+      "accountDesc": "Login, registration and profile settings",
+      "investment": "Investments",
+      "investmentDesc": "Plans, yields and withdrawals",
+      "security": "Security",
+      "securityDesc": "Data protection and security measures"
+    },
+    "quickContact": "Quick Contact",
+    "liveChat": "Live Chat",
+    "liveChatDesc": "Chat with our team in real time",
+    "startChat": "Start Chat",
+    "email": "Email",
+    "emailDesc": "Send your question by email",
+    "sendEmail": "Send Email",
+    "phone": "Phone",
+    "phoneDesc": "Phone support from 9am to 6pm",
+    "callNow": "Call Now",
+    "unavailable": "Unavailable at the moment",
+    "commonTopics": "Common Topics",
+    "howItWorks": "How does Imperium Club work?",
+    "howItWorksDesc": "Understand our automated investment platform",
+    "resetPassword": "How to reset my password?",
+    "resetPasswordDesc": "Step by step to recover your account",
+    "yieldRates": "What are the yield rates?",
+    "yieldRatesDesc": "Learn about our plans and returns",
+    "dataSecurity": "Is my data secure?",
+    "dataSecurityDesc": "Security measures we adopt",
+    "notFound": "Didn't find what you're looking for?",
+    "helpCenterDesc": "Our complete Help Center is available with detailed guides and step-by-step tutorials",
+    "visitHelpCenter": "Visit Help Center"
+  },
+  "deposit": {
+    "title": "Deposit",
+    "subtitle": "Deposit funds to your account using Imperium Club's bank accounts",
+    "instructions": "Deposit Instructions",
+    "instructionsStep1": "1. Select a bank account below",
+    "instructionsStep2": "2. Enter the deposit amount",
+    "instructionsStep3": "3. Make the PIX transfer to the selected account details",
+    "instructionsStep4": "4. After payment, click 'Create Deposit' and send the receipt",
+    "accountHolder": "Account Holder",
+    "agency": "Agency",
+    "account": "Account",
+    "document": "Tax ID",
+    "pixKey": "PIX Key",
+    "pixKeyType": "Type",
+    "recommended": "Recommended",
+    "createDeposit": "Create Deposit",
+    "creating": "Creating...",
+    "depositAmount": "Deposit Amount ($)",
+    "description": "Description (optional)",
+    "descriptionPlaceholder": "Deposit description",
+    "hideQRCode": "Hide QR Code",
+    "generateQRCode": "Generate QR Code",
+    "qrCodeTitle": "QR Code for PIX Payment",
+    "qrCodeSimulated": "QR Code simulated",
+    "amount": "Amount",
+    "scanOrCopy": "Scan the QR Code or copy the PIX key above",
+    "depositSuccess": "Deposit created successfully! Send the receipt for approval.",
+    "depositError": "Error creating deposit",
+    "selectAccountAndAmount": "Select an account and enter the deposit amount"
+  },
+  "helpCenter": {
+    "title": "Help Center",
+    "subtitle": "Find answers to your questions",
+    "search": "Search",
+    "searchPlaceholder": "Search articles...",
+    "gettingStarted": "Getting Started",
+    "gettingStartedDesc": "Start using the platform",
+    "myAccount": "My Account",
+    "myAccountDesc": "Manage your profile and settings",
+    "investments": "Investments",
+    "investmentsDesc": "Plans, yields and withdrawals",
+    "security": "Security",
+    "securityDesc": "Protection and privacy",
+    "features": "Features",
+    "featuresDesc": "Advanced resources",
+    "troubleshooting": "Troubleshooting",
+    "troubleshootingDesc": "Solutions for common issues",
+    "whatIsImperium": "What is Imperium Club?",
+    "whatIsImperiumContent": "Imperium Club is an automated investment platform that offers access to professional institutional-level trading for common investors. Our mission is to transform investors into long-term wealth builders through secure and automated solutions.",
+    "howToStart": "How to start investing?",
+    "howToStartContent": "To get started: 1) Create your free account. 2) Complete your profile with basic information. 3) Choose an investment plan. 4) Make your first deposit. 5) Track your daily yields. The whole process takes less than 5 minutes!",
+    "availablePlans": "What plans are available?",
+    "availablePlansContent": "We offer 3 plans: Start ($500+), Basic ($1,000+) and Silver ($2,000+). Each plan offers different daily yield rates and exclusive benefits. All plans include fast withdrawals and dedicated support.",
+    "createAccount": "How to create my account?",
+    "createAccountContent": "Click 'Sign Up' in the top menu. Fill in your personal details, create a secure password and confirm your email. After confirmation, you will have full access to the platform.",
+    "resetPassword": "How to reset my password?",
+    "resetPasswordContent": "On the login page, click 'Forgot my password'. Enter your registered email and we will send a recovery link. Follow the instructions in the email to create a new password.",
+    "updateProfile": "How to update my data?",
+    "updateProfileContent": "Access your profile in the side menu. There you can update personal information, banking details, notification settings and security preferences. Save the changes at the end.",
+    "howYieldsWork": "How do yields work?",
+    "howYieldsWorkContent": "Yields are calculated daily based on your plan and invested amount. Rates vary from 1% to 3% per day. Yields are automatically credited to your account and you can withdraw at any time.",
+    "withdrawalProcess": "How to make withdrawals?",
+    "withdrawalProcessContent": "Access the investments area, click 'Withdraw' and choose the amount. Withdrawals are processed within 24 hours. Minimum withdrawal: $50. Fees may apply depending on the chosen method.",
+    "compoundInterest": "What is compound interest?",
+    "compoundInterestContent": "Compound interest means your daily yields are automatically reinvested, generating more yields the next day. This creates a snowball effect that accelerates your financial growth.",
+    "supportOnline": "Support Online",
+    "articles": "Articles",
+    "categories": "Categories",
+    "satisfaction": "Satisfaction",
+    "stillNeedHelp": "Still need help?",
+    "supportAvailable": "Our support team is available 24/7 to help with any questions",
+    "contactSupport": "Contact Support"
+  },
+  "profile": {
+    "title": "My Profile",
+    "subtitle": "Manage your personal information",
+    "personalData": "Personal Data",
+    "name": "Name",
+    "email": "Email",
+    "phone": "Phone",
+    "document": "Document",
+    "address": "Address",
+    "city": "City",
+    "state": "State",
+    "postalCode": "Postal Code",
+    "country": "Country",
+    "bankData": "Banking Data",
+    "bank": "Bank",
+    "agency": "Agency",
+    "account": "Account",
+    "pixKey": "PIX Key",
+    "cryptoWallet": "Wallet Address",
+    "edit": "Edit",
+    "save": "Save",
+    "cancel": "Cancel",
+    "saving": "Saving...",
+    "profileUpdated": "Profile updated successfully!",
+    "profileError": "Error updating profile"
+  },
+  "plans": {
+    "title": "Investment Plans",
+    "subtitle": "Choose the ideal plan to start investing",
+    "availableBalance": "Available Balance to Invest",
+    "balance": "Balance",
+    "invested": "Invested",
+    "confirmInvestment": "Confirm Investment",
+    "selectedPlan": "Selected Plan",
+    "minAmount": "Minimum Amount",
+    "maxAmount": "Maximum Amount",
+    "investmentAmount": "Investment Amount",
+    "enterAmount": "Enter amount",
+    "cancel": "Cancel",
+    "processing": "Processing...",
+    "confirm": "Confirm Investment",
+    "valueBetween": "Amount must be between {{min}} and {{max}}",
+    "insufficientBalance": "Insufficient balance. Available: {{balance}}",
+    "investmentSuccess": "Investment made successfully!",
+    "investmentError": "Error making investment"
+  },
+  "contact": {
+    "title": "Contact Us",
+    "subtitle": "We're here to help",
+    "backToSupport": "← Back to Support",
+    "sendMessage": "Send your message",
+    "fullName": "Full Name",
+    "email": "Email",
+    "category": "Category",
+    "subject": "Subject",
+    "message": "Message",
+    "namePlaceholder": "Your name",
+    "emailPlaceholder": "your@email.com",
+    "subjectPlaceholder": "Brief description of the subject",
+    "messagePlaceholder": "Describe your question or problem in detail...",
+    "sending": "Sending...",
+    "send": "Send Message",
+    "messageSent": "Message Sent!",
+    "messageSuccess": "Your message has been received successfully. Our team will respond within 24 hours.",
+    "backToHome": "Back to Home",
+    "supportCenter": "Support Center",
+    "contactMethods": "Contact Methods",
+    "quickFAQ": "Frequently Asked Questions",
+    "officeHours": "Office Hours",
+    "mondayToFriday": "Monday - Friday",
+    "saturday": "Saturday",
+    "sunday": "Sunday",
+    "closed": "Closed",
+    "chatOnline": "Chat Online",
+    "hours24_7": "24/7",
+    "categories": {
+      "general": "General Inquiry",
+      "technical": "Technical Support",
+      "billing": "Billing",
+      "partnership": "Partnership",
+      "complaint": "Complaint"
+    },
+    "contactInfo": {
+      "email": "Email",
+      "phone": "Phone",
+      "liveChat": "Live Chat",
+      "address": "Address",
+      "response24h": "Response within 24 hours",
+      "businessHours": "Monday to Friday, 9am-6pm",
+      "immediateResponse": "Immediate response",
+      "onlineOnly": "Online support only",
+      "available24_7": "Available 24/7"
+    },
+    "faq": {
+      "responseTime": "What is the average response time?",
+      "responseTimeAnswer": "We respond to emails within 24 hours. Live chat offers immediate response during business hours.",
+      "scheduleCall": "Can I schedule a call?",
+      "scheduleCallAnswer": "Yes! Send an email with 'Schedule Call' in the subject and our team will contact you.",
+      "reportProblem": "How do I report a problem?",
+      "reportProblemAnswer": "Use the contact form or send an email to support@imperiumclub.com with problem details."
+    }
+  },
+  "career": {
+    "title": "Career",
+    "pageTitle": "Imperial Career Plan",
+    "subtitle": "Monthly rewards for direct sales - $1 = 1 VP",
+    "currentRank": "Current Rank",
+    "nextRank": "Next Rank",
+    "points": "Points",
+    "progress": "Progress",
+    "directActive": "Direct Active",
+    "teamActive": "Team Active",
+    "yourCurrentVP": "Your current VP",
+    "currentTitle": "Current title",
+    "none": "None",
+    "level": "Level",
+    "inBank": "in bank",
+    "vpGoal": "VP Goal",
+    "lines": "Lines",
+    "minPerLine": "Min/line"
+  },
+  "footer": {
+    "description": "Transforming lives through smart investments and exclusive opportunities.",
+    "quickLinks": "Quick Links",
+    "services": "Services",
+    "referralProgram": "Referral Program",
+    "vipSupport": "VIP Support",
+    "exclusiveEvents": "Exclusive Events",
+    "financialConsulting": "Financial Consulting",
+    "newsletter": {
+      "title": "Stay updated",
+      "description": "Receive exclusive information about new plans and investment opportunities",
+      "placeholder": "Your best email",
+      "subscribe": "Subscribe"
+    },
+    "allRightsReserved": "All rights reserved.",
+    "privacyPolicy": "Privacy Policy",
+    "termsOfUse": "Terms of Use",
+    "cookiePolicy": "Cookie Policy",
+    "compliance": "Compliance",
+    "backToTop": "Back to top"
+  },
+  "admin": {
+    "panel": "Admin Panel",
+    "bankingData": "Banking Data",
+    "users": "Users",
+    "withdrawals": "Withdrawals",
+    "deposits": "Deposits",
+    "yields": "Yields",
+    "settings": "Settings"
+  },
+  "buttons": {
+    "save": "Save",
+    "cancel": "Cancel",
+    "confirm": "Confirm",
+    "close": "Close",
+    "submit": "Submit",
+    "continue": "Continue",
+    "back": "Back",
+    "view": "View",
+    "edit": "Edit",
+    "delete": "Delete",
+    "sending": "Sending...",
+    "sendLink": "Send Link"
+  },
+  "errors": {
+    "required": "This field is required",
+    "invalidEmail": "Invalid email address",
+    "passwordMismatch": "Passwords do not match",
+    "minLength": "Minimum {{count}} characters",
+    "generic": "An error occurred. Please try again.",
+    "unauthorized": "Unauthorized access",
+    "notFound": "Page not found"
+  }
+}

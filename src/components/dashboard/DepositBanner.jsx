@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
 import { X, TrendingUp, Clock, DollarSign, ArrowRight } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
@@ -6,6 +7,7 @@ import { financialAPI } from '@/services/api'
 import { useAuth } from '@/lib/AuthContext'
 
 const DepositBanner = () => {
+  const { t } = useTranslation()
   const { user } = useAuth()
   const [isVisible, setIsVisible] = useState(false)
   const [isDismissed, setIsDismissed] = useState(false)
@@ -84,8 +86,8 @@ const DepositBanner = () => {
               />
             </div>
             <div>
-              <h3 className="text-xl font-bold text-white">Comece a Investir!</h3>
-              <p className="text-sm text-gray-400">Sua jornada financeira começa aqui</p>
+              <h3 className="text-xl font-bold text-white">{t('depositBanner.startInvesting')}</h3>
+              <p className="text-sm text-gray-400">{t('depositBanner.financialJourney')}</p>
             </div>
           </div>
           <button
@@ -101,27 +103,27 @@ const DepositBanner = () => {
           <div className="bg-gradient-to-r from-yellow-400/10 to-yellow-600/10 border border-yellow-400/30 rounded-lg p-4">
             <div className="flex items-center space-x-3 mb-2">
               <Clock className="w-5 h-5 text-yellow-400" />
-              <span className="text-yellow-400 font-semibold">Comece em 24 horas</span>
+              <span className="text-yellow-400 font-semibold">{t('depositBanner.startIn24h')}</span>
             </div>
             <p className="text-gray-300 text-sm">
-              Faça seu primeiro depósito e comece a ver rendimentos já no primeiro dia
+              {t('depositBanner.firstDepositDesc')}
             </p>
           </div>
 
           <div className="grid grid-cols-3 gap-3 text-center">
             <div className="bg-slate-800/50 rounded-lg p-3">
               <DollarSign className="w-6 h-6 text-green-400 mx-auto mb-1" />
-              <div className="text-xs text-gray-400">A partir de</div>
+              <div className="text-xs text-gray-400">{t('depositBanner.from')}</div>
               <div className="text-sm font-bold text-white">R$ 10</div>
             </div>
             <div className="bg-slate-800/50 rounded-lg p-3">
               <TrendingUp className="w-6 h-6 text-yellow-400 mx-auto mb-1" />
-              <div className="text-xs text-gray-400">Até</div>
-              <div className="text-sm font-bold text-white">3% ao dia</div>
+              <div className="text-xs text-gray-400">{t('depositBanner.upTo')}</div>
+              <div className="text-sm font-bold text-white">3% {t('depositBanner.perDay')}</div>
             </div>
             <div className="bg-slate-800/50 rounded-lg p-3">
               <Clock className="w-6 h-6 text-blue-400 mx-auto mb-1" />
-              <div className="text-xs text-gray-400">Saques em</div>
+              <div className="text-xs text-gray-400">{t('depositBanner.withdrawalsIn')}</div>
               <div className="text-sm font-bold text-white">24h</div>
             </div>
           </div>
@@ -129,15 +131,15 @@ const DepositBanner = () => {
           <div className="space-y-2">
             <div className="flex items-center space-x-2">
               <div className="w-2 h-2 bg-green-400 rounded-full"></div>
-              <span className="text-sm text-gray-300">Rendimentos diários automáticos</span>
+              <span className="text-sm text-gray-300">{t('depositBanner.dailyReturns')}</span>
             </div>
             <div className="flex items-center space-x-2">
               <div className="w-2 h-2 bg-green-400 rounded-full"></div>
-              <span className="text-sm text-gray-300">Segurança e confiança garantidas</span>
+              <span className="text-sm text-gray-300">{t('depositBanner.securityGuaranteed')}</span>
             </div>
             <div className="flex items-center space-x-2">
               <div className="w-2 h-2 bg-green-400 rounded-full"></div>
-              <span className="text-sm text-gray-300">Suporte 24/7 dedicado</span>
+              <span className="text-sm text-gray-300">{t('depositBanner.dedicatedSupport')}</span>
             </div>
           </div>
         </div>
@@ -149,7 +151,7 @@ const DepositBanner = () => {
             className="w-full bg-gradient-to-r from-yellow-400 to-yellow-600 text-slate-900 px-6 py-3 rounded-lg font-bold hover:from-yellow-500 hover:to-yellow-700 transition-all duration-200 transform hover:scale-105 flex items-center justify-center space-x-2"
           >
             <DollarSign className="w-5 h-5" />
-            <span>Fazer Depósito Agora</span>
+            <span>{t('depositBanner.depositNow')}</span>
             <ArrowRight className="w-5 h-5" />
           </button>
           
@@ -157,14 +159,14 @@ const DepositBanner = () => {
             onClick={handleDismiss}
             className="w-full bg-slate-800 text-gray-300 px-6 py-3 rounded-lg font-medium hover:bg-slate-700 transition-all duration-200 border border-slate-600"
           >
-            Depois
+            {t('depositBanner.later')}
           </button>
         </div>
 
         {/* Footer */}
         <div className="mt-6 pt-4 border-t border-slate-700 text-center">
           <p className="text-xs text-gray-500">
-            🎯 <span className="text-yellow-400">Dica:</span> Comece pequeno e veja seu dinheiro crescer todos os dias
+            🎯 <span className="text-yellow-400">{t('depositBanner.tip')}:</span> {t('depositBanner.startSmallTip')}
           </p>
         </div>
       </div>

@@ -1,5 +1,6 @@
 import React, { useState } from 'react'
 import { Link } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { 
   Headphones, 
   MessageCircle, 
@@ -16,55 +17,56 @@ import {
 } from 'lucide-react'
 
 const Support = () => {
+  const { t } = useTranslation()
   const [activeCategory, setActiveCategory] = useState('general')
 
   const categories = [
     {
       id: 'general',
-      name: 'Geral',
+      name: t('support.categories.general'),
       icon: <HelpCircle className="w-6 h-6" />,
-      description: 'Dúvidas comuns e informações gerais'
+      description: t('support.categories.generalDesc')
     },
     {
       id: 'account',
-      name: 'Conta',
+      name: t('support.categories.account'),
       icon: <Users className="w-6 h-6" />,
-      description: 'Login, cadastro e configurações de perfil'
+      description: t('support.categories.accountDesc')
     },
     {
       id: 'investment',
-      name: 'Investimentos',
+      name: t('support.categories.investment'),
       icon: <CreditCard className="w-6 h-6" />,
-      description: 'Planos, rendimentos e saques'
+      description: t('support.categories.investmentDesc')
     },
     {
       id: 'security',
-      name: 'Segurança',
+      name: t('support.categories.security'),
       icon: <Shield className="w-6 h-6" />,
-      description: 'Proteção de dados e medidas de segurança'
+      description: t('support.categories.securityDesc')
     }
   ]
 
   const quickActions = [
     {
       icon: <MessageCircle className="w-8 h-8" />,
-      title: 'Chat ao Vivo',
-      description: 'Converse com nossa equipe em tempo real',
-      action: 'Iniciar Chat',
+      title: t('support.liveChat'),
+      description: t('support.liveChatDesc'),
+      action: t('support.startChat'),
       available: true
     },
     {
       icon: <Mail className="w-8 h-8" />,
-      title: 'E-mail',
-      description: 'Envie sua dúvida por e-mail',
-      action: 'Enviar E-mail',
+      title: t('support.email'),
+      description: t('support.emailDesc'),
+      action: t('support.sendEmail'),
       available: true
     },
     {
       icon: <Phone className="w-8 h-8" />,
-      title: 'Telefone',
-      description: 'Suporte telefônico das 9h às 18h',
-      action: 'Ligar Agora',
+      title: t('support.phone'),
+      description: t('support.phoneDesc'),
+      action: t('support.callNow'),
       available: false
     }
   ]
@@ -72,23 +74,23 @@ const Support = () => {
   const commonIssues = [
     {
       category: 'general',
-      title: 'Como funciona a Imperium Club?',
-      description: 'Entenda nossa plataforma de investimentos automatizados'
+      title: t('support.howItWorks'),
+      description: t('support.howItWorksDesc')
     },
     {
       category: 'account',
-      title: 'Como resetar minha senha?',
-      description: 'Passo a passo para recuperar sua conta'
+      title: t('support.resetPassword'),
+      description: t('support.resetPasswordDesc')
     },
     {
       category: 'investment',
-      title: 'Quais são as taxas de rendimento?',
-      description: 'Conheça nossos planos e retornos'
+      title: t('support.yieldRates'),
+      description: t('support.yieldRatesDesc')
     },
     {
       category: 'security',
-      title: 'Meus dados estão seguros?',
-      description: 'Medidas de segurança que adotamos'
+      title: t('support.dataSecurity'),
+      description: t('support.dataSecurityDesc')
     }
   ]
 
@@ -104,16 +106,16 @@ const Support = () => {
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
               <Link to="/" className="text-yellow-400 hover:text-yellow-300 transition-colors">
-                ← Voltar
+                ← {t('support.back')}
               </Link>
               <div>
-                <h1 className="text-2xl font-bold text-white">Central de Suporte</h1>
-                <p className="text-gray-400">Estamos aqui para ajudar</p>
+                <h1 className="text-2xl font-bold text-white">{t('support.title')}</h1>
+                <p className="text-gray-400">{t('support.subtitle')}</p>
               </div>
             </div>
             <div className="flex items-center space-x-2 text-green-400">
               <CheckCircle className="w-5 h-5" />
-              <span className="text-sm">Online</span>
+              <span className="text-sm">{t('support.online')}</span>
             </div>
           </div>
         </div>
@@ -123,7 +125,7 @@ const Support = () => {
         {/* Categories */}
         <div className="mb-12">
           <h2 className="text-3xl font-bold text-white mb-8 text-center">
-            Como podemos <span className="bg-gradient-to-r from-yellow-400 to-yellow-600 bg-clip-text text-transparent">ajudar?</span>
+            {t('support.howCanWeHelp')} <span className="bg-gradient-to-r from-yellow-400 to-yellow-600 bg-clip-text text-transparent">{t('support.help')}?</span>
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             {categories.map((category) => (
@@ -156,7 +158,7 @@ const Support = () => {
 
         {/* Quick Actions */}
         <div className="mb-12">
-          <h3 className="text-2xl font-bold text-white mb-6">Contato Rápido</h3>
+          <h3 className="text-2xl font-bold text-white mb-6">{t('support.quickContact')}</h3>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {quickActions.map((action, index) => (
               <div
@@ -189,7 +191,7 @@ const Support = () => {
                 {!action.available && (
                   <div className="flex items-center justify-center mt-2 text-gray-500 text-sm">
                     <Clock className="w-4 h-4 mr-1" />
-                    Indisponível no momento
+                    {t('support.unavailable')}
                   </div>
                 )}
               </div>
@@ -200,7 +202,7 @@ const Support = () => {
         {/* Common Issues */}
         <div className="mb-12">
           <h3 className="text-2xl font-bold text-white mb-6">
-            Tópicos Comuns - {categories.find(c => c.id === activeCategory)?.name}
+            {t('support.commonTopics')} - {categories.find(c => c.id === activeCategory)?.name}
           </h3>
           <div className="space-y-4">
             {filteredIssues.map((issue, index) => (
@@ -226,16 +228,16 @@ const Support = () => {
         <div className="text-center">
           <div className="bg-gradient-to-r from-yellow-400/10 to-yellow-600/10 border border-yellow-400/30 rounded-xl p-8">
             <h3 className="text-2xl font-bold text-white mb-4">
-              Não encontrou o que procura?
+              {t('support.notFound')}
             </h3>
             <p className="text-gray-300 mb-6 max-w-2xl mx-auto">
-              Nossa Central de Ajuda completa está disponível com guias detalhados e tutoriais passo a passo
+              {t('support.helpCenterDesc')}
             </p>
             <Link
               to="/help-center"
               className="bg-gradient-to-r from-yellow-400 to-yellow-600 text-slate-900 px-8 py-3 rounded-lg font-bold hover:from-yellow-500 hover:to-yellow-700 transition-all duration-200 transform hover:scale-105 inline-block"
             >
-              Visitar Central de Ajuda
+              {t('support.visitHelpCenter')}
             </Link>
           </div>
         </div>

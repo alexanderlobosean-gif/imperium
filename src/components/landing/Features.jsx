@@ -1,38 +1,40 @@
 import React from 'react'
 import { Link } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { Zap, Shield, TrendingUp, Globe, Headphones, Award, Users } from 'lucide-react'
 
 const Features = () => {
+  const { t } = useTranslation()
   const features = [
     {
       icon: <TrendingUp className="w-8 h-8" />,
-      title: "Rendimentos Excepcionais",
-      description: "Até 300% de retorno sobre seus investimentos com taxas diárias competitivas e planos flexíveis."
+      title: t('features.items.0.title'),
+      description: t('features.items.0.description')
     },
     {
       icon: <Shield className="w-8 h-8" />,
-      title: "Segurança Máxima",
-      description: "Sua proteção é nossa prioridade com criptografia avançada e fundos de seguro garantidos."
+      title: t('features.items.1.title'),
+      description: t('features.items.1.description')
     },
     {
       icon: <Users className="w-8 h-8" />,
-      title: "Comunidade Exclusiva",
-      description: "Faça parte da elite de investidores com acesso a conteúdo exclusivo e networking premium."
+      title: t('features.items.2.title'),
+      description: t('features.items.2.description')
     },
     {
       icon: <Zap className="w-8 h-8" />,
-      title: "Saques Rápidos",
-      description: "Processamento de saques em até 24 horas com suporte dedicado e múltiplas opções de pagamento."
+      title: t('features.items.3.title'),
+      description: t('features.items.3.description')
     },
     {
       icon: <Globe className="w-8 h-8" />,
-      title: "Acesso Global",
-      description: "Invista de qualquer lugar do mundo com nossa plataforma multilíngue e suporte 24/7."
+      title: t('features.items.4.title'),
+      description: t('features.items.4.description')
     },
     {
       icon: <Award className="w-8 h-8" />,
-      title: "Programa de Rewards",
-      description: "Ganhe bônus generosos através de nosso programa de indicação e recompensas por lealdade."
+      title: t('features.items.5.title'),
+      description: t('features.items.5.description')
     }
   ]
 
@@ -42,10 +44,10 @@ const Features = () => {
         {/* Section Header */}
         <div className="text-center mb-16">
           <h2 className="text-4xl md:text-5xl font-bold text-white mb-4">
-            Por que escolher o <span className="bg-gradient-to-r from-yellow-400 to-yellow-600 bg-clip-text text-transparent">IMPERIUM CLUB</span>
+            {t('features.title')} <span className="bg-gradient-to-r from-yellow-400 to-yellow-600 bg-clip-text text-transparent">IMPERIUM CLUB</span>
           </h2>
           <p className="text-xl text-gray-300 max-w-3xl mx-auto">
-            Descubra as vantagens que tornam nossa plataforma a escolha preferida dos investidores mais exigentes
+            {t('features.subtitle')}
           </p>
         </div>
 
@@ -78,16 +80,16 @@ const Features = () => {
         <div className="mt-16 text-center">
           <div className="bg-gradient-to-r from-yellow-400/10 to-yellow-600/10 border border-yellow-400/30 rounded-xl p-8">
             <h3 className="text-2xl font-bold text-white mb-4">
-              Comece sua jornada de investimentos hoje
+              {t('features.cta.title')}
             </h3>
             <p className="text-gray-300 mb-6 max-w-2xl mx-auto">
-              Junte-se a milhares de investidores que já estão transformando suas vidas com o Imperium Club
+              {t('features.cta.description')}
             </p>
             <Link 
               to="/register"
               className="bg-gradient-to-r from-yellow-400 to-yellow-600 text-slate-900 px-8 py-3 rounded-lg font-bold hover:from-yellow-500 hover:to-yellow-700 transition-all duration-200 transform hover:scale-105 inline-block"
             >
-              Abrir Conta Gratuita
+              {t('features.cta.button')}
             </Link>
           </div>
         </div>

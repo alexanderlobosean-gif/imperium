@@ -1,5 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/lib/AuthContext';
 import { supabase } from '@/lib/supabase';
 import { financialAPI } from '@/services/api';
@@ -14,6 +15,7 @@ import { formatCurrency, RESIDUAL_PERCENTAGES } from '@/lib/planConfig';
 import { toast } from 'sonner';
 
 export default function Dashboard() {
+  const { t } = useTranslation();
   const { user, isAuthenticated, isLoadingAuth } = useAuth();
   const navigate = useNavigate();
   const [copied, setCopied] = React.useState(false);
@@ -44,7 +46,7 @@ export default function Dashboard() {
 
       if (isNew) {
         localStorage.removeItem('just_registered');
-        toast.success('🎉 Cadastro aprovado! Bem-vindo ao Imperium Club!', { duration: 6000 });
+        toast.success(t('dashboard.welcomeMessage'), { duration: 6000 });
       }
 
       // Always try to link referral if code exists (even if just_registered was lost)
@@ -166,7 +168,7 @@ export default function Dashboard() {
     if (referralLink) {
       navigator.clipboard.writeText(referralLink);
       setCopied(true);
-      toast.success('Link copiado!');
+      toast.success(t('dashboard.linkCopied'));
       setTimeout(() => setCopied(false), 2000);
     }
   };
@@ -176,15 +178,15 @@ export default function Dashboard() {
       {/* Header */}
       <div>
         <h1 className="text-2xl font-bold text-foreground">
-          Olá, <span className="gold-text">{user?.full_name?.split(' ')[0] || 'Usuário'}</span>
+          {t('dashboard.hello')}, <span className="gold-text">{user?.full_name?.split(' ')[0] || t('dashboard.user')}</span>
         </h1>
-        <p className="text-sm text-muted-foreground mt-1">Bem-vindo ao seu painel Imperium Club</p>
+        <p className="text-sm text-muted-foreground mt-1">{t('dashboard.welcome')}</p>
       </div>
 
       {/* Referral link */}
       {referralLink && (
         <div className="flex items-center gap-2 p-3 rounded-xl border border-gold/20 bg-gold/5">
-          <span className="text-xs text-muted-foreground flex-shrink-0">Seu link:</span>
+          <span className="text-xs text-muted-foreground flex-shrink-0">{t('dashboard.yourLink')}:</span>
           <span className="text-xs text-gold truncate flex-1">{referralLink}</span>
           <button onClick={handleCopyLink} className="flex-shrink-0 p-1.5 rounded-md hover:bg-gold/10 transition">
             {copied ? <CheckCheck className="w-4 h-4 text-green-400" /> : <Copy className="w-4 h-4 text-gold" />}
@@ -194,10 +196,10 @@ export default function Dashboard() {
 
       {/* Stats */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-        <StatsCard title="Valor Investido" value={totalInvested} icon={TrendingUp} color="blue" subtitle="" />
-        <StatsCard title="Rendimento" value={totalEarnings} icon={TrendingUp} color="green" subtitle="" />
-        <StatsCard title="Ganhos de Rede" value={networkEarnings} icon={Users} color="purple" subtitle="" />
-        <StatsCard title="Saldo Disponível" value={availableBalance} icon={Wallet} color="amber" subtitle="" />
+        <StatsCard title={t('dashboard.invested')} value={totalInvested} icon={TrendingUp} color="blue" subtitle="" />
+        <StatsCard title={t('dashboard.earnings')} value={totalEarnings} icon={TrendingUp} color="green" subtitle="" />
+        <StatsCard title={t('dashboard.networkEarnings')} value={networkEarnings} icon={Users} color="purple" subtitle="" />
+        <StatsCard title={t('dashboard.availableBalance')} value={availableBalance} icon={Wallet} color="amber" subtitle="" />
       </div>
 
       {/* Quick Actions */}

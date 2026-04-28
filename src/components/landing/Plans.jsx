@@ -1,8 +1,10 @@
 import React, { useState } from 'react'
 import { Link } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { Check, Crown, Star, Zap, Rocket, Diamond } from 'lucide-react'
 
 const Plans = () => {
+  const { t } = useTranslation()
   const [billingCycle, setBillingCycle] = useState('monthly')
 
   const plans = [
@@ -119,10 +121,10 @@ const Plans = () => {
         {/* Section Header */}
         <div className="text-center mb-16">
           <h2 className="text-4xl md:text-5xl font-bold text-white mb-4">
-            Planos de <span className="bg-gradient-to-r from-yellow-400 to-yellow-600 bg-clip-text text-transparent">Investimento</span>
+            {t('plans.title')} <span className="bg-gradient-to-r from-yellow-400 to-yellow-600 bg-clip-text text-transparent">{t('plans.highlight')}</span>
           </h2>
           <p className="text-xl text-gray-300 max-w-3xl mx-auto">
-            Escolha o plano perfeito para suas metas financeiras e comece a construir seu futuro
+            {t('plans.subtitle')}
           </p>
         </div>
 
@@ -141,7 +143,7 @@ const Plans = () => {
               {plan.popular && (
                 <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
                   <div className="bg-gradient-to-r from-yellow-400 to-yellow-600 text-slate-900 px-4 py-1 rounded-full text-sm font-bold">
-                    MAIS POPULAR
+                    {t('hero.popular')}
                   </div>
                 </div>
               )}
@@ -160,7 +162,7 @@ const Plans = () => {
               {/* Price */}
               <div className="mb-6">
                 <div className="text-4xl font-bold text-white">{plan.price}</div>
-                <div className="text-gray-400">{plan.period}</div>
+                <div className="text-gray-400">{t('plans.minimum')}</div>
               </div>
 
               {/* Features */}
@@ -178,11 +180,11 @@ const Plans = () => {
                 to="/register"
                 className={`block w-full py-3 rounded-lg font-bold text-center transition-all duration-200 ${
                   plan.popular
-                    ? 'bg-gradient-to-r from-yellow-400 to-yellow-600 text-slate-900 hover:from-yellow-500 hover:to-yellow-700'
+                    ? 'bg-gradient-to-r from-yellow-400 to-yellow-600 text-slate-900 hover:from-yellow-500 hover:to-yellow-700' 
                     : 'bg-slate-700 text-white hover:bg-slate-600'
                 }`}
               >
-                {plan.popular ? 'Começar Agora' : 'Selecionar Plano'}
+                {plan.popular ? t('plans.cta.start') : t('plans.cta.select')}
               </Link>
             </div>
           ))}
@@ -191,10 +193,10 @@ const Plans = () => {
         {/* Leadership Plans */}
         <div className="text-center mb-12">
           <h3 className="text-3xl font-bold text-white mb-4">
-            Planos <span className="bg-gradient-to-r from-yellow-400 to-yellow-600 bg-clip-text text-transparent">Leadership</span>
+            {t('plans.leadership.title')} <span className="bg-gradient-to-r from-yellow-400 to-yellow-600 bg-clip-text text-transparent">Leadership</span>
           </h3>
           <p className="text-gray-300 max-w-2xl mx-auto">
-            Para líderes que buscam o máximo em retornos e benefícios exclusivos
+            {t('plans.leadership.subtitle')}
           </p>
         </div>
 
@@ -211,7 +213,7 @@ const Plans = () => {
                 </div>
                 <div className="text-right">
                   <div className="text-3xl font-bold text-yellow-400">{plan.price}</div>
-                  <div className="text-gray-400">{plan.period}</div>
+                  <div className="text-gray-400">{t('plans.minimum')}</div>
                 </div>
               </div>
 
@@ -228,7 +230,7 @@ const Plans = () => {
                 to="/register"
                 className="w-full bg-gradient-to-r from-yellow-400 to-yellow-600 text-slate-900 py-3 rounded-lg font-bold hover:from-yellow-500 hover:to-yellow-700 transition-all duration-200 block text-center"
               >
-                Contatar Vendas
+                {t('plans.leadership.cta')}
               </Link>
             </div>
           ))}

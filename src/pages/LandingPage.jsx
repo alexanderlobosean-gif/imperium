@@ -1,5 +1,6 @@
 import React from 'react'
 import Hero from '@/components/landing/Hero'
+import DownloadApp from '@/components/landing/DownloadApp'
 import VisionMission from '@/components/landing/VisionMission'
 import Features from '@/components/landing/Features'
 import Plans from '@/components/landing/Plans'
@@ -12,6 +13,7 @@ const LandingPage = () => {
     <>
       <AnchorHandler />
       <Hero />
+      <DownloadApp />
       <VisionMission />
       <Features />
       <Plans />
