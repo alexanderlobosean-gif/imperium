@@ -19,36 +19,36 @@ export default function InvestmentSuccessModal({ open, onClose, investment, plan
               <CheckCircle2 className="w-8 h-8 text-green-400" />
             </div>
           </div>
-          <DialogTitle className="text-foreground text-xl">Investimento Realizado!</DialogTitle>
+          <DialogTitle className="text-foreground text-xl">Investment Made!</DialogTitle>
         </DialogHeader>
 
         <div className="space-y-4 py-4">
           <div className="p-3 rounded-lg bg-secondary/50 space-y-2">
-            <p className="text-xs text-muted-foreground uppercase tracking-wider">Plano</p>
+            <p className="text-xs text-muted-foreground uppercase tracking-wider">Plan</p>
             <p className="text-lg font-bold text-gold">{plan.name}</p>
           </div>
 
           <div className="grid grid-cols-2 gap-3">
             <div className="p-3 rounded-lg bg-secondary/50">
-              <p className="text-xs text-muted-foreground mb-1">Valor Investido</p>
+              <p className="text-xs text-muted-foreground mb-1">Invested Amount</p>
               <p className="text-lg font-bold text-green-400">{formatCurrency(investment.amount)}</p>
             </div>
             <div className="p-3 rounded-lg bg-secondary/50">
-              <p className="text-xs text-muted-foreground mb-1">Teto de Ganho</p>
+              <p className="text-xs text-muted-foreground mb-1">Earning Cap</p>
               <p className="text-lg font-bold text-amber-400">{formatCurrency(investment.earning_cap)}</p>
             </div>
           </div>
 
           <div className="p-3 rounded-lg bg-secondary/50">
-            <p className="text-xs text-muted-foreground mb-1">Ativação</p>
+            <p className="text-xs text-muted-foreground mb-1">Activation</p>
             <p className="text-sm font-semibold text-foreground">
-              {format(activationDate, 'dd \'de\' MMMM \'às\' HH:mm', { locale: ptBR })}
+              {format(activationDate, 'MMM dd, yyyy at HH:mm')}
             </p>
           </div>
 
           {investment.unlocked_levels > 0 && (
             <div className="p-3 rounded-lg bg-purple-500/10">
-              <p className="text-xs text-purple-400 mb-1 uppercase tracking-wider">Níveis de Rede Liberados</p>
+              <p className="text-xs text-purple-400 mb-1 uppercase tracking-wider">Network Levels Unlocked</p>
               <p className="text-lg font-bold text-purple-400">{investment.unlocked_levels}</p>
             </div>
           )}
@@ -58,7 +58,7 @@ export default function InvestmentSuccessModal({ open, onClose, investment, plan
           onClick={onClose}
           className="w-full bg-gold hover:bg-gold-hover text-primary-foreground"
         >
-          Entendi, Obrigado!
+          Got it, Thanks!
         </Button>
       </DialogContent>
     </Dialog>

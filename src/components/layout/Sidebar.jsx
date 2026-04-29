@@ -20,17 +20,17 @@ import { supabase } from '@/lib/supabase';
 
 const NAV_ITEMS = [
   { path: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-  { path: '/wallet', label: 'Carteira', icon: Wallet },
-  { path: '/plans', label: 'Planos', icon: TrendingUp },
-  { path: '/network', label: 'Rede', icon: Users },
-  { path: '/indicacao', label: 'Indicação', icon: Share2 },
-  { path: '/career', label: 'Carreira', icon: Award },
-  { path: '/profile', label: 'Perfil', icon: Settings },
+  { path: '/wallet', label: 'Wallet', icon: Wallet },
+  { path: '/plans', label: 'Plans', icon: TrendingUp },
+  { path: '/network', label: 'Network', icon: Users },
+  { path: '/indicacao', label: 'Referral', icon: Share2 },
+  { path: '/career', label: 'Career', icon: Award },
+  { path: '/profile', label: 'Profile', icon: Settings },
 ];
 
 const ADMIN_ITEMS = [
-  { path: '/admin', label: 'Painel Admin', icon: ShieldCheck },
-  { path: '/admin/banking', label: 'Dados Bancários', icon: Wallet },
+  { path: '/admin', label: 'Admin Panel', icon: ShieldCheck },
+  { path: '/admin/banking', label: 'Banking Data', icon: Wallet },
 ];
 
 export default function Sidebar() {
@@ -113,7 +113,7 @@ export default function Sidebar() {
           className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-muted-foreground hover:text-red-400 hover:bg-red-500/10 transition-all w-full"
         >
           <LogOut className="w-5 h-5 flex-shrink-0" />
-          {!collapsed && <span className="text-sm font-medium">Sair</span>}
+          {!collapsed && <span className="text-sm font-medium">Logout</span>}
         </button>
       </div>
     </div>

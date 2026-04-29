@@ -30,7 +30,7 @@ export default function PlanCard({ plan, planKey, onSelect }) {
     <div className={`relative rounded-xl border bg-gradient-to-br ${colors} p-6 transition-all hover:scale-[1.02] hover:shadow-lg`}>
       {plan.name === 'Imperium' && (
         <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full bg-gold text-primary-foreground text-xs font-bold">
-          MAIS POPULAR
+          MOST POPULAR
         </div>
       )}
 
@@ -50,46 +50,46 @@ export default function PlanCard({ plan, planKey, onSelect }) {
         {!plan.isLeadership ? (
           <>
             <div className="flex justify-between text-sm">
-              <span className="text-muted-foreground">Rentabilidade</span>
-              <span className="font-semibold text-foreground">{plan.minRate}% a {plan.baseRate}%/dia</span>
+              <span className="text-muted-foreground">Yield</span>
+              <span className="font-semibold text-foreground">{plan.minRate}% to {plan.baseRate}%/day</span>
             </div>
             <div className="flex justify-between text-sm">
-              <span className="text-muted-foreground">Incremento</span>
-              <span className="font-semibold text-foreground">+{plan.increment}%/dia</span>
+              <span className="text-muted-foreground">Increment</span>
+              <span className="font-semibold text-foreground">+{plan.increment}%/day</span>
             </div>
             <div className="flex justify-between text-sm">
-              <span className="text-muted-foreground">Limite</span>
-              <span className="font-semibold text-foreground">{plan.maxRate}%/dia</span>
+              <span className="text-muted-foreground">Limit</span>
+              <span className="font-semibold text-foreground">{plan.maxRate}%/day</span>
             </div>
             <div className="flex justify-between text-sm">
-              <span className="text-muted-foreground">Divisão</span>
+              <span className="text-muted-foreground">Split</span>
               <span className="font-semibold text-foreground">{plan.clientShare}/{plan.companyShare}</span>
             </div>
             <div className="flex justify-between text-sm">
-              <span className="text-muted-foreground">Comissão direta</span>
+              <span className="text-muted-foreground">Direct Commission</span>
               <span className="font-semibold text-foreground">{plan.directCommission}%</span>
             </div>
             {plan.residualLevels > 0 && (
               <div className="flex justify-between text-sm">
-                <span className="text-muted-foreground">Níveis residuais</span>
-                <span className="font-semibold text-foreground">Até {plan.residualLevels}</span>
+                <span className="text-muted-foreground">Residual Levels</span>
+                <span className="font-semibold text-foreground">Up to {plan.residualLevels}</span>
               </div>
             )}
           </>
         ) : (
           <>
             <div className="flex justify-between text-sm">
-              <span className="text-muted-foreground">Tipo</span>
-              <span className="font-semibold text-foreground">Conta Liderança</span>
+              <span className="text-muted-foreground">Type</span>
+              <span className="font-semibold text-foreground">Leadership Account</span>
             </div>
             <div className="flex justify-between text-sm">
-              <span className="text-muted-foreground">Rendimento</span>
-              <span className="font-semibold text-muted-foreground">Sem rendimento</span>
+              <span className="text-muted-foreground">Yield</span>
+              <span className="font-semibold text-muted-foreground">No yield</span>
             </div>
             <div className="flex justify-between text-sm">
-              <span className="text-muted-foreground">Bônus de rede</span>
+              <span className="text-muted-foreground">Network Bonus</span>
               <span className="font-semibold text-foreground">
-                {plan.residualLevels ? `Até ${plan.residualLevels} níveis` : 'Diretos apenas'}
+                {plan.residualLevels ? `Up to ${plan.residualLevels} levels` : 'Direct only'}
               </span>
             </div>
           </>
@@ -100,7 +100,7 @@ export default function PlanCard({ plan, planKey, onSelect }) {
         onClick={() => onSelect(planKey)}
         className="w-full bg-gold hover:bg-gold-hover text-primary-foreground font-semibold"
       >
-        Investir Agora
+        Invest Now
       </Button>
     </div>
   );

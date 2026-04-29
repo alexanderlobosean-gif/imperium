@@ -1,12 +1,9 @@
 import React from 'react';
-import { useTranslation } from 'react-i18next';
 import { Bell, User } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import LanguageSwitcher from '@/components/LanguageSwitcher';
 import { useAuth } from '@/lib/AuthContext';
 
 export default function Header() {
-  const { t } = useTranslation();
   const { user } = useAuth();
 
   return (
@@ -20,15 +17,12 @@ export default function Header() {
         {/* Center - Title (desktop) */}
         <div className="hidden lg:flex items-center">
           <h1 className="text-lg font-semibold text-foreground">
-            {t('nav.dashboard')}
+            Dashboard
           </h1>
         </div>
 
         {/* Right side - Actions */}
         <div className="flex items-center gap-3">
-          {/* Language Switcher */}
-          <LanguageSwitcher />
-          
           {/* Notifications */}
           <Button 
             variant="ghost" 

@@ -37,7 +37,28 @@ function getMinutesSinceActivation(investment) {
 }
 
 export default function ProfitabilityClock({ investment }) {
-  const { t } = useTranslation();
+  // Função de tradução local (removendo i18n)
+  const t = (key) => {
+    const translations = {
+      'profitabilityClock.noActiveInvestment': 'No active investment',
+      'profitabilityClock.getPlanToStart': 'Get a plan to start earning',
+      'profitabilityClock.currentYield': 'Current Yield',
+      'profitabilityClock.nextMinute': 'next minute',
+      'profitabilityClock.currentRate': 'Current rate per day',
+      'profitabilityClock.nextIncrementIn': 'Next increment in',
+      'profitabilityClock.perMinuteRate': 'per minute rate',
+      'profitabilityClock.earningNow': 'Earning now',
+      'profitabilityClock.perDay': 'per day',
+      'profitabilityClock.after24hNoWithdraw': 'After 24h without withdrawal',
+      'profitabilityClock.daysWithoutWithdrawal': 'Days without withdrawal',
+      'profitabilityClock.days': 'days',
+      'profitabilityClock.capProgress': 'Cap progress',
+      'profitabilityClock.rateProgress': 'Rate progress',
+      'profitabilityClock.max': 'max'
+    };
+    return translations[key] || key;
+  };
+
   const [seconds, setSeconds] = useState(59);
   const [minutesElapsed, setMinutesElapsed] = useState(() => getMinutesSinceActivation(investment));
 

@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import { useTranslation } from 'react-i18next';
 import { formatCurrency, getPlanForAmount } from '@/lib/planConfig';
 import { useAuth } from '@/lib/AuthContext';
 import { supabase } from '@/lib/supabase';
@@ -20,7 +19,31 @@ const fetchPlans = async () => {
 };
 
 export default function Plans() {
-  const { t } = useTranslation();
+  // Função de tradução local (removendo i18n)
+  const t = (key, params = {}) => {
+    const translations = {
+      'plans.title': 'Investment Plans',
+      'plans.subtitle': 'Choose a plan and start earning',
+      'plans.availableBalance': 'Available Balance',
+      'plans.balance': 'Balance',
+      'plans.invested': 'Invested',
+      'plans.confirmInvestment': 'Confirm Investment',
+      'plans.selectedPlan': 'Selected Plan',
+      'plans.minAmount': 'Minimum Amount',
+      'plans.maxAmount': 'Maximum Amount',
+      'plans.investmentAmount': 'Investment Amount',
+      'plans.enterAmount': 'Enter amount',
+      'plans.cancel': 'Cancel',
+      'plans.processing': 'Processing...',
+      'plans.confirm': 'Confirm',
+      'plans.valueBetween': `Value must be between ${params?.min || ''} and ${params?.max || ''}`,
+      'plans.insufficientBalance': `Insufficient balance. Available: ${params?.balance || ''}`,
+      'errors.unauthorized': 'Unauthorized',
+      'errors.loadPlans': 'Error loading plans'
+    };
+    return translations[key] || key;
+  };
+
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const [selectedPlan, setSelectedPlan] = useState(null);
@@ -74,7 +97,7 @@ export default function Plans() {
     console.error('Investments query error:', investmentsError);
   }
   
-  // Buscar saldo real da API
+  // Fetch real balance from API
   const { data: balanceData } = useQuery({
     queryKey: ['balance', user?.id],
     queryFn: async () => {
@@ -157,7 +180,7 @@ export default function Plans() {
       console.log('User ID:', user?.id);
       console.log('Plan data:', data?.plan);
       
-      // Usar API para criar investimento
+      // Use API to create investment
       const result = await financialAPI.createInvestment({
         plan_slug: data?.plan?.slug || data?.plan?.id || 'basic',
         amount: data?.amount,
@@ -187,13 +210,13 @@ export default function Plans() {
       setShowDialog(false);
       setSelectedPlan(null);
       setAmount('');
-      toast.success('Investimento criado com sucesso!');
+      toast.success('Investment created successfully!');
     },
     onError: (err) => {
       console.error('Investment mutation error:', err);
       console.error('Error message:', err?.message);
       console.error('Error code:', err?.code);
-      toast.error(err?.message || 'Erro ao realizar investimento.');
+      toast.error(err?.message || 'Error making investment.');
     },
   });
 

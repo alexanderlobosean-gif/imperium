@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/lib/AuthContext';
 import { financialAPI } from '@/services/api';
 import { useQuery } from '@tanstack/react-query';
@@ -11,7 +10,25 @@ import DirectReferralBonuses from '@/components/network/DirectReferralBonuses';
 import { toast } from 'sonner';
 
 export default function Network() {
-  const { t } = useTranslation();
+  // Função de tradução local (removendo i18n)
+  const t = (key) => {
+    const translations = {
+      'network.pageTitle': 'Network',
+      'network.subtitle': 'Track your network and earnings',
+      'network.yourReferralLink': 'Your Referral Link',
+      'network.directReferrals': 'Direct Referrals',
+      'network.indirectReferrals': 'Indirect Referrals',
+      'network.totalGenerated': 'Total Generated',
+      'network.unlockedLevels': 'Unlocked Levels',
+      'network.members': 'Members',
+      'network.levelCommissions': 'Level Commissions',
+      'network.commissionEarned': 'Commission Earned',
+      'network.copyLink': 'Copy Link',
+      'network.copied': 'Copied!'
+    };
+    return translations[key] || key;
+  };
+
   const { user } = useAuth();
   const [copied, setCopied] = useState(false);
   const [generatingCode, setGeneratingCode] = useState(false);
@@ -72,15 +89,16 @@ export default function Network() {
   const handleCopy = () => {
     navigator.clipboard.writeText(referralLink);
     setCopied(true);
-    toast.success('Link copiado!');
+    toast.success('Link copied!');
     setTimeout(() => setCopied(false), 2000);
   };
 
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-foreground">Minha Rede</h1>
-        <p className="text-sm text-muted-foreground mt-1">Acompanhe seus indicados e ganhos de rede</p>
+        <h1 className="text-2xl font-bold text-foreground">{t('network.pageTitle')}</h1>
+        <p className="text-sm text-muted-foreground mt-1">{t('network.subtitle')}</p>
+        <p className="text-sm text-muted-foreground mt-1">Track your referrals and network earnings</p>
       </div>
 
       {/* Referral link */}
@@ -111,18 +129,18 @@ export default function Network() {
       {/* Direct members */}
       <div className="rounded-xl border border-border bg-card p-6">
         <h3 className="font-semibold text-foreground mb-4 flex items-center gap-2">
-          <User className="w-4 h-4 text-blue-400" /> Indicados Diretos (N1)
+          <User className="w-4 h-4 text-blue-400" /> Direct Referrals (N1)
         </h3>
         {directMembers.length === 0 ? (
           <p className="text-sm text-muted-foreground text-center py-8">
-            Nenhum indicado direto ainda. Compartilhe seu link!
+            No direct referrals yet. Share your link!
           </p>
         ) : (
           <div className="space-y-2">
             {directMembers.map((member) => (
               <div key={member.id} className="flex items-center justify-between p-3 rounded-lg bg-secondary/50 border border-border">
                 <div>
-                  <p className="text-sm font-medium text-foreground">{member.referred_name || 'Usuário'}</p>
+                  <p className="text-sm font-medium text-foreground">{member.referred_name || 'User'}</p>
                   <p className="text-xs text-muted-foreground">{member.referred_email}</p>
                 </div>
                 <div className="text-right">
@@ -158,7 +176,7 @@ export default function Network() {
                   <div className="flex items-center gap-3">
                     <Badge variant="outline" className="text-purple-400 border-purple-500/30">N{lvl}</Badge>
                     <p className="text-sm text-muted-foreground">{byLevel[lvl].count} {t('network.members')}</p>
-                    <p className="text-sm text-muted-foreground">{byLevel[lvl].count} membro(s)</p>
+                    <p className="text-sm text-muted-foreground">{byLevel[lvl].count} member(s)</p>
                     <span className="text-xs text-amber-400 font-medium">{RESIDUAL_PERCENTAGES[lvl] || 0}%</span>
                   </div>
                   <div className="text-right">
@@ -175,26 +193,26 @@ export default function Network() {
       {/* Indirect members */}
       <div className="rounded-xl border border-border bg-card p-6">
         <h3 className="font-semibold text-foreground mb-4 flex items-center gap-2">
-          <Users className="w-4 h-4 text-purple-400" /> Indicados Indiretos
+          <Users className="w-4 h-4 text-purple-400" /> Indirect Referrals
         </h3>
         {indirectMembers.length === 0 ? (
           <p className="text-sm text-muted-foreground text-center py-8">
-            Nenhum indicado indireto ainda
+            No indirect referrals yet
           </p>
         ) : (
           <div className="space-y-2">
             {indirectMembers.map((member) => (
               <div key={member.id} className="flex items-center justify-between p-3 rounded-lg bg-secondary/50 border border-border">
                 <div>
-                  <p className="text-sm font-medium text-foreground">{member.referred_name || 'Usuário'}</p>
+                  <p className="text-sm font-medium text-foreground">{member.referred_name || 'User'}</p>
                   <p className="text-xs text-muted-foreground">{member.referred_email}</p>
                 </div>
                 <div className="text-right">
                   <Badge variant="outline" className="text-purple-400 border-purple-500/30 mb-1">N{member.level}</Badge>
                   {indirectInvestments[member.referred_id] != null && (
                     <>
-                      <p className="text-xs text-muted-foreground">Investiu: <span className="text-gold font-semibold">{formatCurrency(indirectInvestments[member.referred_id].amount)}</span></p>
-                      <p className="text-xs font-semibold text-green-400">Bônus: {formatCurrency((indirectInvestments[member.referred_id].total_yield || 0) * ((RESIDUAL_PERCENTAGES[member.level] || 0) / 100))}</p>
+                      <p className="text-xs text-muted-foreground">Invested: <span className="text-gold font-semibold">{formatCurrency(indirectInvestments[member.referred_id].amount)}</span></p>
+                      <p className="text-xs font-semibold text-green-400">Bonus: {formatCurrency((indirectInvestments[member.referred_id].total_yield || 0) * ((RESIDUAL_PERCENTAGES[member.level] || 0) / 100))}</p>
                     </>
                   )}
                 </div>

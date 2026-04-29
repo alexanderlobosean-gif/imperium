@@ -13,7 +13,7 @@ export default function DirectReferralBonuses() {
   const { data: bonuses = [], isLoading } = useQuery({
     queryKey: ['referral-bonuses', user?.id],
     queryFn: async () => {
-      console.log('🔍 Buscando comissões direct para user:', user?.id);
+      console.log('🔍 Fetching direct commissions for user:', user?.id);
       const { data, error } = await supabase
         .from('commissions')
         .select('*')
@@ -27,7 +27,7 @@ export default function DirectReferralBonuses() {
         return [];
       }
       
-      console.log('✅ Comissões encontradas:', data?.length || 0, data);
+      console.log('✅ Commissions found:', data?.length || 0, data);
       return data || [];
     },
     enabled: !!user?.id,
@@ -40,26 +40,26 @@ export default function DirectReferralBonuses() {
       <div className="flex items-center justify-between">
         <h3 className="font-semibold text-foreground flex items-center gap-2">
           <Gift className="w-4 h-4 text-gold" />
-          Ganhos de Indicação Direta (10%)
+          Direct Referral Earnings (10%)
         </h3>
         <div className="text-right">
-          <p className="text-xs text-muted-foreground">Total recebido</p>
+          <p className="text-xs text-muted-foreground">Total received</p>
           <p className="text-lg font-bold text-gold">{formatCurrency(totalBonuses)}</p>
         </div>
       </div>
 
       {isLoading ? (
-        <p className="text-sm text-muted-foreground text-center py-4">Carregando...</p>
+        <p className="text-sm text-muted-foreground text-center py-4">Loading...</p>
       ) : bonuses.length === 0 ? (
         <p className="text-sm text-muted-foreground text-center py-8">
-          Nenhum bônus de indicação recebido ainda
+          No referral bonuses received yet
         </p>
       ) : (
         <div className="space-y-2">
           {bonuses.map((b) => (
             <div key={b.id} className="flex items-center justify-between p-3 rounded-lg bg-secondary/50 border border-border">
               <div>
-                <p className="text-sm font-medium text-foreground">{b.description || 'Bônus de indicação'}</p>
+                <p className="text-sm font-medium text-foreground">{b.description || 'Referral bonus'}</p>
                 <p className="text-xs text-muted-foreground">
                   {b.created_at ? format(new Date(b.created_at), 'dd/MM/yyyy HH:mm') : ''}
                 </p>

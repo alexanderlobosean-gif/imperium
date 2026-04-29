@@ -53,17 +53,17 @@ export default function NetworkMembersTable() {
     <div className="rounded-xl border border-border bg-card p-6">
       <h3 className="font-semibold text-foreground mb-4 flex items-center gap-2">
         <Users className="w-4 h-4 text-purple-400" />
-        Membros da Rede — Rendimento do Dia (1%)
+        Network Members — Daily Yield (1%)
       </h3>
       <div className="overflow-x-auto">
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-border">
-              <th className="text-left py-2 px-3 text-xs text-muted-foreground font-medium">Nível</th>
-              <th className="text-left py-2 px-3 text-xs text-muted-foreground font-medium">Nome</th>
-              <th className="text-right py-2 px-3 text-xs text-muted-foreground font-medium">Investido</th>
-              <th className="text-right py-2 px-3 text-xs text-muted-foreground font-medium">Rendimento (1%)</th>
-              <th className="text-right py-2 px-3 text-xs text-muted-foreground font-medium">Total Gerado</th>
+              <th className="text-left py-2 px-3 text-xs text-muted-foreground font-medium">Level</th>
+              <th className="text-left py-2 px-3 text-xs text-muted-foreground font-medium">Name</th>
+              <th className="text-right py-2 px-3 text-xs text-muted-foreground font-medium">Invested</th>
+              <th className="text-right py-2 px-3 text-xs text-muted-foreground font-medium">Yield (1%)</th>
+              <th className="text-right py-2 px-3 text-xs text-muted-foreground font-medium">Total Generated</th>
             </tr>
           </thead>
           <tbody>

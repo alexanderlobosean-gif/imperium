@@ -19,7 +19,7 @@ export default function Indicacao() {
           setReferralData(data);
           setGeneratingCode(false);
         } catch (e) {
-          console.error('Erro ao buscar referral:', e);
+          console.error('Error fetching referral:', e);
           setGeneratingCode(false);
         }
       }
@@ -51,24 +51,24 @@ export default function Indicacao() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-foreground">Indicação</h1>
-        <p className="text-sm text-muted-foreground mt-1">Compartilhe seu link e ganhe bônus por cada indicado</p>
+        <h1 className="text-2xl font-bold text-foreground">Referral</h1>
+        <p className="text-sm text-muted-foreground mt-1">Share your link and earn bonus for each referral</p>
       </div>
 
-      {/* Card do link */}
+      {/* Link Card */}
       <div className="rounded-xl border border-gold/30 bg-gradient-to-br from-gold/10 to-transparent p-6 space-y-4">
         <div className="flex items-center gap-3">
           <div className="p-3 rounded-xl bg-gold/10 border border-gold/20">
             <Link className="w-6 h-6 text-gold" />
           </div>
           <div>
-            <p className="font-semibold text-foreground">Seu Link de Indicação</p>
-            <p className="text-xs text-muted-foreground">Compartilhe com amigos e ganhe 10% de bônus</p>
+            <p className="font-semibold text-foreground">Your Referral Link</p>
+            <p className="text-xs text-muted-foreground">Share with friends and earn 10% bonus</p>
           </div>
         </div>
 
         {generatingCode ? (
-          <p className="text-sm text-gold text-center py-4 animate-pulse">Gerando seu código...</p>
+          <p className="text-sm text-gold text-center py-4 animate-pulse">Generating your code...</p>
         ) : referralLink ? (
           <>
             <div className="flex items-center gap-2 p-3 rounded-lg bg-secondary border border-border">
@@ -80,33 +80,33 @@ export default function Indicacao() {
                 className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl bg-gold/10 border border-gold/30 hover:bg-gold/20 transition text-gold font-medium text-sm"
               >
                 {copied ? <CheckCheck className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
-                {copied ? 'Copiado!' : 'Copiar Link'}
+                {copied ? 'Copied!' : 'Copy Link'}
               </button>
               <button
                 onClick={handleShare}
                 className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl bg-green-500/10 border border-green-500/30 hover:bg-green-500/20 transition text-green-400 font-medium text-sm"
               >
                 <Share2 className="w-4 h-4" />
-                Compartilhar
+                Share
               </button>
             </div>
           </>
         ) : (
           <p className="text-sm text-muted-foreground text-center py-4">
-            Seu código de indicação ainda não foi gerado
+            Your referral code has not been generated yet
           </p>
         )}
       </div>
 
-      {/* Código de indicação */}
+      {/* Referral Code */}
       {referralCode && (
         <div className="rounded-xl border border-border bg-card p-5 flex items-center justify-between">
           <div>
-            <p className="text-xs text-muted-foreground uppercase tracking-wider">Seu Código</p>
+            <p className="text-xs text-muted-foreground uppercase tracking-wider">Your Code</p>
             <p className="text-2xl font-bold gold-text mt-1">{referralCode}</p>
           </div>
           <button
-            onClick={() => { navigator.clipboard.writeText(referralCode); toast.success('Código copiado!'); }}
+            onClick={() => { navigator.clipboard.writeText(referralCode); toast.success('Code copied!'); }}
             className="p-3 rounded-lg bg-gold/10 hover:bg-gold/20 transition border border-gold/20"
           >
             <Copy className="w-5 h-5 text-gold" />
@@ -114,24 +114,24 @@ export default function Indicacao() {
         </div>
       )}
 
-      {/* Info bônus */}
+      {/* Bonus Info */}
       <div className="rounded-xl border border-border bg-card p-5 space-y-3">
         <h3 className="font-semibold text-foreground flex items-center gap-2">
           <Users className="w-4 h-4 text-purple-400" />
-          Como funciona
+          How it works
         </h3>
         <div className="space-y-2 text-sm text-muted-foreground">
           <div className="flex items-start gap-2">
             <span className="text-gold font-bold mt-0.5">1.</span>
-            <p>Compartilhe seu link com amigos e conhecidos.</p>
+            <p>Share your link with friends and acquaintances.</p>
           </div>
           <div className="flex items-start gap-2">
             <span className="text-gold font-bold mt-0.5">2.</span>
-            <p>Quando seu indicado fizer um investimento, você recebe <span className="text-gold font-semibold">10% de bônus</span> sobre o valor aportado.</p>
+            <p>When your referral makes an investment, you receive <span className="text-gold font-semibold">10% bonus</span> on the invested amount.</p>
           </div>
           <div className="flex items-start gap-2">
             <span className="text-gold font-bold mt-0.5">3.</span>
-            <p>Além disso, você ganha comissões residuais de até 20 níveis de profundidade.</p>
+            <p>Additionally, you earn residual commissions of up to 20 levels deep.</p>
           </div>
         </div>
       </div>
