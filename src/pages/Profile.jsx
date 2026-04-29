@@ -9,7 +9,6 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { User, Phone, FileText, MapPin, Calendar, Building, CreditCard, Wallet, Globe, Building2 } from 'lucide-react';
 import { toast } from 'sonner';
-import { useTranslation } from 'react-i18next';
 
 const Field = React.memo(({ label, field, placeholder, icon: Icon, value, onChange }) => (
   <div>
@@ -26,8 +25,37 @@ const Field = React.memo(({ label, field, placeholder, icon: Icon, value, onChan
 ));
 
 export default function Profile() {
-  const { t } = useTranslation();
   const { user } = useAuth();
+  
+  // Função de tradução local (removendo i18n)
+  const t = (key) => {
+    const translations = {
+      'profile.title': 'Profile',
+      'profile.subtitle': 'Manage your personal information and settings',
+      'profile.personalData': 'Personal Data',
+      'profile.name': 'Full Name',
+      'profile.email': 'Email',
+      'profile.phone': 'Phone',
+      'profile.document': 'Document',
+      'profile.address': 'Address',
+      'profile.city': 'City',
+      'profile.state': 'State',
+      'profile.postalCode': 'Postal Code',
+      'profile.bankData': 'Bank Data',
+      'profile.bank': 'Bank',
+      'profile.agency': 'Agency',
+      'profile.account': 'Account',
+      'profile.pixKey': 'PIX Key',
+      'profile.cryptoWallet': 'Crypto Wallet',
+      'profile.saving': 'Saving...',
+      'profile.save': 'Save',
+      'profile.edit': 'Edit',
+      'profile.profileUpdated': 'Profile updated successfully',
+      'profile.profileError': 'Error updating profile'
+    };
+    return translations[key] || key;
+  };
+  
   const queryClient = useQueryClient();
   const [saving, setSaving] = useState(false);
   const [isEditing, setIsEditing] = useState(false);

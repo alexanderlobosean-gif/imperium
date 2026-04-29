@@ -1,11 +1,32 @@
 import React from 'react';
-import { useTranslation } from 'react-i18next';
 import { formatCurrency } from '@/lib/planConfig';
 import { ArrowDownCircle, ArrowUpCircle, Send, TrendingUp, Users, RefreshCw } from 'lucide-react';
 import { format } from 'date-fns';
 
 export default function RecentTransactions({ transactions = [], limit = 5 }) {
-  const { t } = useTranslation();
+  // Função de tradução local (removendo i18n)
+  const t = (key) => {
+    const translations = {
+      'transactions.types.deposit': 'Deposit',
+      'transactions.types.withdrawal': 'Withdrawal',
+      'transactions.types.transfer': 'Transfer',
+      'transactions.types.yield': 'Yield',
+      'transactions.types.network_bonus': 'Network Bonus',
+      'transactions.types.referral_bonus': 'Referral Bonus',
+      'transactions.types.reinvestment': 'Reinvestment',
+      'transactions.types.penalty': 'Penalty',
+      'transactions.types.career_bonus': 'Career Bonus',
+      'transactions.types.investment': 'Investment',
+      'status.pending': 'Pending',
+      'status.approved': 'Approved',
+      'status.rejected': 'Rejected',
+      'status.completed': 'Completed',
+      'status.active': 'Active',
+      'dashboard.recentTransactions': 'Recent Transactions',
+      'transactions.empty': 'No transactions yet'
+    };
+    return translations[key] || key;
+  };
 
   const TYPE_CONFIG = {
     deposit: { label: t('transactions.types.deposit'), icon: ArrowDownCircle, color: 'text-green-400' },

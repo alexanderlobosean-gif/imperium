@@ -7,7 +7,28 @@ import { financialAPI } from '@/services/api'
 import { useAuth } from '@/lib/AuthContext'
 
 const DepositBanner = () => {
-  const { t } = useTranslation()
+  // Função local de tradução (removendo dependência do i18n)
+  const t = (key) => {
+    const translations = {
+      'depositBanner.startInvesting': 'Start Investing',
+      'depositBanner.financialJourney': 'Begin your financial journey',
+      'depositBanner.startIn24h': 'Start in 24h',
+      'depositBanner.firstDepositDesc': 'Make your first deposit and start earning daily returns',
+      'depositBanner.from': 'From',
+      'depositBanner.upTo': 'Up to',
+      'depositBanner.perDay': 'per day',
+      'depositBanner.withdrawalsIn': 'Withdrawals in',
+      'depositBanner.dailyReturns': 'Daily returns on your investment',
+      'depositBanner.securityGuaranteed': 'Security guaranteed',
+      'depositBanner.dedicatedSupport': 'Dedicated support',
+      'depositBanner.depositNow': 'Deposit Now',
+      'depositBanner.later': 'Later',
+      'depositBanner.tip': 'Tip',
+      'depositBanner.startSmallTip': 'Start small and grow your investment over time'
+    };
+    return translations[key] || key;
+  };
+
   const { user } = useAuth()
   const [isVisible, setIsVisible] = useState(false)
   const [isDismissed, setIsDismissed] = useState(false)

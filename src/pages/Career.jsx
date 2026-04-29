@@ -1,12 +1,27 @@
 import React from 'react';
-import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/lib/AuthContext';
 import { CAREER_LEVELS, formatCurrency } from '@/lib/planConfig';
 import { Award, CheckCircle, Lock } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
 
 export default function Career() {
-  const { t } = useTranslation();
+  // Função de tradução local (removendo i18n)
+  const t = (key) => {
+    const translations = {
+      'career.pageTitle': 'Career',
+      'career.subtitle': 'Track your career progress and achievements',
+      'career.yourCurrentVP': 'Your Current VP',
+      'career.currentTitle': 'Current Title',
+      'career.none': 'None',
+      'career.level': 'Level',
+      'career.inBank': 'In Bank',
+      'career.vpGoal': 'VP Goal',
+      'career.lines': 'Lines',
+      'career.minPerLine': 'Min Per Line'
+    };
+    return translations[key] || key;
+  };
+
   const { user } = useAuth();
   const currentVP = user?.career_vp || 0;
   const currentLevel = user?.career_level || 'none';

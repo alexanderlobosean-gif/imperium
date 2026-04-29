@@ -1,6 +1,5 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/lib/AuthContext';
 import { supabase } from '@/lib/supabase';
 import { financialAPI } from '@/services/api';
@@ -15,7 +14,6 @@ import { formatCurrency, RESIDUAL_PERCENTAGES } from '@/lib/planConfig';
 import { toast } from 'sonner';
 
 export default function Dashboard() {
-  const { t } = useTranslation();
   const { user, isAuthenticated, isLoadingAuth } = useAuth();
   const navigate = useNavigate();
   const [copied, setCopied] = React.useState(false);
@@ -168,7 +166,7 @@ export default function Dashboard() {
     if (referralLink) {
       navigator.clipboard.writeText(referralLink);
       setCopied(true);
-      toast.success(t('dashboard.linkCopied'));
+      toast.success('Link copied to clipboard!');
       setTimeout(() => setCopied(false), 2000);
     }
   };
@@ -178,15 +176,15 @@ export default function Dashboard() {
       {/* Header */}
       <div>
         <h1 className="text-2xl font-bold text-foreground">
-          {t('dashboard.hello')}, <span className="gold-text">{user?.full_name?.split(' ')[0] || t('dashboard.user')}</span>
+          Hello, <span className="gold-text">{user?.full_name?.split(' ')[0] || 'User'}</span>
         </h1>
-        <p className="text-sm text-muted-foreground mt-1">{t('dashboard.welcome')}</p>
+        <p className="text-sm text-muted-foreground mt-1">Welcome to your investment dashboard</p>
       </div>
 
       {/* Referral link */}
       {referralLink && (
         <div className="flex items-center gap-2 p-3 rounded-xl border border-gold/20 bg-gold/5">
-          <span className="text-xs text-muted-foreground flex-shrink-0">{t('dashboard.yourLink')}:</span>
+          <span className="text-xs text-muted-foreground flex-shrink-0">Your referral link:</span>
           <span className="text-xs text-gold truncate flex-1">{referralLink}</span>
           <button onClick={handleCopyLink} className="flex-shrink-0 p-1.5 rounded-md hover:bg-gold/10 transition">
             {copied ? <CheckCheck className="w-4 h-4 text-green-400" /> : <Copy className="w-4 h-4 text-gold" />}
@@ -196,10 +194,10 @@ export default function Dashboard() {
 
       {/* Stats */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-        <StatsCard title={t('dashboard.invested')} value={totalInvested} icon={TrendingUp} color="blue" subtitle="" />
-        <StatsCard title={t('dashboard.earnings')} value={totalEarnings} icon={TrendingUp} color="green" subtitle="" />
-        <StatsCard title={t('dashboard.networkEarnings')} value={networkEarnings} icon={Users} color="purple" subtitle="" />
-        <StatsCard title={t('dashboard.availableBalance')} value={availableBalance} icon={Wallet} color="amber" subtitle="" />
+        <StatsCard title="Invested" value={totalInvested} icon={TrendingUp} color="blue" subtitle="" />
+        <StatsCard title="Earnings" value={totalEarnings} icon={TrendingUp} color="green" subtitle="" />
+        <StatsCard title="Network Earnings" value={networkEarnings} icon={Users} color="purple" subtitle="" />
+        <StatsCard title="Available Balance" value={availableBalance} icon={Wallet} color="amber" subtitle="" />
       </div>
 
       {/* Quick Actions */}
