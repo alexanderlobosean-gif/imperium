@@ -322,7 +322,14 @@
     "agreeTerms": "Aceito os Termos de Uso",
     "acceptTerms": "Aceite os termos para continuar",
     "resetPassword": "Redefinir Senha",
-    "sendResetLink": "Enviar link de redefinição"
+    "sendResetLink": "Enviar link de redefinição",
+    "errors": {
+      "loginFailed": "Falha ao entrar. Tente novamente.",
+      "loginTimeout": "A conexão com o servidor está demorando. Verifique sua internet e tente novamente.",
+      "googleLoginFailed": "Falha ao entrar com Google. Tente novamente.",
+      "resetSent": "Link de redefinição enviado. Verifique seu e-mail.",
+      "resetFailed": "Falha ao enviar o link. Tente novamente."
+    }
   },
   "dashboard": {
     "hello": "Olá",

@@ -15,138 +15,113 @@ export const AuthProvider = ({ children }) => {
   const currentUserId = useRef(null)
 
   useEffect(() => {
-    // Get initial session
-    const getInitialSession = async () => {
-      console.log('Getting initial session...');
-      
-      // First, check if there's an OAuth callback in the URL
-      const hash = window.location.hash;
-      const hasAuthTokens = hash.includes('access_token=') || hash.includes('refresh_token=');
-      
-      if (hasAuthTokens) {
-        // Wait longer for Supabase to process the tokens from URL
-        await new Promise(resolve => setTimeout(resolve, 1500));
+    let mounted = true
+
+    // Fallback de segurança: nunca deixar a app presa no loading
+    // (evita spinner infinito se o Supabase demorar a responder)
+    const safetyTimeout = setTimeout(() => {
+      if (mounted) setIsLoadingAuth(false)
+    }, 12000)
+
+    const hydrateUser = (session) => {
+      const baseUser = {
+        ...session.user,
+        role: 'user',
+        referral_code: null,
+        full_name: session.user.email
       }
-      
-      const { data: { session }, error } = await supabase.auth.getSession()
-      
-      console.log('Session result:', { hasSession: !!session, userId: session?.user?.id, error });
-      
-      if (session?.user) {
-        console.log('User authenticated:', session.user.email);
+      setUser(baseUser)
+      currentUserId.current = session.user.id
+      hasInitialized.current = true
+      setIsLoadingAuth(false)
+      return baseUser
+    }
 
-        // IMPORTANT: Set authenticated immediately so Dashboard doesn't redirect
-        setIsAuthenticated(true);
+    // Enriquecimento de perfil em background (não bloqueia o loading)
+    const loadProfile = async (session) => {
+      let profile = null
 
-        // Fetch user profile to get role and referral_code from profiles table
-        let { data: profile, error: profileError } = await supabase
+      try {
+        const { data } = await supabase
           .from('profiles')
           .select('role, referral_code, full_name, email')
           .eq('user_id', session.user.id)
-          .single();
-
-        // If profile doesn't exist (OAuth user), create it via API
-        if (!profile) {
-          try {
-            const result = await authAPI.createOAuthProfile({
-              user_id: session.user.id,
-              email: session.user.email,
-              full_name: session.user.user_metadata?.full_name || session.user.user_metadata?.name || session.user.email?.split('@')[0] || 'Usuário',
-            });
-            profile = result.profile;
-          } catch (apiError) {
-            console.error('Error creating profile via API:', apiError);
-            // Don't fail - user can still use the app, just without profile
-          }
-        }
-        
-        const userData = {
-          ...session.user,
-          role: profile?.role || 'user',
-          referral_code: profile?.referral_code || null,
-          full_name: profile?.full_name || session.user.email
-        }
-        
-        setUser(userData)
-        currentUserId.current = session.user.id
-        hasInitialized.current = true
-        
-        // Clear the URL hash if it was an OAuth callback
-        if (hasAuthTokens && window.history.replaceState) {
-          window.history.replaceState({}, document.title, window.location.pathname + window.location.search);
-        }
-      } else {
-        console.log('No session found, user not authenticated');
+          .single()
+        profile = data
+      } catch (e) {
+        console.error('Erro ao buscar profile:', e)
       }
-      
-      setIsLoadingAuth(false)
+
+      if (!profile) {
+        try {
+          const result = await authAPI.createOAuthProfile({
+            user_id: session.user.id,
+            email: session.user.email,
+            full_name: session.user.user_metadata?.full_name || session.user.user_metadata?.name || session.user.email?.split('@')[0] || 'Usuário',
+          })
+          profile = result.profile
+        } catch (apiError) {
+          console.error('Error creating profile via API:', apiError)
+        }
+      }
+
+      if (!mounted) return
+
+      setUser(prev => ({
+        ...prev,
+        role: profile?.role || prev?.role || 'user',
+        referral_code: profile?.referral_code ?? prev?.referral_code,
+        full_name: profile?.full_name || prev?.full_name || session.user.email
+      }))
     }
 
-    getInitialSession()
-
-    // Listen for auth changes
+    // Fonte única de verdade: o evento INITIAL_SESSION/SIGNED_IN do listener.
+    // NÃO chamar getSession() manualmente em paralelo — evita deadlock do
+    // GoTrueClient quando há sessão no storage (causa de login travar).
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        // Só loga eventos importantes, ignorando INITIAL_SESSION e TOKEN_REFRESHED
-        if (event !== 'INITIAL_SESSION' && event !== 'TOKEN_REFRESHED') {
-          console.log('Auth event:', event, '- User:', session?.user?.email || 'none');
-        }
-        
-        // TOKEN_REFRESHED não deve causar logout ou recarregar estado
-        if (event === 'TOKEN_REFRESHED') {
-          return;
-        }
-        
-        // Ignora eventos se o usuário não mudou (exceto SIGNED_OUT)
-        if (event !== 'SIGNED_OUT' && session?.user?.id === currentUserId.current && hasInitialized.current) {
-          return;
-        }
-        
-        if (event === 'SIGNED_IN' && session?.user) {
-          // IMPORTANT: Set authenticated immediately so Dashboard doesn't redirect
-          setIsAuthenticated(true);
-          
-          // Check if profile exists
-          let { data: profile } = await supabase
-            .from('profiles')
-            .select('role, referral_code, full_name, email')
-            .eq('user_id', session.user.id)
-            .single();
-          
-          // If profile doesn't exist (OAuth user), create it via API
-          if (!profile) {
-            try {
-              const result = await authAPI.createOAuthProfile({
-                user_id: session.user.id,
-                email: session.user.email,
-                full_name: session.user.user_metadata?.full_name || session.user.user_metadata?.name || session.user.email?.split('@')[0] || 'Usuário',
-              });
-              profile = result.profile;
-            } catch (apiError) {
-              console.error('Error creating profile via API:', apiError);
-              // Don't fail - user can still use the app, just without profile
-            }
+      (event, session) => {
+        if (event === 'TOKEN_REFRESHED') return
+
+        if (event === 'SIGNED_OUT') {
+          if (mounted) {
+            setUser(null)
+            setIsAuthenticated(false)
+            currentUserId.current = null
+            setIsLoadingAuth(false)
           }
-          
-          const userData = {
-            ...session.user,
-            role: profile?.role || 'user',
-            referral_code: profile?.referral_code || null,
-            full_name: profile?.full_name || session.user.email
-          }
-          
-          setUser(userData)
-          currentUserId.current = session.user.id
-        } else if (event === 'SIGNED_OUT') {
-          setUser(null)
-          setIsAuthenticated(false)
-          currentUserId.current = null
+          return
         }
-        setIsLoadingAuth(false)
+
+        if (!session?.user) {
+          if (mounted) setIsLoadingAuth(false)
+          return
+        }
+
+        // Mesmo usuário já inicializado: só garante o fim do loading
+        if (hasInitialized.current && session.user.id === currentUserId.current) {
+          if (mounted) setIsLoadingAuth(false)
+          return
+        }
+
+        if (!mounted) return
+
+        setIsAuthenticated(true)
+        hydrateUser(session)
+        loadProfile(session)
+
+        // Limpa hash de OAuth da URL
+        const hash = window.location.hash
+        if ((hash.includes('access_token=') || hash.includes('refresh_token=')) && window.history.replaceState) {
+          window.history.replaceState({}, document.title, window.location.pathname + window.location.search)
+        }
       }
     )
 
-    return () => subscription.unsubscribe()
+    return () => {
+      mounted = false
+      clearTimeout(safetyTimeout)
+      subscription.unsubscribe()
+    }
   }, [])
 
   const logout = async () => {
