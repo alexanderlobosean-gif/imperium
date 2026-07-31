@@ -403,7 +403,14 @@
     "agreeTerms": "I agree to the Terms of Use",
     "acceptTerms": "Please accept the terms to continue",
     "resetPassword": "Reset Password",
-    "sendResetLink": "Send reset link"
+    "sendResetLink": "Send reset link",
+    "errors": {
+      "loginFailed": "Login failed. Please try again.",
+      "loginTimeout": "Connection to the server is taking too long. Check your internet and try again.",
+      "googleLoginFailed": "Google login failed. Please try again.",
+      "resetSent": "Reset link sent. Check your email.",
+      "resetFailed": "Failed to send the link. Please try again."
+    }
   },
   "investments": {
     "title": "Investment Plans",

@@ -4,6 +4,16 @@ import { useTranslation } from 'react-i18next'
 import { Eye, EyeOff, Shield, Lock, Mail, User } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 
+const withTimeout = (promise, ms) => {
+  return new Promise((resolve, reject) => {
+    const timer = setTimeout(() => reject(new Error('TIMEOUT')), ms)
+    promise.then(
+      (v) => { clearTimeout(timer); resolve(v) },
+      (e) => { clearTimeout(timer); reject(e) }
+    )
+  })
+}
+
 // Google Icon Component
 const GoogleIcon = () => (
   <svg className="w-5 h-5" viewBox="0 0 24 24">
@@ -56,11 +66,14 @@ const Login = () => {
     setError('')
 
     try {
-      // Login direto no Supabase
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email: formData.email,
-        password: formData.password
-      })
+      // Login direto no Supabase (com timeout para não travar o botão)
+      const { data, error } = await withTimeout(
+        supabase.auth.signInWithPassword({
+          email: formData.email,
+          password: formData.password
+        }),
+        20000
+      )
       
       if (error) {
         setError(error.message)
@@ -74,7 +87,11 @@ const Login = () => {
         navigate('/dashboard')
       }
     } catch (err) {
-      setError(t('auth.errors.loginFailed'))
+      if (err?.message === 'TIMEOUT') {
+        setError(t('auth.errors.loginTimeout'))
+      } else {
+        setError(t('auth.errors.loginFailed'))
+      }
     } finally {
       setIsLoading(false)
     }

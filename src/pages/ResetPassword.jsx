@@ -23,28 +23,37 @@ const ResetPassword = () => {
       // Aguardar um pouco para o Supabase detectar a sessão na URL
       await new Promise(resolve => setTimeout(resolve, 500))
       
-      const { data: { session }, error } = await supabase.auth.getSession()
-      
-      if (error) {
-        console.error('❌ Erro ao verificar sessão:', error)
-        setError('Link de recuperação inválido ou expirado. Solicite um novo link.')
-        return
-      }
-      
-      if (session) {
-        setHasSession(true)
-      } else {
-        // Verificar se estamos em um fluxo de recuperação pela URL
-        const hash = window.location.hash
-        const hasRecoveryToken = hash.includes('type=recovery') || hash.includes('access_token')
-        
-        if (!hasRecoveryToken) {
+      try {
+        const result = await Promise.race([
+          supabase.auth.getSession(),
+          new Promise((_, reject) => setTimeout(() => reject(new Error('TIMEOUT')), 8000))
+        ])
+        const { session, error } = result.data
+
+        if (error) {
+          console.error('❌ Erro ao verificar sessão:', error)
           setError('Link de recuperação inválido ou expirado. Solicite um novo link.')
+          return
         }
-        // Se tem token, aguardar o Supabase processar - o listener abaixo vai capturar
+        
+        if (session) {
+          setHasSession(true)
+        } else {
+          // Verificar se estamos em um fluxo de recuperação pela URL
+          const hash = window.location.hash
+          const hasRecoveryToken = hash.includes('type=recovery') || hash.includes('access_token')
+          
+          if (!hasRecoveryToken) {
+            setError('Link de recuperação inválido ou expirado. Solicite um novo link.')
+          }
+          // Se tem token, aguardar o Supabase processar - o listener abaixo vai capturar
+        }
+      } catch (e) {
+        console.error('❌ Erro ao verificar sessão:', e)
+        setError('Link de recuperação inválido ou expirado. Solicite um novo link.')
+      } finally {
+        setIsCheckingSession(false)
       }
-      
-      setIsCheckingSession(false)
     }
     
     handleRecovery()
