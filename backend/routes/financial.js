@@ -2,6 +2,7 @@ const express = require('express');
 const Joi = require('joi');
 const router = express.Router();
 const { sendTransferVerificationEmail, generateVerificationCode } = require('../services/emailService');
+const { requireAdmin } = require('../middlewares/auth');
 
 // Validações
 const depositSchema = Joi.object({
@@ -197,7 +198,7 @@ router.post('/deposit/usdt', async (req, res) => {
 // @route   POST /api/financial/deposit/approve
 // @desc    Aprovar ou rejeitar depósito (somente admin)
 // @access  Admin
-router.post('/deposit/approve', async (req, res) => {
+router.post('/deposit/approve', requireAdmin, async (req, res) => {
   try {
     const { error } = approveDepositSchema.validate(req.body);
     if (error) {
@@ -206,23 +207,6 @@ router.post('/deposit/approve', async (req, res) => {
 
     const { deposit_id, action, notes } = req.body;
     const adminId = req.user.id;
-
-    // Verificar se usuário é admin pelo campo role na tabela profiles
-    const { data: profile, error: profileError } = await req.supabase
-      .from('profiles')
-      .select('role')
-      .eq('user_id', adminId)
-      .single();
-    
-    if (profileError || !profile) {
-      return res.status(403).json({ error: 'Perfil não encontrado' });
-    }
-
-    const isAdmin = profile.role === 'admin';
-
-    if (!isAdmin) {
-      return res.status(403).json({ error: 'Acesso negado. Somente admin pode aprovar depósitos.' });
-    }
 
     // Buscar depósito
     const { data: deposit, error: depositError } = await req.supabase
@@ -394,27 +378,8 @@ router.post('/deposit/transaction-hash', async (req, res) => {
 // @route   GET /api/financial/deposits/pending
 // @desc    Listar depósitos pendentes (somente admin)
 // @access  Admin
-router.get('/deposits/pending', async (req, res) => {
+router.get('/deposits/pending', requireAdmin, async (req, res) => {
   try {
-    const adminId = req.user.id;
-
-    // Verificar se é admin pelo campo role na tabela profiles
-    const { data: profile, error: profileError } = await req.supabase
-      .from('profiles')
-      .select('role')
-      .eq('user_id', adminId)
-      .single();
-    
-    if (profileError || !profile) {
-      return res.status(403).json({ error: 'Perfil não encontrado' });
-    }
-
-    const isAdmin = profile.role === 'admin';
-
-    if (!isAdmin) {
-      return res.status(403).json({ error: 'Acesso negado' });
-    }
-
     const { data: deposits, error } = await req.supabase
       .from('deposits')
       .select(`
@@ -533,34 +498,13 @@ router.post('/withdrawal', async (req, res) => {
 // @route   POST /api/financial/withdrawal/approve
 // @desc    Aprovar ou rejeitar saque (somente admin)
 // @access  Admin
-router.post('/withdrawal/approve', async (req, res) => {
+router.post('/withdrawal/approve', requireAdmin, async (req, res) => {
   try {
     console.log('🚀 === APROVAÇÃO DE SAQUE INICIADA ===');
     console.log('📥 Request body:', req.body);
     console.log('👤 Admin:', req.user?.email, req.user?.id);
 
     const { withdrawal_id, action, notes } = req.body;
-    const adminId = req.user.id;
-
-    // Verificar se usuário é admin pelo campo role na tabela profiles
-    const { data: profile, error: profileError } = await req.supabase
-      .from('profiles')
-      .select('role')
-      .eq('user_id', adminId)
-      .single();
-    
-    if (profileError || !profile) {
-      return res.status(403).json({ error: 'Perfil não encontrado' });
-    }
-
-    const isAdmin = profile.role === 'admin' || profile.role === 'super_admin';
-
-    if (!isAdmin) {
-      console.log('❌ Acesso negado. Role do usuário:', profile.role);
-      return res.status(403).json({ error: 'Acesso negado. Somente admin pode aprovar saques.' });
-    }
-
-    console.log('✅ Admin verificado. Role:', profile.role);
 
     // Buscar saque
     const { data: withdrawal, error: withdrawalError } = await req.supabase
@@ -719,27 +663,8 @@ router.post('/withdrawal/approve', async (req, res) => {
 // @route   GET /api/financial/withdrawals/pending
 // @desc    Listar saques pendentes (somente admin)
 // @access  Admin
-router.get('/withdrawals/pending', async (req, res) => {
+router.get('/withdrawals/pending', requireAdmin, async (req, res) => {
   try {
-    const adminId = req.user.id;
-
-    // Verificar se é admin pelo campo role na tabela profiles
-    const { data: profile, error: profileError } = await req.supabase
-      .from('profiles')
-      .select('role')
-      .eq('user_id', adminId)
-      .single();
-    
-    if (profileError || !profile) {
-      return res.status(403).json({ error: 'Perfil não encontrado' });
-    }
-
-    const isAdmin = profile.role === 'admin';
-
-    if (!isAdmin) {
-      return res.status(403).json({ error: 'Acesso negado' });
-    }
-
     const { data: withdrawals, error } = await req.supabase
       .from('withdrawals')
       .select(`
@@ -938,111 +863,40 @@ router.post('/transfer/confirm', async (req, res) => {
       return res.status(400).json({ error: 'Código de verificação inválido' });
     }
 
-    // Executar transferência de forma atômica (sem RPC - diretamente no backend)
-    console.log('💸 Executando transferência atômica...');
-    
-    try {
-      // 1. Verificar saldo novamente
-      const { data: senderBalance, error: balanceError } = await req.supabase
-        .from('wallet_balances')
-        .select('wallet_balance, yield_balance, bonus_balance')
-        .eq('user_id', pendingTransfer.from_user_id)
-        .single();
-      
-      if (balanceError) throw new Error('Erro ao verificar saldo: ' + balanceError.message);
-      
-      const availableBalance = 
-        (senderBalance?.wallet_balance || 0) + 
-        (senderBalance?.yield_balance || 0) + 
-        (senderBalance?.bonus_balance || 0);
-      
-      if (availableBalance < pendingTransfer.amount) {
-        throw new Error('Saldo insuficiente');
-      }
+    // Executar transferência de forma atômica via RPC (debita + credita em uma transação)
+    const { data: rpcResult, error: rpcError } = await req.supabase.rpc('execute_transfer', {
+      p_transfer_id: transfer_id,
+      p_sender_id: senderId
+    });
 
-      // 2. Debitar do remetente (wallet_balance)
-      console.log('💸 Debitando do remetente:', pendingTransfer.from_user_id, 'Valor:', pendingTransfer.amount);
-      const { error: debitError } = await req.supabase
-        .from('wallet_balances')
-        .update({ 
-          wallet_balance: (senderBalance.wallet_balance || 0) - pendingTransfer.amount,
-          updated_at: new Date().toISOString()
-        })
-        .eq('user_id', pendingTransfer.from_user_id);
-      
-      if (debitError) {
-        console.error('❌ Erro detalhado ao debitar:', debitError);
-        throw new Error('Erro ao debitar: ' + debitError.message);
-      }
-      console.log('✅ Remetente debitado com sucesso');
-
-      // 3. Creditar no destinatário
-      const { data: recipientBalance, error: recipientBalanceError } = await req.supabase
-        .from('wallet_balances')
-        .select('wallet_balance')
-        .eq('user_id', pendingTransfer.to_user_id)
-        .single();
-      
-      const recipientExists = !recipientBalanceError || recipientBalanceError.code !== 'PGRST116';
-      
-      if (recipientExists && recipientBalance) {
-        // Atualizar saldo existente
-        const { error: creditError } = await req.supabase
-          .from('wallet_balances')
-          .update({ 
-            wallet_balance: (recipientBalance.wallet_balance || 0) + pendingTransfer.amount,
-            updated_at: new Date().toISOString()
-          })
-          .eq('user_id', pendingTransfer.to_user_id);
-        
-        if (creditError) {
-          console.error('❌ Erro detalhado ao creditar:', creditError);
-          throw new Error('Erro ao creditar: ' + creditError.message);
-        }
-        console.log('✅ Destinatário creditado com sucesso');
-      } else {
-        // Criar novo registro
-        const { error: creditError } = await req.supabase
-          .from('wallet_balances')
-          .insert({ 
-            user_id: pendingTransfer.to_user_id,
-            wallet_balance: pendingTransfer.amount,
-            yield_balance: 0,
-            bonus_balance: 0,
-            locked_balance: 0,
-            updated_at: new Date().toISOString()
-          });
-        
-        if (creditError) {
-          console.error('❌ Erro detalhado ao criar saldo destinatário:', creditError);
-          throw new Error('Erro ao criar saldo destinatário: ' + creditError.message);
-        }
-        console.log('✅ Novo saldo criado para destinatário');
-      }
-
-      // 4. Atualizar status da transferência
-      const { error: updateError } = await req.supabase
-        .from('transfers')
-        .update({ 
-          status: 'completed',
-          completed_at: new Date().toISOString()
-        })
-        .eq('id', transfer_id);
-      
-      if (updateError) throw new Error('Erro ao atualizar transferência: ' + updateError.message);
-
-      console.log('✅ Transferência executada com sucesso:', transfer_id);
-
-    } catch (transferError) {
-      console.error('❌ Erro ao executar transferência:', transferError);
-      return res.status(500).json({ error: transferError.message || 'Erro ao executar transferência' });
+    if (rpcError) {
+      console.error('❌ Erro ao executar transferência via RPC:', rpcError);
+      return res.status(500).json({
+        error: rpcError.message || 'Erro ao executar transferência'
+      });
     }
+
+    const resultRow = Array.isArray(rpcResult) ? rpcResult[0] : rpcResult;
+
+    if (!resultRow || resultRow.status === 'not_found') {
+      return res.status(404).json({ error: resultRow?.message || 'Transferência não encontrada ou já processada' });
+    }
+
+    if (resultRow.status === 'expired') {
+      return res.status(400).json({ error: resultRow.message });
+    }
+
+    if (resultRow.status === 'insufficient') {
+      return res.status(400).json({ error: resultRow.message });
+    }
+
+    console.log('✅ Transferência executada com sucesso:', transfer_id);
 
     res.json({
       message: 'Transferência realizada com sucesso',
       transfer: {
         id: transfer_id,
-        amount: pendingTransfer.amount,
+        amount: parseFloat(resultRow.amount) || parseFloat(pendingTransfer.amount),
         sender_id: pendingTransfer.from_user_id,
         recipient_id: pendingTransfer.to_user_id,
         status: 'completed',
@@ -1969,21 +1823,8 @@ router.get('/referral', async (req, res) => {
 // @route   GET /api/financial/admin/check-network-schema
 // @desc    Verificar schema da tabela network_relations
 // @access  Admin
-router.get('/admin/check-network-schema', async (req, res) => {
+router.get('/admin/check-network-schema', requireAdmin, async (req, res) => {
   try {
-    const userId = req.user.id;
-    
-    // Verificar se é admin
-    const { data: profile } = await req.supabase
-      .from('profiles')
-      .select('role')
-      .eq('user_id', userId)
-      .single();
-    
-    if (profile?.role !== 'admin' && profile?.role !== 'super_admin') {
-      return res.status(403).json({ error: 'Acesso negado' });
-    }
-
     // Tentar buscar uma linha para ver o schema
     const { data: sample, error } = await req.supabase
       .from('network_relations')
@@ -2026,21 +1867,8 @@ router.get('/admin/check-network-schema', async (req, res) => {
 });
 // @desc    Migrar dados de profiles para network_relations (admin only)
 // @access  Admin
-router.post('/admin/migrate-network-relations', async (req, res) => {
+router.post('/admin/migrate-network-relations', requireAdmin, async (req, res) => {
   try {
-    const userId = req.user.id;
-    
-    // Verificar se é admin
-    const { data: profile } = await req.supabase
-      .from('profiles')
-      .select('role')
-      .eq('user_id', userId)
-      .single();
-    
-    if (profile?.role !== 'admin' && profile?.role !== 'super_admin') {
-      return res.status(403).json({ error: 'Acesso negado' });
-    }
-
     console.log('🚀 Iniciando migração de network_relations...');
 
     // Buscar todos os perfis que têm referred_by (foram indicados por alguém)
@@ -2152,21 +1980,8 @@ router.post('/admin/migrate-network-relations', async (req, res) => {
 // @route   POST /api/financial/admin/create-multi-level-relations
 // @desc    Criar relações de nível 2-5 baseado na cadeia de indicações
 // @access  Admin
-router.post('/admin/create-multi-level-relations', async (req, res) => {
+router.post('/admin/create-multi-level-relations', requireAdmin, async (req, res) => {
   try {
-    const userId = req.user.id;
-    
-    // Verificar se é admin
-    const { data: profile } = await req.supabase
-      .from('profiles')
-      .select('role')
-      .eq('user_id', userId)
-      .single();
-    
-    if (profile?.role !== 'admin' && profile?.role !== 'super_admin') {
-      return res.status(403).json({ error: 'Acesso negado' });
-    }
-
     console.log('🚀 Criando relações multi-nível...');
 
     // Buscar todas as relações nível 1
@@ -2279,21 +2094,8 @@ router.get('/commissions', async (req, res) => {
 // @route   GET /api/financial/admin/check-commissions
 // @desc    Verificar todas as comissões (admin)
 // @access  Admin
-router.get('/admin/check-commissions', async (req, res) => {
+router.get('/admin/check-commissions', requireAdmin, async (req, res) => {
   try {
-    const userId = req.user.id;
-    
-    // Verificar se é admin
-    const { data: profile } = await req.supabase
-      .from('profiles')
-      .select('role')
-      .eq('user_id', userId)
-      .single();
-    
-    if (profile?.role !== 'admin' && profile?.role !== 'super_admin') {
-      return res.status(403).json({ error: 'Acesso negado' });
-    }
-
     const { data: commissions, error, count } = await req.supabase
       .from('commissions')
       .select('*', { count: 'exact' })

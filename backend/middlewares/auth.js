@@ -1,6 +1,28 @@
-const jwt = require('jsonwebtoken');
+// Middleware para validar token JWT do Supabase
+const authenticateToken = async (req, res, next) => {
+  try {
+    const token = req.headers.authorization?.replace('Bearer ', '');
 
-// Middleware para verificar se é admin (futuro uso)
+    if (!token) {
+      return res.status(401).json({ error: 'Token não fornecido' });
+    }
+
+    const { data: { user }, error } =
+      await req.supabaseAuth.auth.getUser(token);
+
+    if (error || !user) {
+      return res.status(401).json({ error: 'Token inválido' });
+    }
+
+    req.user = user;
+    next();
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Erro interno' });
+  }
+};
+
+// Middleware para verificar se é admin
 const requireAdmin = async (req, res, next) => {
   try {
     // Verificar se usuário tem role de admin no perfil
@@ -10,7 +32,11 @@ const requireAdmin = async (req, res, next) => {
       .eq('user_id', req.user.id)
       .single();
 
-    if (error || profile?.role !== 'admin') {
+    if (error || !profile) {
+      return res.status(403).json({ error: 'Perfil não encontrado' });
+    }
+
+    if (profile.role !== 'admin' && profile.role !== 'super_admin') {
       return res.status(403).json({ error: 'Acesso negado. Apenas administradores.' });
     }
 
@@ -74,6 +100,7 @@ const requireActiveUser = async (req, res, next) => {
 };
 
 module.exports = {
+  authenticateToken,
   requireAdmin,
   requestLogger,
   validateFinancialInput,

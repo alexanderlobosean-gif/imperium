@@ -5,36 +5,30 @@ import { supabase } from '@/lib/supabase';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || '/api';
 
-console.log('API Base URL:', API_BASE_URL);
-
 // Helper para fazer requests com auth token
 const apiRequest = async (endpoint, options = {}) => {
-  // Tentar pegar token do Supabase client primeiro
+  // Tentar pegar token do Supabase client
   let token = null;
-  
+
   try {
     const { data: { session } } = await supabase.auth.getSession();
     token = session?.access_token;
-    console.log('🔍 Token do Supabase session:', token ? `existe (${token.length} chars)` : 'não encontrado');
   } catch (e) {
-    console.error('❌ Erro ao pegar sessão do Supabase:', e);
+    console.error('Erro ao pegar sessão do Supabase:', e);
   }
-  
+
   // Fallback: verificar localStorage
   if (!token) {
     const localStorageKeys = Object.keys(localStorage);
-    console.log('🔍 localStorage keys:', localStorageKeys);
-    
+
     for (const key of localStorageKeys) {
       const value = localStorage.getItem(key);
-      console.log(`🔍 ${key}:`, value ? `${value.length} chars` : 'vazio');
-      
+
       if (value && value.startsWith('{')) {
         try {
           const parsed = JSON.parse(value);
           if (parsed.access_token) {
             token = parsed.access_token;
-            console.log(`✅ Token encontrado em ${key}`);
             break;
           }
         } catch (e) {
@@ -43,12 +37,11 @@ const apiRequest = async (endpoint, options = {}) => {
       }
     }
   }
-  
+
   // Fallback: verificar sessionStorage
   if (!token) {
     const sessionStorageKeys = Object.keys(sessionStorage);
-    console.log('🔍 sessionStorage keys:', sessionStorageKeys);
-    
+
     for (const key of sessionStorageKeys) {
       const value = sessionStorage.getItem(key);
       if (value && value.startsWith('{')) {
@@ -56,7 +49,6 @@ const apiRequest = async (endpoint, options = {}) => {
           const parsed = JSON.parse(value);
           if (parsed.access_token) {
             token = parsed.access_token;
-            console.log(`✅ Token encontrado em sessionStorage.${key}`);
             break;
           }
         } catch (e) {
@@ -65,9 +57,7 @@ const apiRequest = async (endpoint, options = {}) => {
       }
     }
   }
-  
-  console.log(`🔐 API Request: ${endpoint}`, { hasToken: !!token, tokenLength: token?.length });
-  
+
   const response = await fetch(`${API_BASE_URL}${endpoint}`, {
     ...options,
     headers: {

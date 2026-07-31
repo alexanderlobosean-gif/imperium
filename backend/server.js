@@ -11,6 +11,8 @@ const financialRoutes = require('./routes/financial');
 const networkRoutes = require('./routes/network');
 const adminRoutes = require('./routes/admin');
 
+const { authenticateToken } = require('./middlewares/auth');
+
 const app = express();
 const PORT = process.env.PORT || 3001;
 
@@ -41,20 +43,27 @@ const allowedOrigins = [
   'https://api.imperiumclub.asia',
   'https://imperiumclub.vercel.app',
   'https://homolog.imperiumclub.vercel.app',
-  'http://localhost:5173',
-  'http://localhost:3001',
 ];
 
 const corsOptions = {
   origin: function (origin, callback) {
     if (!origin) return callback(null, true);
 
-    if (allowedOrigins.includes(origin)) {
+    const isAllowed = allowedOrigins.includes(origin);
+
+    if (process.env.NODE_ENV !== 'production') {
+      const isLocalhost = /^http:\/\/localhost(:\d+)?$/.test(origin);
+      if (isAllowed || isLocalhost) {
+        return callback(null, true);
+      }
+    }
+
+    if (isAllowed) {
       return callback(null, true);
     }
 
     console.log('CORS BLOQUEADO:', origin);
-    return callback(null, true); // liberar temporariamente
+    return callback(null, false);
   },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
@@ -107,35 +116,6 @@ app.use((req, res, next) => {
 //
 // =============================
 // AUTH MIDDLEWARE
-// =============================
-//
-
-const authenticateToken = async (req, res, next) => {
-  try {
-    const token = req.headers.authorization?.replace('Bearer ', '');
-
-    if (!token) {
-      return res.status(401).json({ error: 'Token não fornecido' });
-    }
-
-    const { data: { user }, error } =
-      await req.supabaseAuth.auth.getUser(token);
-
-    if (error || !user) {
-      return res.status(401).json({ error: 'Token inválido' });
-    }
-
-    req.user = user;
-    next();
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'Erro interno' });
-  }
-};
-
-//
-// =============================
-// ROUTES
 // =============================
 //
 

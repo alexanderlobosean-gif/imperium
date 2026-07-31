@@ -25,9 +25,6 @@ const ResetPassword = () => {
       
       const { data: { session }, error } = await supabase.auth.getSession()
       
-      console.log('🔍 ResetPassword - Sessão detectada:', !!session)
-      console.log('🔍 ResetPassword - URL:', window.location.href)
-      
       if (error) {
         console.error('❌ Erro ao verificar sessão:', error)
         setError('Link de recuperação inválido ou expirado. Solicite um novo link.')
