@@ -7,12 +7,15 @@ const API_BASE_URL = import.meta.env.VITE_API_URL || '/api';
 
 // Helper para fazer requests com auth token
 const apiRequest = async (endpoint, options = {}) => {
-  // Tentar pegar token do Supabase client
+  // Tentar pegar token do Supabase client (com timeout para não travar as chamadas)
   let token = null;
 
   try {
-    const { data: { session } } = await supabase.auth.getSession();
-    token = session?.access_token;
+    const result = await Promise.race([
+      supabase.auth.getSession(),
+      new Promise((_, reject) => setTimeout(() => reject(new Error('TIMEOUT')), 5000))
+    ]);
+    token = result.data?.session?.access_token;
   } catch (e) {
     console.error('Erro ao pegar sessão do Supabase:', e);
   }

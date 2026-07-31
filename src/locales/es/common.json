@@ -178,7 +178,14 @@
     "agreeTerms": "Acepto los Términos de Uso",
     "acceptTerms": "Acepte los términos para continuar",
     "resetPassword": "Restablecer Contraseña",
-    "sendResetLink": "Enviar enlace de restablecimiento"
+    "sendResetLink": "Enviar enlace de restablecimiento",
+    "errors": {
+      "loginFailed": "Error al iniciar sesión. Inténtalo de nuevo.",
+      "loginTimeout": "La conexión con el servidor está tardando. Revisa tu internet e inténtalo de nuevo.",
+      "googleLoginFailed": "Error al iniciar sesión con Google. Inténtalo de nuevo.",
+      "resetSent": "Enlace de restablecimiento enviado. Revisa tu correo.",
+      "resetFailed": "Error al enviar el enlace. Inténtalo de nuevo."
+    }
   },
   "faq": {
     "title": {
