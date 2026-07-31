@@ -2,29 +2,7 @@ const express = require('express');
 const Joi = require('joi');
 const router = express.Router();
 
-// Middleware to check admin role
-const requireAdmin = async (req, res, next) => {
-  try {
-    const { data: profile, error } = await req.supabase
-      .from('profiles')
-      .select('role')
-      .eq('user_id', req.user.id)
-      .single();
-
-    if (error || !profile) {
-      return res.status(403).json({ error: 'Perfil não encontrado' });
-    }
-
-    if (profile.role !== 'admin' && profile.role !== 'super_admin') {
-      return res.status(403). json({ error: 'Acesso negado. Somente administradores.' });
-    }
-
-    next();
-  } catch (error) {
-    console.error('Erro no middleware requireAdmin:', error);
-    res.status(500).json({ error: 'Erro interno do servidor' });
-  }
-};
+const { requireAdmin } = require('../middlewares/auth');
 
 // ==================== USERS ====================
 

@@ -31,21 +31,3 @@ export const getSupabaseClient = () => {
 
 // Exporta singleton
 export const supabase = getSupabaseClient()
-
-// Helper function to get service role client (for admin operations)
-// Storage disabled to prevent lock conflicts with main supabase client
-export const supabaseAdmin = createClient(
-  import.meta.env.VITE_SUPABASE_URL,
-  import.meta.env.VITE_SUPABASE_SERVICE_ROLE,
-  {
-    auth: {
-      autoRefreshToken: false,
-      persistSession: false,
-      storage: {
-        getItem: () => null,
-        setItem: () => {},
-        removeItem: () => {}
-      }
-    }
-  }
-)

@@ -24,11 +24,8 @@ export const AuthProvider = ({ children }) => {
       const hasAuthTokens = hash.includes('access_token=') || hash.includes('refresh_token=');
       
       if (hasAuthTokens) {
-        console.log('Detected OAuth callback with tokens in URL');
-        console.log('Current URL hash:', hash.substring(0, 50) + '...');
         // Wait longer for Supabase to process the tokens from URL
         await new Promise(resolve => setTimeout(resolve, 1500));
-        console.log('Waited for token processing, checking session again...');
       }
       
       const { data: { session }, error } = await supabase.auth.getSession()
@@ -37,24 +34,19 @@ export const AuthProvider = ({ children }) => {
       
       if (session?.user) {
         console.log('User authenticated:', session.user.email);
-        console.log('User metadata:', session.user.user_metadata);
-        console.log('Email confirmed:', session.user.email_confirmed_at);
-        
+
         // IMPORTANT: Set authenticated immediately so Dashboard doesn't redirect
         setIsAuthenticated(true);
-        
+
         // Fetch user profile to get role and referral_code from profiles table
         let { data: profile, error: profileError } = await supabase
           .from('profiles')
           .select('role, referral_code, full_name, email')
           .eq('user_id', session.user.id)
           .single();
-        
-        console.log('Profile result:', { profile, profileError });
-        
+
         // If profile doesn't exist (OAuth user), create it via API
         if (!profile) {
-          console.log('Profile not found for existing session, creating via API...');
           try {
             const result = await authAPI.createOAuthProfile({
               user_id: session.user.id,
@@ -62,7 +54,6 @@ export const AuthProvider = ({ children }) => {
               full_name: session.user.user_metadata?.full_name || session.user.user_metadata?.name || session.user.email?.split('@')[0] || 'Usuário',
             });
             profile = result.profile;
-            console.log('Profile created successfully via API:', profile);
           } catch (apiError) {
             console.error('Error creating profile via API:', apiError);
             // Don't fail - user can still use the app, just without profile
@@ -124,7 +115,6 @@ export const AuthProvider = ({ children }) => {
           
           // If profile doesn't exist (OAuth user), create it via API
           if (!profile) {
-            console.log('Profile not found for OAuth user, creating via API...');
             try {
               const result = await authAPI.createOAuthProfile({
                 user_id: session.user.id,
@@ -132,7 +122,6 @@ export const AuthProvider = ({ children }) => {
                 full_name: session.user.user_metadata?.full_name || session.user.user_metadata?.name || session.user.email?.split('@')[0] || 'Usuário',
               });
               profile = result.profile;
-              console.log('Profile created successfully via API:', profile);
             } catch (apiError) {
               console.error('Error creating profile via API:', apiError);
               // Don't fail - user can still use the app, just without profile
