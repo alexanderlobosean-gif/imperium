@@ -151,13 +151,17 @@ router.post('/referral', async (req, res) => {
       return res.status(500).json({ error: 'Erro ao criar usuário' });
     }
 
-    // Criar perfil
+    // Criar perfil (com referral_code e referred_by para a cadeia de comissões)
+    const generatedReferralCode = `IMP${authData.user.id.substring(0, 8).toUpperCase()}`;
+
     const { error: profileError } = await req.supabase
       .from('profiles')
       .insert({
         user_id: authData.user.id,
         email,
         full_name,
+        referral_code: generatedReferralCode,
+        referred_by: sponsorId,
         sponsor_email: req.user.email
       });
 

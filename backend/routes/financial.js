@@ -3,6 +3,7 @@ const Joi = require('joi');
 const router = express.Router();
 const { sendTransferVerificationEmail, generateVerificationCode } = require('../services/emailService');
 const { requireAdmin } = require('../middlewares/auth');
+const { MAX_LEVELS, DIRECT_RATE, getCommissionRate } = require('../config/commissionConfig');
 
 // Validações
 const depositSchema = Joi.object({
@@ -1553,6 +1554,21 @@ router.post('/investments', async (req, res) => {
       return res.status(400).json({ error: 'Plano e valor são obrigatórios' });
     }
 
+    // Buscar configuração de comissão do plano (fonte da verdade das regras)
+    let planDirectCommission = 10;
+    let planResidualLevels = 0;
+
+    const { data: planData } = await req.supabase
+      .from('plans')
+      .select('direct_commission, residual_levels')
+      .eq('slug', plan_slug)
+      .single();
+
+    if (planData) {
+      planDirectCommission = parseInt(planData.direct_commission) || 10;
+      planResidualLevels = parseInt(planData.residual_levels) || 0;
+    }
+
     // Verificar saldo
     const { data: balance } = await req.supabase.rpc('get_available_balance', { p_user_id: userId });
     if (balance < amount) {
@@ -1570,6 +1586,7 @@ router.post('/investments', async (req, res) => {
         company_share,
         status: 'active',
         daily_yield,
+        residual_levels: planResidualLevels,
         created_at: new Date().toISOString()
       })
       .select()
@@ -1630,9 +1647,12 @@ router.post('/investments', async (req, res) => {
       // Não falhar o investimento se o ledger falhar, apenas logar
     }
 
-    // Gerar comissões para a rede
+    // Gerar comissões para a rede (regras do plano: direta + residuais)
     console.log('💰 Gerando comissões para investimento:', investment.id, 'usuário:', userId, 'valor:', amount);
-    await generateNetworkCommissions(req.supabase, investment);
+    await generateNetworkCommissions(req.supabase, investment, {
+      directRate: planDirectCommission / 100,
+      residualLevels: planResidualLevels
+    });
     console.log('✅ Comissões geradas para investimento:', investment.id);
 
     res.json({ investment });
@@ -2124,17 +2144,19 @@ router.get('/admin/check-commissions', requireAdmin, async (req, res) => {
   }
 });
 
-async function generateNetworkCommissions(supabase, investment) {
+async function generateNetworkCommissions(supabase, investment, config = {}) {
   try {
     console.log('🚀 Iniciando generateNetworkCommissions para investimento:', investment.id);
     
     const investmentAmount = parseFloat(investment.amount);
+    const directRate = config.directRate || DIRECT_RATE;
+    const residualLevels = parseInt(config.residualLevels) || 0;
+    // Nível 1 (direta) + residual_levels níveis residuais, limitado ao máximo global
+    const maxLevels = Math.min(1 + residualLevels, MAX_LEVELS);
     let currentUserId = investment.user_id;
     let level = 1;
-    const maxLevels = 5;
-    const commissionRates = { 1: 0.10, 2: 0.05, 3: 0.03, 4: 0.02, 5: 0.01 };
 
-    console.log('📊 Valor do investimento:', investmentAmount, 'Usuário:', currentUserId);
+    console.log('📊 Valor:', investmentAmount, '| direta:', directRate, '| residual_levels:', residualLevels, '| maxLevels:', maxLevels);
 
     while (level <= maxLevels) {
       console.log(`🔍 Buscando perfil para nível ${level}, userId:`, currentUserId);
@@ -2156,7 +2178,7 @@ async function generateNetworkCommissions(supabase, investment) {
       }
 
       const referrerId = userProfile.referred_by;
-      const commissionRate = commissionRates[level] || 0;
+      const commissionRate = level === 1 ? directRate : getCommissionRate(level);
       const commissionAmount = parseFloat((investmentAmount * commissionRate).toFixed(2));
 
       console.log(`💵 Nível ${level}: referrerId=${referrerId}, rate=${commissionRate}, amount=${commissionAmount}`);

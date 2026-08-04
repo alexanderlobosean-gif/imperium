@@ -128,6 +128,15 @@ export const RESIDUAL_PERCENTAGES = {
   20: 0.1,
 };
 
+// Comissão direta (nível 1) em % — deve espelhar backend/config/commissionConfig.js
+export const DIRECT_COMMISSION_RATE = 0.10; // 10%
+
+// Taxa de comissão por nível da rede (nível 1 = direta 10%, demais = residual)
+export function getCommissionRate(level) {
+  if (level === 1) return DIRECT_COMMISSION_RATE;
+  return (RESIDUAL_PERCENTAGES[level] || 0) / 100;
+}
+
 export const CAREER_LEVELS = [
   {
     level: 1,
