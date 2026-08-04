@@ -10,7 +10,7 @@ import ProfitabilityClock from '@/components/dashboard/ProfitabilityClock';
 import QuickActions from '@/components/dashboard/QuickActions';
 import RecentTransactions from '@/components/dashboard/RecentTransactions';
 import NetworkMembersTable from '@/components/dashboard/NetworkMembersTable';
-import { formatCurrency, RESIDUAL_PERCENTAGES } from '@/lib/planConfig';
+import { formatCurrency, getCommissionRate } from '@/lib/planConfig';
 import { toast } from 'sonner';
 
 export default function Dashboard() {
@@ -153,7 +153,7 @@ export default function Dashboard() {
   
   const networkEarnings = (Array.isArray(networkMembers) ? networkMembers : []).reduce((sum, m) => {
     const inv = investmentByUser[m.referred_id];
-    const pct = (RESIDUAL_PERCENTAGES[m.level] || 0) / 100;
+    const pct = getCommissionRate(m.level);
     return sum + (inv?.total_yield || 0) * pct;
   }, 0);
   const totalValue = availableBalance;

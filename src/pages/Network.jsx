@@ -3,7 +3,7 @@ import { useAuth } from '@/lib/AuthContext';
 import { financialAPI } from '@/services/api';
 import { useQuery } from '@tanstack/react-query';
 import { Users, User, TrendingUp, Copy, CheckCheck } from 'lucide-react';
-import { formatCurrency, getUnlockedLevels, RESIDUAL_PERCENTAGES } from '@/lib/planConfig';
+import { formatCurrency, getUnlockedLevels, getCommissionRate } from '@/lib/planConfig';
 import { Badge } from '@/components/ui/badge';
 import StatsCard from '@/components/dashboard/StatsCard';
 import DirectReferralBonuses from '@/components/network/DirectReferralBonuses';
@@ -177,11 +177,11 @@ export default function Network() {
                     <Badge variant="outline" className="text-purple-400 border-purple-500/30">N{lvl}</Badge>
                     <p className="text-sm text-muted-foreground">{byLevel[lvl].count} {t('network.members')}</p>
                     <p className="text-sm text-muted-foreground">{byLevel[lvl].count} member(s)</p>
-                    <span className="text-xs text-amber-400 font-medium">{RESIDUAL_PERCENTAGES[lvl] || 0}%</span>
+                    <span className="text-xs text-amber-400 font-medium">{(getCommissionRate(parseInt(lvl)) * 100).toFixed(1)}%</span>
                   </div>
                   <div className="text-right">
                     <p className="text-xs text-muted-foreground">{t('network.commissionEarned')}</p>
-                    <p className="text-sm font-bold text-green-400">{formatCurrency(byLevel[lvl].total * ((RESIDUAL_PERCENTAGES[lvl] || 0) / 100))}</p>
+                    <p className="text-sm font-bold text-green-400">{formatCurrency(byLevel[lvl].total * getCommissionRate(parseInt(lvl)))}</p>
                   </div>
                 </div>
               ))}
@@ -212,7 +212,7 @@ export default function Network() {
                   {indirectInvestments[member.referred_id] != null && (
                     <>
                       <p className="text-xs text-muted-foreground">Invested: <span className="text-gold font-semibold">{formatCurrency(indirectInvestments[member.referred_id].amount)}</span></p>
-                      <p className="text-xs font-semibold text-green-400">Bonus: {formatCurrency((indirectInvestments[member.referred_id].total_yield || 0) * ((RESIDUAL_PERCENTAGES[member.level] || 0) / 100))}</p>
+                      <p className="text-xs font-semibold text-green-400">Bonus: {formatCurrency((indirectInvestments[member.referred_id].total_yield || 0) * getCommissionRate(member.level))}</p>
                     </>
                   )}
                 </div>
