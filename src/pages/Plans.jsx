@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { formatCurrency, getPlanForAmount } from '@/lib/planConfig';
 import { useAuth } from '@/lib/AuthContext';
-import { supabase } from '@/lib/supabase';
 import { financialAPI } from '@/services/api';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import PlanCard from '@/components/plans/PlanCard';
@@ -111,69 +110,6 @@ export default function Plans() {
   
   console.log('Balance from API:', { availableBalance, totalInvested });
   
-  // Function to generate network commissions (direct and indirect)
-  const generateNetworkCommissions = async (investment) => {
-    try {
-      const investmentAmount = parseFloat(investment.amount);
-      
-      // Get the full referral chain (up to 5 levels)
-      let currentUserId = investment.user_id;
-      let level = 1;
-      const maxLevels = 5;
-      
-      while (level <= maxLevels) {
-        // Get user's profile to find who referred them
-        const { data: userProfile } = await supabase
-          .from('profiles')
-          .select('referred_by')
-          .eq('user_id', currentUserId)
-          .single();
-        
-        if (!userProfile?.referred_by) {
-          console.log(`No referrer found at level ${level} for user:`, currentUserId);
-          break;
-        }
-        
-        const referrerId = userProfile.referred_by;
-        
-        // Calculate commission rate based on level
-        // Level 1: 10%, Level 2: 5%, Level 3: 3%, Level 4: 2%, Level 5: 1%
-        const commissionRates = { 1: 0.10, 2: 0.05, 3: 0.03, 4: 0.02, 5: 0.01 };
-        const commissionRate = commissionRates[level] || 0;
-        const commissionAmount = investmentAmount * commissionRate;
-        
-        if (commissionAmount > 0) {
-          // Create commission record - matching actual table schema
-          const { error: commissionError } = await supabase
-            .from('commissions')
-            .insert({
-              user_id: referrerId,
-              source_user_id: investment.user_id,
-              investment_id: investment.id,
-              amount: commissionAmount,
-              percentage: commissionRate * 100,
-              commission_type: level === 1 ? 'direct' : 'residual',
-              level: level,
-              status: 'pending',
-              created_at: new Date().toISOString(),
-            });
-          
-          if (commissionError) {
-            console.error(`Error creating level ${level} commission:`, commissionError);
-          } else {
-            console.log(`Level ${level} commission created:`, commissionAmount, 'for referrer:', referrerId);
-          }
-        }
-        
-        // Move up the chain
-        currentUserId = referrerId;
-        level++;
-      }
-    } catch (err) {
-      console.error('Error generating network commissions:', err);
-    }
-  };
-
   const investMutation = useMutation({
     mutationFn: async (data) => {
       console.log('Creating investment via API with data:', data);
@@ -195,10 +131,8 @@ export default function Plans() {
     onSuccess: async (investment) => {
       console.log('Investment mutation success:', investment);
       
-      // Generate network commissions for this investment
-      if (investment && investment.id) {
-        await generateNetworkCommissions(investment);
-      }
+      // NOTA: As comissões de rede são geradas no BACKEND (financial.js)
+      // durante o POST /investments. Gerar aqui duplicaria as comissões.
       
       setSuccessInvestment(investment);
       setShowSuccessModal(true);

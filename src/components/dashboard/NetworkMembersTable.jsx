@@ -2,7 +2,7 @@ import React from 'react';
 import { useAuth } from '@/lib/AuthContext';
 import { financialAPI } from '@/services/api'; // Usar API em vez de Supabase direto
 import { useQuery } from '@tanstack/react-query';
-import { formatCurrency, RESIDUAL_PERCENTAGES } from '@/lib/planConfig';
+import { formatCurrency, getCommissionRate } from '@/lib/planConfig';
 import { Users } from 'lucide-react';
 
 export default function NetworkMembersTable() {
@@ -71,7 +71,7 @@ export default function NetworkMembersTable() {
               const inv = investmentByUser[member.referred_id];
               const invested = inv?.amount || 0;
               const dailyYield = invested * 0.01;
-              const levelPct = (RESIDUAL_PERCENTAGES[member.level] || 0) / 100;
+              const levelPct = getCommissionRate(member.level);
               const myEarning = (inv?.total_earned || 0) * levelPct;
               return (
                 <tr key={member.id} className="border-b border-border/50 hover:bg-secondary/30 transition">
@@ -106,7 +106,7 @@ export default function NetworkMembersTable() {
               <td className="py-3 px-3 text-right font-bold text-muted-foreground">
                 {formatCurrency((Array.isArray(networkMembers) ? networkMembers : []).reduce((s, m) => {
                 const inv = investmentByUser[m.referred_id];
-                const pct = (RESIDUAL_PERCENTAGES[m.level] || 0) / 100;
+                const pct = getCommissionRate(m.level);
                 return s + (inv?.total_earned || 0) * pct;
               }, 0))}
               </td>
